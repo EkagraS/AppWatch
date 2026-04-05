@@ -1,4 +1,4 @@
-package com.example.appwatch
+package com.example.appwatch.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
