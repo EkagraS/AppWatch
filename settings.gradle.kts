@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AppWatch"
+rootProject.name = "AppWatch2"
 include(":app")
  

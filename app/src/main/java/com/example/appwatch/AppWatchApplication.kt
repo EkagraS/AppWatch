@@ -1,4 +1,13 @@
 package com.example.appwatch
 
-class AppWatchApplication {
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class AppWatchApplication : Application(){
+    override fun onCreate() {
+        super.onCreate()
+
+    }
+
 }
