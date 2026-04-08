@@ -1,9 +1,6 @@
 package com.example.appwatch.ui.screens
 
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -42,28 +40,37 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             title = "Audit Your Privacy",
             description = "Gain deep insights into which apps are accessing your camera, mic, and location in real-time.",
             icon = Icons.Default.Security,
-            color = Color(0xFF6366F1) // Indigo
+            color = Color(0xFF818CF8) // Lighter Indigo for icons on dark background
         ),
         OnboardingData(
             title = "Usage Intelligence",
             description = "Monitor screen time and identify apps you haven't used in 30 days that still hold risky permissions.",
             icon = Icons.Default.History,
-            color = Color(0xFF10B981) // Emerald
+            color = Color(0xFF34D399) // Lighter Emerald
         ),
         OnboardingData(
             title = "Watch the Watchers",
             description = "Receive instant alerts for high-risk background activities and take control of your digital footprint.",
             icon = Icons.Default.Lock,
-            color = Color(0xFF8B5CF6) // Purple
+            color = Color(0xFFA78BFA) // Lighter Purple
         )
     )
 
     val pagerState = rememberPagerState(pageCount = { slides.size })
 
+    // Using a gradient background to match the Splash/Dashboard theme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF1E1B4B), // Deepest Indigo (Night)
+                        Color(0xFF312E81)  // Deep Indigo
+                    )
+                )
+            )
+            .systemBarsPadding() // FIX: Ensures UI doesn't overlap with status or navigation bars
     ) {
         // Skip Button (only if not on the last page)
         Row(
@@ -76,8 +83,15 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 TextButton(onClick = {
                     completeOnboarding(context, onFinish)
                 }) {
-                    Text("Skip", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "Skip",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+            } else {
+                // Empty box to maintain spacing
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
 
@@ -95,7 +109,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(bottom = 32.dp, start = 32.dp, end = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Page Indicators
@@ -112,7 +126,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                             .clip(CircleShape)
                             .background(
                                 if (isSelected) Color(0xFF6366F1)
-                                else Color(0xFF6366F1).copy(alpha = 0.2f)
+                                else Color.White.copy(alpha = 0.2f)
                             )
                     )
                 }
@@ -132,15 +146,18 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF6366F1)
-                )
+                    containerColor = Color(0xFF6366F1),
+                    contentColor = Color.White
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
                 Text(
-                    text = if (pagerState.currentPage == slides.size - 1) "Get Started" else "Next",
+                    text = if (pagerState.currentPage == slides.size - 1) "Get Started" else "Continue",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    letterSpacing = 1.sp
                 )
             }
         }
@@ -156,11 +173,11 @@ fun OnboardingSlide(data: OnboardingData) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Animated Icon Container
+        // High-End Icon Container
         Box(
             modifier = Modifier
-                .size(160.dp)
-                .background(data.color.copy(alpha = 0.1f), RoundedCornerShape(48.dp)),
+                .size(180.dp)
+                .background(data.color.copy(alpha = 0.15f), RoundedCornerShape(56.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -171,30 +188,28 @@ fun OnboardingSlide(data: OnboardingData) {
             )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         Text(
             text = data.title,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Black,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = Color.White
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = data.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
-            lineHeight = 24.sp
+            lineHeight = 26.sp
         )
     }
 }
 
-/**
- * Handles the logic to save the preference and navigate out
- */
 private fun completeOnboarding(context: Context, onFinish: () -> Unit) {
     val sharedPref = context.getSharedPreferences("app_watch_prefs", Context.MODE_PRIVATE)
     sharedPref.edit().putBoolean("is_first_run", false).apply()

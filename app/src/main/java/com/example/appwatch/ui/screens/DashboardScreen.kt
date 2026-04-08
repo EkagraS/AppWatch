@@ -114,8 +114,8 @@ fun DashboardScreen(navController: NavController) {
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
-                            label = "High Risk",
-                            value = "7",
+                            label = "Screen time",
+                            value = "7 hrs",
                             icon = Icons.Default.Warning,
                             color = Color(0xFFF59E0B),
                             modifier = Modifier.weight(1f)
@@ -193,13 +193,13 @@ fun DashboardScreen(navController: NavController) {
                         else -> "Weather App"
                     },
                     reason = when (index) {
-                        0 -> "Location access in background"
-                        1 -> "Unused Camera permission"
-                        else -> "Excessive data usage detected"
+                        0 -> "Camera permission not used in 30 days"
+                        1 -> "Location accessed recently"
+                        else -> "Access to 14 permissions"
                     },
                     severity = when (index) {
-                        0 -> "High"
-                        1 -> "Medium"
+                        0 -> "Medium"
+                        1 -> "High"
                         else -> "Low"
                     },
                     onActionClick = {
@@ -218,14 +218,20 @@ fun DashboardScreen(navController: NavController) {
                         fontWeight = FontWeight.Bold
                     )
                     ActivityCard(
-                        title = "Permission Changes",
-                        description = "3 apps modified permissions today",
-                        icon = Icons.Default.Security,
-                        onClick = { navController.navigate("permission_audit") }
-                    )
-                    ActivityCard(
                         title = "New Installations",
                         description = "2 apps installed this week",
+                        icon = Icons.Default.TrendingUp,
+                        onClick = { navController.navigate("app_list") }
+                    )
+                    ActivityCard(
+                        title = "Active apps",
+                        description = "13 apps opened today",
+                        icon = Icons.Default.TrendingUp,
+                        onClick = { navController.navigate("app_list") }
+                    )
+                    ActivityCard(
+                        title = "Inactive apps",
+                        description = "4 apps inactive for 30+ days",
                         icon = Icons.Default.TrendingUp,
                         onClick = { navController.navigate("app_list") }
                     )
@@ -262,20 +268,6 @@ fun DashboardScreen(navController: NavController) {
                         icon = Icons.Default.List,
                         iconColor = Color(0xFF8B5CF6),
                         onClick = { navController.navigate("app_list") }
-                    )
-                    NavigationRow(
-                        title = "Permission History",
-                        subtitle = "Track permission changes over time",
-                        icon = Icons.Default.History,
-                        iconColor = Color(0xFFF59E0B),
-                        onClick = { navController.navigate("permission_history") }
-                    )
-                    NavigationRow(
-                        title = "Blocked Apps",
-                        subtitle = "View restricted applications",
-                        icon = Icons.Default.Block,
-                        iconColor = Color(0xFFEF4444),
-                        onClick = { navController.navigate("blocked_apps") }
                     )
                 }
             }

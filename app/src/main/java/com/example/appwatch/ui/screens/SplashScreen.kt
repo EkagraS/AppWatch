@@ -78,7 +78,8 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
                         Color(0xFF4F46E5)  // Deep Indigo
                     )
                 )
-            ),
+            )
+            .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
         Column(
