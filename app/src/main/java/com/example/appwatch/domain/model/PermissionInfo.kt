@@ -1,4 +1,8 @@
 package com.example.appwatch.domain.model
 
-class PermissionInfo {
-}
+data class PermissionInfo(
+    val permissionName: String,
+    val isSensitive: Boolean,
+    val description: String,
+    val granted: Boolean
+)
