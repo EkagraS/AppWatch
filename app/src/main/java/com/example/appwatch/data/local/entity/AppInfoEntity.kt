@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "app_metadata")
-data class AppMetadataEntity(
+data class AppInfoEntity(
     @PrimaryKey val packageName: String,
     val appName: String,
     val totalPermissions: Int,
