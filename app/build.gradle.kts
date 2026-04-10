@@ -44,8 +44,15 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.hilt.work)
+    val work_version = "2.9.0"
+    val hilt_ext_version = "1.2.0"
     val room_version = "2.6.1"
 
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+    ksp("androidx.hilt:hilt-compiler:$hilt_ext_version")
+    implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -54,8 +61,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.room.common.jvm)
     implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

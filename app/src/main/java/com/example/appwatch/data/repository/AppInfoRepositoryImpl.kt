@@ -1,25 +1,53 @@
 package com.example.appwatch.data.repository
 
 import com.example.appwatch.data.local.dao.AppInfoDao
-import com.example.appwatch.data.local.entity.AppInfoEntity
+import com.example.appwatch.domain.model.AppInfo
+import com.example.appwatch.domain.model.RiskLevel
+import com.example.appwatch.domain.repository.AppInfoRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-class AppInfoRepositoryImpl @Inject constructor(private val appInfoDao: AppInfoDao) {
+class AppInfoRepositoryImpl @Inject constructor(
+    private val appMetadataDao: AppInfoDao
+) : AppInfoRepository {
 
-    fun getAllApps(sortByPermissions: Boolean): Flow<List<AppInfoEntity>> {
-        return if (sortByPermissions) {
-            appInfoDao.getAppsByPermissionCount()
+    override fun getAllApps(sortByRisk: Boolean): Flow<List<AppInfo>> {
+        val flow = if (sortByRisk) {
+            appMetadataDao.getAppsByPermissionCount()
         } else {
-            appInfoDao.getAllAppsAlphabetical()
+            appMetadataDao.getAllAppsAlphabetical()
+        }
+
+        return flow.map { entities ->
+            entities.map { entity ->
+                AppInfo(
+                    packageName = entity.packageName,
+                    appName = entity.appName,
+                    isSystemApp = entity.isSystemApp,
+                    totalPermissions = entity.totalPermissions,
+                    riskLevel = if (entity.totalPermissions > 10) RiskLevel.HIGH else RiskLevel.LOW
+                )
+            }
         }
     }
 
-    suspend fun refreshMetadata(metadataList: List<AppInfoEntity>) {
-        appInfoDao.insertAllMetadata(metadataList)
+    override fun searchApps(query: String): Flow<List<AppInfo>> {
+        return getAllApps(false).map { list ->
+            list.filter {
+                it.appName.contains(query, ignoreCase = true) ||
+                        it.packageName.contains(query, ignoreCase = true)
+            }
+        }
     }
 
-    suspend fun getSingleAppMetadata(packageName: String): AppInfoEntity? {
-        return appInfoDao.getAppMetadata(packageName)
+    override fun getAppDetails(packageName: String): Flow<AppInfo?> {
+        return getAllApps(false).map { list ->
+            list.find { it.packageName == packageName }
+        }
+    }
+
+    override suspend fun refreshAppCache() {
+        // Yahan PackageManagerHelper se data sync karne ka logic aayega
     }
 }

@@ -1,9 +1,11 @@
 package com.example.appwatch.domain.model
 
+import android.graphics.drawable.Drawable
+
 data class AppInfo(
     val packageName: String,
     val appName: String,
-    val iconUri: String? = null, // Path to the icon
+    val iconDrawable: Drawable? = null,
     val isSystemApp: Boolean,
     val totalPermissions: Int,
     val riskLevel: RiskLevel = RiskLevel.LOW
