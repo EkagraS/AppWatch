@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.ChevronRight
@@ -48,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,11 +58,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(navController: NavController) {
+fun DashboardScreen(
+    navController: NavController,
+    viewModel: DashboardViewModel = hiltViewModel()
+) {
+    // Collecting missing data from ViewModel
+    val summary by viewModel.dashboardSummary.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -71,7 +83,9 @@ fun DashboardScreen(navController: NavController) {
                     )
                 },
                 actions = {
-                    IconButton(onClick = { navController.navigate("settings") }) {
+                    IconButton(onClick = {
+//                        navController.navigate("settings")
+                    }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
@@ -86,7 +100,7 @@ fun DashboardScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
             contentPadding = PaddingValues(vertical = 16.dp, horizontal = 0.dp)
         ) {
-            // 1. Overview Stats Row
+            // 1. Overview Stats Row - UPDATED WITH DATA
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -100,23 +114,23 @@ fun DashboardScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         StatCard(
-                            label = "Total Apps",
-                            value = "124",
+                            label = "Installed Apps",
+                            value = summary?.totalApps?.toString() ?: "0",
                             icon = Icons.Default.Apps,
                             color = Color(0xFF6366F1),
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
-                            label = "Permissions",
-                            value = "42",
+                            label = "High Risk",
+                            value = summary?.highRiskApps?.toString() ?: "0",
                             icon = Icons.Default.Shield,
-                            color = Color(0xFF10B981),
+                            color = Color(0xFFEF4444),
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
                             label = "Screen time",
-                            value = "7 hrs",
-                            icon = Icons.Default.Warning,
+                            value = summary?.totalScreenTime ?: "0m",
+                            icon = Icons.Default.TrendingUp,
                             color = Color(0xFFF59E0B),
                             modifier = Modifier.weight(1f)
                         )
@@ -124,7 +138,7 @@ fun DashboardScreen(navController: NavController) {
                 }
             }
 
-            // 2. Privacy Insights
+            // 2. Privacy Insights - UPDATED WITH DATA
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
@@ -138,7 +152,7 @@ fun DashboardScreen(navController: NavController) {
                     ) {
                         InsightCard(
                             title = "Background Location",
-                            count = "5 apps",
+                            count = "${summary?.locationAppsCount ?: 0} apps",
                             icon = Icons.Default.LocationOn,
                             color = Color(0xFFEF4444),
                             modifier = Modifier.weight(1f),
@@ -146,7 +160,7 @@ fun DashboardScreen(navController: NavController) {
                         )
                         InsightCard(
                             title = "Camera Access",
-                            count = "12 apps",
+                            count = "${summary?.cameraAppsCount ?: 0} apps",
                             icon = Icons.Default.Camera,
                             color = Color(0xFF8B5CF6),
                             modifier = Modifier.weight(1f),
@@ -159,7 +173,7 @@ fun DashboardScreen(navController: NavController) {
                     ) {
                         InsightCard(
                             title = "Microphone",
-                            count = "8 apps",
+                            count = "${summary?.micAppsCount ?: 0} apps",
                             icon = Icons.Default.Mic,
                             color = Color(0xFF06B6D4),
                             modifier = Modifier.weight(1f),
@@ -167,7 +181,7 @@ fun DashboardScreen(navController: NavController) {
                         )
                         InsightCard(
                             title = "Storage",
-                            count = "31 apps",
+                            count = "${summary?.storageAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
                             color = Color(0xFFF97316),
                             modifier = Modifier.weight(1f),
@@ -177,68 +191,57 @@ fun DashboardScreen(navController: NavController) {
                 }
             }
 
-            // 3. Needs Attention Section
+            // 3. Needs Attention Section - UPDATED WITH DYNAMIC DATA
             item {
-                Text(
-                    text = "Needs Attention",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Needs Attention",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(onClick = { navController.navigate("permission_audit") }) {
+                        Icon(Icons.Default.ArrowForward, contentDescription = "See All Issues")
+                    }
+                }
             }
-            items(3) { index ->
+            items(summary?.attentionItems ?: emptyList()) { item ->
                 AppAttentionItem(
-                    appName = when (index) {
-                        0 -> "Facebook"
-                        1 -> "Flashlight Pro"
-                        else -> "Weather App"
-                    },
-                    reason = when (index) {
-                        0 -> "Camera permission not used in 30 days"
-                        1 -> "Location accessed recently"
-                        else -> "Access to 14 permissions"
-                    },
-                    severity = when (index) {
-                        0 -> "Medium"
-                        1 -> "High"
-                        else -> "Low"
-                    },
+                    appName = item.appName,
+                    reason = item.reason,
+                    severity = item.severity,
                     onActionClick = {
-                        val testPackage = "com.android.settings"
-                        navController.navigate("app_detail/$testPackage")
+                        navController.navigate("app_detail/${item.packageName}")
                     }
                 )
             }
 
-            // 4. Recent Activity
+            // 4. Recent Activity - UPDATED WITH DYNAMIC DATA
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = "Recent Activity",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    ActivityCard(
-                        title = "New Installations",
-                        description = "2 apps installed this week",
-                        icon = Icons.Default.TrendingUp,
-                        onClick = { navController.navigate("app_list") }
-                    )
-                    ActivityCard(
-                        title = "Active apps",
-                        description = "13 apps opened today",
-                        icon = Icons.Default.TrendingUp,
-                        onClick = { navController.navigate("app_list") }
-                    )
-                    ActivityCard(
-                        title = "Inactive apps",
-                        description = "4 apps inactive for 30+ days",
-                        icon = Icons.Default.TrendingUp,
-                        onClick = { navController.navigate("app_list") }
-                    )
-                }
+                Text(
+                    text = "Recent Activity",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            items(summary?.recentActivity ?: emptyList()) { activity ->
+                ActivityCard(
+                    title = activity.title,
+                    description = activity.description,
+                    icon = when(activity.iconType) {
+                        "INSTALL" -> Icons.Default.TrendingUp
+                        "ACTIVE" -> Icons.Default.History
+                        "INACTIVE" -> Icons.Default.Block
+                        else -> Icons.Default.History
+                    },
+                    onClick = { navController.navigate("app_list") }
+                )
             }
 
-            // 5. Quick Navigation Grid
+            // 5. Quick Navigation Grid - REMAINS READY
             item {
                 Text(
                     text = "Tools & Features",

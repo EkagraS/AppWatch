@@ -10,11 +10,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * The "Librarian" of the app.
- * Responsible for scanning the device for installed applications and
- * extracting metadata like permission counts and installation dates.
- */
 @Singleton
 class PackageManagerHelper @Inject constructor(
     @ApplicationContext private val context: Context
@@ -22,37 +17,38 @@ class PackageManagerHelper @Inject constructor(
     private val packageManager: PackageManager = context.packageManager
 
     /**
-     * Fetches all installed apps and converts them into our Database Entities.
-     * This is the heavy lifting used to populate the App List.
+     * Fetches metadata for all installed apps.
+     * Fixed the nullability mismatch for applicationInfo.
      */
     fun getInstalledAppsMetadata(): List<AppInfoEntity> {
-        val apps = mutableListOf<AppInfoEntity>()
         val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
 
-        for (packageInfo in packages) {
-            val appInfo = packageInfo.applicationInfo ?: continue
+        return packages.mapNotNull { packageInfo ->
+            val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
 
-            // Skip the AppWatch app itself to avoid auditing ourselves
-            if (packageInfo.packageName == context.packageName) continue
+            // Skip auditing ourselves
+            if (packageInfo.packageName == context.packageName) return@mapNotNull null
 
-            apps.add(
-                AppInfoEntity(
-                    packageName = packageInfo.packageName,
-                    appName = packageManager.getApplicationLabel(appInfo).toString(),
-                    totalPermissions = packageInfo.requestedPermissions?.size ?: 0,
-                    sensitivePermissionsCount = countSensitivePermissions(packageInfo),
-                    isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
-                    installedAt = packageInfo.firstInstallTime
-                )
+            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+
+            // Count sensitive permissions
+            val sensitiveCount = packageInfo.requestedPermissions?.count { perm ->
+                val p = perm.uppercase()
+                p.contains("CAMERA") || p.contains("RECORD_AUDIO") ||
+                        p.contains("LOCATION") || p.contains("SMS") || p.contains("CONTACTS")
+            } ?: 0
+
+            AppInfoEntity(
+                packageName = packageInfo.packageName,
+                appName = packageManager.getApplicationLabel(appInfo).toString(),
+                totalPermissions = packageInfo.requestedPermissions?.size ?: 0,
+                sensitivePermissionsCount = sensitiveCount,
+                isSystemApp = isSystem,
+                installedAt = packageInfo.firstInstallTime
             )
         }
-        return apps
     }
 
-    /**
-     * Returns the icon for a specific package.
-     * Used by the UI layer to display app icons in lists.
-     */
     fun getAppIcon(packageName: String): Drawable? {
         return try {
             packageManager.getApplicationIcon(packageName)
@@ -61,23 +57,22 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 
-    /**
-     * Helper to identify high-risk permission counts for the Dashboard.
-     */
-    private fun countSensitivePermissions(packageInfo: PackageInfo): Int {
-        val sensitiveKeywords = listOf("CAMERA", "RECORD_AUDIO", "LOCATION", "CONTACTS", "SMS", "STORAGE")
-        return packageInfo.requestedPermissions?.count { permission ->
-            sensitiveKeywords.any { keyword -> permission.contains(keyword, ignoreCase = true) }
-        } ?: 0
-    }
-
-    /**
-     * Gets the count of user-installed apps vs system apps for the Dashboard Overview.
-     */
     fun getAppCounts(): Pair<Int, Int> {
         val packages = packageManager.getInstalledPackages(0)
         val systemApps = packages.count { (it.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM)) != 0 }
         val userApps = packages.size - systemApps
         return Pair(userApps, systemApps)
+    }
+
+    /**
+     * Helper to check specific counts for the Dashboard Insights grid.
+     */
+    fun getAppsWithPermission(permissionSubString: String): Int {
+        val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
+        return packages.count { pkg ->
+            pkg.requestedPermissions?.any {
+                it.contains(permissionSubString, ignoreCase = true)
+            } == true
+        }
     }
 }
