@@ -20,7 +20,7 @@ class AppOpsHelper @Inject constructor(
     private val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-    val monitorOps = arrayOf(AppOpsManager.OPSTR_CAMERA, AppOpsManager.OPSTR_RECORD_AUDIO, AppOpsManager.OPSTR_FINE_LOCATION, AppOpsManager.OPSTR_COARSE_LOCATION)
+//    val monitorOps = arrayOf(AppOpsManager.OPSTR_CAMERA, AppOpsManager.OPSTR_RECORD_AUDIO, AppOpsManager.OPSTR_FINE_LOCATION, AppOpsManager.OPSTR_COARSE_LOCATION, AppOpsManager.OPSTR_READ_CONTACTS, AppOpsManager.OPSTR_READ_CALENDAR, AppOpsManager.OPSTR_READ_PHONE_NUMBERS, AppOpsManager.OPSTR_READ_SMS)
 
     /**
      * Gets the last time an app was active.
@@ -66,6 +66,10 @@ class AppOpsHelper @Inject constructor(
             AppOpsManager.OPSTR_RECORD_AUDIO -> "Microphone"
             AppOpsManager.OPSTR_FINE_LOCATION -> "Precise Location"
             AppOpsManager.OPSTR_COARSE_LOCATION -> "Approximate Location"
+            AppOpsManager.OPSTR_READ_CONTACTS -> "Contacts"
+            AppOpsManager.OPSTR_READ_CALENDAR -> "Calendar"
+            AppOpsManager.OPSTR_READ_PHONE_NUMBERS -> "Phone Numbers"
+            AppOpsManager.OPSTR_READ_SMS -> "SMS"
             else -> "System Resource"
         }
     }

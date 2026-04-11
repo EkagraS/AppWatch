@@ -1,5 +1,8 @@
 package com.example.appwatch.ui.screens
 
+import android.app.AppOpsManager
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,14 +53,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -69,8 +76,21 @@ fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
-    // Collecting missing data from ViewModel
+    val context = LocalContext.current
     val summary by viewModel.dashboardSummary.collectAsStateWithLifecycle()
+
+    // Usage Stats Permission Check
+    LaunchedEffect(Unit) {
+        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOps.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            android.os.Process.myUid(),
+            context.packageName
+        )
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            context.startActivity(Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -181,7 +201,28 @@ fun DashboardScreen(
                         )
                         InsightCard(
                             title = "Storage",
-                            count = "${summary?.storageAppsCount ?: 0} apps",
+                            count = "${summary?.contactAppsCount ?: 0} apps",
+                            icon = Icons.Default.Storage,
+                            color = Color(0xFFF97316),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("permission_audit") }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        InsightCard(
+                            title = "Contacts",
+                            count = "${summary?.phoneAppsCount ?: 0} apps",
+                            icon = Icons.Default.Mic,
+                            color = Color(0xFF06B6D4),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("permission_audit") }
+                        )
+                        InsightCard(
+                            title = "Calendar",
+                            count = "${summary?.SmsAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
                             color = Color(0xFFF97316),
                             modifier = Modifier.weight(1f),
@@ -535,4 +576,7 @@ fun NavigationRow(
             )
         }
     }
+}
+
+fun permissions(){
 }

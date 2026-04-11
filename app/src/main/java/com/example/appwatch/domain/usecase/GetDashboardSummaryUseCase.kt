@@ -49,10 +49,12 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 totalApps = userApps.size,
                 highRiskApps = highRiskApps.size,
                 totalScreenTime = screenTime,
-                locationAppsCount = packageManagerHelper.getAppsWithPermission("LOCATION"),
+                locationAppsCount = packageManagerHelper.getAppsWithPermission("ACCESS_FINE_LOCATION"),
                 cameraAppsCount = packageManagerHelper.getAppsWithPermission("CAMERA"),
                 micAppsCount = packageManagerHelper.getAppsWithPermission("RECORD_AUDIO"),
-                storageAppsCount = packageManagerHelper.getAppsWithPermission("STORAGE"),
+                contactAppsCount = packageManagerHelper.getAppsWithPermission("READ_CONTACTS"),
+                phoneAppsCount = packageManagerHelper.getAppsWithPermission("READ_CALL_NUMBERS"),
+                SmsAppsCount = packageManagerHelper.getAppsWithPermission("READ_SMS"),
                 attentionItems = attention,
                 recentActivity = listOf(
                     ActivityItem(

@@ -17,4 +17,16 @@ interface UsageDao {
 
     @Query("SELECT SUM(totalTimeInForeground) FROM app_usage WHERE usageDate = :date")
     fun getTotalScreenTime(date: Long): Flow<Long?>
+
+    @Query("SELECT * FROM app_usage WHERE packageName = :packageName ORDER BY usageDate DESC")
+    fun getUsageForApp(packageName: String): Flow<List<UsageEntity>>
+
+    @Query("SELECT SUM(totalTimeInForeground) FROM app_usage WHERE packageName = :packageName AND usageDate >= :startDate")
+    fun getTotalTimeForApp(packageName: String, startDate: Long): Flow<Long?>
+
+    @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate ORDER BY totalTimeInForeground DESC LIMIT 5")
+    fun getMostUsedApps(startDate: Long): Flow<List<UsageEntity>>
+
+    @Query("SELECT SUM(totalTimeInForeground) FROM app_usage WHERE packageName = :packageName")
+    fun getMonthlyTotalForApp(packageName: String): Flow<Long?>
 }

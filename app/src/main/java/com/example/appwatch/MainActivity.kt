@@ -1,14 +1,10 @@
 package com.example.appwatch
 
-import android.app.AppOpsManager
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +25,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Check usage access permission
+//        // Check usage access permission
 //        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
 //        val mode = appOps.checkOpNoThrow(
 //            AppOpsManager.OPSTR_GET_USAGE_STATS,

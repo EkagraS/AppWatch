@@ -9,7 +9,10 @@ data class DashboardSummary(
     val locationAppsCount: Int,
     val cameraAppsCount: Int,
     val micAppsCount: Int,
-    val storageAppsCount: Int,
+    val contactAppsCount: Int,
+    val phoneAppsCount: Int,
+    val SmsAppsCount: Int,
+
 
     // Dynamic Lists
     val attentionItems: List<AttentionItem>,

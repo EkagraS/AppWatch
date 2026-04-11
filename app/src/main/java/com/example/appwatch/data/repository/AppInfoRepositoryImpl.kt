@@ -9,15 +9,12 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AppInfoRepositoryImpl @Inject constructor(
-    private val appMetadataDao: AppInfoDao
+    private val appInfoDao: AppInfoDao
 ) : AppInfoRepository {
 
     override fun getAllApps(sortByRisk: Boolean): Flow<List<AppInfo>> {
-        val flow = if (sortByRisk) {
-            appMetadataDao.getAppsByPermissionCount()
-        } else {
-            appMetadataDao.getAllAppsAlphabetical()
-        }
+        val flow = if (sortByRisk) appInfoDao.getAppsByPermissionCount()
+        else appInfoDao.getAllAppsAlphabetical()
 
         return flow.map { entities ->
             entities.map { entity ->
@@ -31,7 +28,6 @@ class AppInfoRepositoryImpl @Inject constructor(
             }
         }
     }
-
     override fun searchApps(query: String): Flow<List<AppInfo>> {
         return getAllApps(false).map { list ->
             list.filter {
@@ -48,6 +44,5 @@ class AppInfoRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshAppCache() {
-        // Yahan PackageManagerHelper se data sync karne ka logic aayega
     }
 }

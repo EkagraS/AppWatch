@@ -2,18 +2,16 @@ package com.example.appwatch
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.*
 import com.example.appwatch.worker.AppDiscoveryWorker
+import com.example.appwatch.worker.UsageSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
-class AppWatchApplication : Application(), Configuration.Provider{
+class AppWatchApplication : Application(), Configuration.Provider {
+
     @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
@@ -23,18 +21,62 @@ class AppWatchApplication : Application(), Configuration.Provider{
 
     override fun onCreate() {
         super.onCreate()
-        scheduleAppSync()
+        scheduleAppDiscovery()
+        scheduleUsageSnapshot()
     }
 
-    private fun scheduleAppSync() {
-        val syncRequest = OneTimeWorkRequestBuilder<AppDiscoveryWorker>()
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build())
+    private fun scheduleAppDiscovery() {
+        // Runs once on first install, then daily
+        val request = PeriodicWorkRequestBuilder<AppDiscoveryWorker>(1, TimeUnit.DAYS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .build()
+            )
             .build()
 
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "initial_app_sync",
-            ExistingWorkPolicy.REPLACE,
-            syncRequest
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "app_discovery",
+            ExistingPeriodicWorkPolicy.KEEP, // Don't restart if already scheduled
+            request
         )
+    }
+
+    private fun scheduleUsageSnapshot() {
+        // Runs every night at approximately midnight to save daily usage to Room
+        val request = PeriodicWorkRequestBuilder<UsageSnapshotWorker>(1, TimeUnit.DAYS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .build()
+            )
+            .setInitialDelay(calculateDelayUntilMidnight(), TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "usage_snapshot",
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
+
+        // Also run immediately once to populate today's data
+        val immediateRequest = OneTimeWorkRequestBuilder<UsageSnapshotWorker>().build()
+        WorkManager.getInstance(this).enqueueUniqueWork(
+            "usage_snapshot_immediate",
+            ExistingWorkPolicy.KEEP,
+            immediateRequest
+        )
+    }
+
+    private fun calculateDelayUntilMidnight(): Long {
+        val now = System.currentTimeMillis()
+        val midnight = java.util.Calendar.getInstance().apply {
+            add(java.util.Calendar.DAY_OF_YEAR, 1)
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        return midnight - now
     }
 }
