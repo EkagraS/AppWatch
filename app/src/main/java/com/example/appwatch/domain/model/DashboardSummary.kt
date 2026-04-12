@@ -3,6 +3,8 @@ package com.example.appwatch.domain.model
 data class DashboardSummary(
     val totalApps: Int,
     val highRiskApps: Int,
+    val usedStorage: String = "-- GB",
+    val totalStorage: String = "-- GB",
     val totalScreenTime: String,
 
     // Privacy Insights

@@ -17,6 +17,7 @@ import com.example.appwatch.ui.screens.OnboardingScreen
 import com.example.appwatch.ui.screens.PermissionAuditScreen
 import com.example.appwatch.ui.screens.PermissionScreen
 import com.example.appwatch.ui.screens.SplashScreen
+import com.example.appwatch.ui.screens.StorageDetailScreen
 import com.example.appwatch.ui.screens.UsageStatsScreen
 import com.example.appwatch.ui.theme.AppWatch2Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,6 +68,9 @@ fun AppWatchNavigation(navController: NavHostController) {
         composable("apps_with_permission/{permissionType}") { backStackEntry ->
             val permissionType = backStackEntry.arguments?.getString("permissionType")
             AppsWithPermissionScreen(navController, permissionType)
+        }
+        composable("storage_detail") {
+            StorageDetailScreen(navController)
         }
     }
 }

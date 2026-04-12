@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PriorityHigh
+import androidx.compose.material.icons.filled.SdStorage
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -62,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.ContextCompat.startActivity
@@ -141,10 +145,11 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
-                            label = "High Risk",
-                            value = summary?.highRiskApps?.toString() ?: "0",
-                            icon = Icons.Default.Shield,
-                            color = Color(0xFFEF4444),
+                            label = "Storage",
+                            value = summary?.usedStorage ?: "--",
+                            subValue = summary?.totalStorage ?: "--",
+                            icon = Icons.Default.SdStorage,
+                            color = Color(0xFF10B981),
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
@@ -309,9 +314,16 @@ fun DashboardScreen(
                     NavigationRow(
                         title = "App List",
                         subtitle = "Manage all installed packages",
-                        icon = Icons.Default.List,
+                        icon = Icons.Default.Apps,
                         iconColor = Color(0xFF8B5CF6),
                         onClick = { navController.navigate("app_list") }
+                    )
+                    NavigationRow(
+                        title = "Storage",
+                        subtitle = "Manage your storage",
+                        icon = Icons.Default.Storage,
+                        iconColor = Color(0xFF8B5CF6),
+                        onClick = { navController.navigate("storage_detail") }
                     )
                 }
             }
@@ -323,45 +335,73 @@ fun DashboardScreen(
 fun StatCard(
     label: String,
     value: String,
+    subValue: String = "",
     icon: ImageVector,
     color: Color,
-    modifier: Modifier
+    modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        modifier = modifier,
+        modifier = modifier.fillMaxHeight(), // Fill height to match the Row's tallest item
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        shape = MaterialTheme.shapes.large
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center // Center content vertically
         ) {
+            // Icon Circle
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(color.copy(alpha = 0.15f), CircleShape),
+                    .size(42.dp)
+                    .background(color.copy(alpha = 0.12f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     icon,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                     tint = color
                 )
             }
+
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Primary Value
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
             )
+
+            // Sub-Value (Occupies space even if empty to keep labels aligned)
+            Box(modifier = Modifier.height(16.dp), contentAlignment = Alignment.Center) {
+                if (subValue.isNotEmpty()) {
+                    Text(
+                        text = "of $subValue",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Label
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
             )
         }
     }

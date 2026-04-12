@@ -27,4 +27,21 @@ interface AppInfoDao {
 
     @Query("SELECT * FROM app_info WHERE packageName = :packageName LIMIT 1")
     suspend fun getAppMetadata(packageName: String): AppInfoEntity?
+
+    @Query("SELECT * FROM app_info ORDER BY totalSizeBytes DESC")
+    fun getAppsByStorageSize(): Flow<List<AppInfoEntity>>
+
+    @Query("SELECT SUM(totalSizeBytes) FROM app_info WHERE isSystemApp = 0")
+    fun getTotalUserAppsSize(): Flow<Long?>
+
+    @Query("SELECT SUM(totalSizeBytes) FROM app_info WHERE isSystemApp = 1")
+    fun getTotalSystemAppsSize(): Flow<Long?>
+
+    @Query("""
+    UPDATE app_info 
+    SET appSizeBytes = :appSize, dataSizeBytes = :dataSize, cacheSizeBytes = :cacheSize, totalSizeBytes = :totalSize, storageLastUpdated = :updatedAt
+    WHERE packageName = :packageName""")
+
+    suspend fun updateAppStorage(packageName: String, appSize: Long, dataSize: Long, cacheSize: Long, totalSize: Long, updatedAt: Long
+    )
 }

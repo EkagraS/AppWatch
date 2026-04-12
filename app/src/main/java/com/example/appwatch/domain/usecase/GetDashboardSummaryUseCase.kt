@@ -3,6 +3,7 @@ package com.example.appwatch.domain.usecase
 import com.example.appwatch.domain.model.*
 import com.example.appwatch.domain.repository.UsageRepository
 import com.example.appwatch.system.PackageManagerHelper
+import com.example.appwatch.system.StorageStatsHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
@@ -10,13 +11,15 @@ import javax.inject.Inject
 
 class GetDashboardSummaryUseCase @Inject constructor(
     private val usageRepository: UsageRepository,
-    private val packageManagerHelper: PackageManagerHelper
+    private val packageManagerHelper: PackageManagerHelper,
+    private val storageStatsHelper: StorageStatsHelper
 ) {
     operator fun invoke(): Flow<DashboardSummary> {
         val appsFlow = flow {
             emit(packageManagerHelper.getInstalledAppsMetadata())
         }
 
+        val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
         return combine(
             appsFlow,
             usageRepository.getTotalScreenTimeToday()
@@ -55,6 +58,8 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 contactAppsCount = packageManagerHelper.getAppsWithPermission("READ_CONTACTS"),
                 phoneAppsCount = packageManagerHelper.getAppsWithPermission("READ_CALL_NUMBERS"),
                 SmsAppsCount = packageManagerHelper.getAppsWithPermission("READ_SMS"),
+                usedStorage = storageStatsHelper.formatSize(deviceStorage.freeBytes),
+                totalStorage = storageStatsHelper.formatSize(deviceStorage.totalBytes),
                 attentionItems = attention,
                 recentActivity = listOf(
                     ActivityItem(

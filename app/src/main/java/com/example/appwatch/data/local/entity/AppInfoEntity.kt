@@ -11,5 +11,11 @@ data class AppInfoEntity(
     val sensitivePermissionsCount: Int,
     val isSystemApp: Boolean,
     val installedAt: Long,
-    val lastUpdatedAt: Long = System.currentTimeMillis()
+    val lastUpdatedAt: Long = System.currentTimeMillis(),
+
+    val appSizeBytes: Long = 0L,
+    val dataSizeBytes: Long = 0L,
+    val cacheSizeBytes: Long = 0L,
+    val totalSizeBytes: Long = 0L,
+    val storageLastUpdated: Long = 0L
 )
