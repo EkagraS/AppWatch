@@ -179,16 +179,6 @@ fun AppDetailScreen(
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            IconButton(
-                                onClick = {
-                                    navController.navigate("app_permissions/${uiState.appInfo?.packageName}")
-                                }
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowForward,
-                                    contentDescription = "See all permissions"
-                                )
-                            }
                         }
 
                         // Show only first 3
@@ -365,7 +355,6 @@ fun DetailedPermissionRow(
                 }
                 Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

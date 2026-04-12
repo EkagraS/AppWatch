@@ -176,7 +176,7 @@ fun DashboardScreen(
                             icon = Icons.Default.LocationOn,
                             color = Color(0xFFEF4444),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/LOCATION") }
                         )
                         InsightCard(
                             title = "Camera Access",
@@ -184,7 +184,7 @@ fun DashboardScreen(
                             icon = Icons.Default.Camera,
                             color = Color(0xFF8B5CF6),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/CAMERA") }
                         )
                     }
                     Row(
@@ -197,15 +197,15 @@ fun DashboardScreen(
                             icon = Icons.Default.Mic,
                             color = Color(0xFF06B6D4),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/RECORD_AUDIO") }
                         )
                         InsightCard(
-                            title = "Storage",
+                            title = "Phone & Calls",
                             count = "${summary?.contactAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
                             color = Color(0xFFF97316),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/CALL_LOG") }
                         )
                     }
                     Row(
@@ -216,17 +216,17 @@ fun DashboardScreen(
                             title = "Contacts",
                             count = "${summary?.phoneAppsCount ?: 0} apps",
                             icon = Icons.Default.Mic,
-                            color = Color(0xFF06B6D4),
+                            color = Color(0xFF10B981),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/CONTACTS") }
                         )
                         InsightCard(
-                            title = "Calendar",
+                            title = "SMS",
                             count = "${summary?.SmsAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
-                            color = Color(0xFFF97316),
+                            color = Color(0xFF84CC16),
                             modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("permission_audit") }
+                            onClick = { navController.navigate("apps_with_permission/SMS") }
                         )
                     }
                 }

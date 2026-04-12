@@ -52,6 +52,20 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 
+    fun hasPermission(packageName: String, permissionKeyword: String): Boolean {
+        return try {
+            val packageInfo = packageManager.getPackageInfo(
+                packageName,
+                PackageManager.GET_PERMISSIONS
+            )
+            packageInfo.requestedPermissions?.any { permission ->
+                permission.contains(permissionKeyword, ignoreCase = true)
+            } == true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun getAppIcon(packageName: String): Drawable? {
         return try {
             packageManager.getApplicationIcon(packageName)
