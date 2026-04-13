@@ -9,20 +9,20 @@ AppWatch is a system-level Android app that gives you complete visibility into h
 
 <table>
   <tr>
-    <td><img src="screenshots/aw1.jpeg" width="100%"/></td>
-    <td><img src="screenshots/aw2.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw1.jpeg" width="48%"/></td>
+    <td><img src="screenshots/aw2.jpeg" width="48%"/></td>
   </tr>
   <tr>
-    <td><img src="screenshots/aw3.jpeg" width="100%"/></td>
-    <td><img src="screenshots/aw4.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw3.jpeg" width="48%"/></td>
+    <td><img src="screenshots/aw4.jpeg" width="48%"/></td>
   </tr>
   <tr>
-    <td><img src="screenshots/aw5.jpeg" width="100%"/></td>
-    <td><img src="screenshots/aw6.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw5.jpeg" width="48%"/></td>
+    <td><img src="screenshots/aw6.jpeg" width="48%"/></td>
   </tr>
   <tr>
-    <td><img src="screenshots/aw7.jpeg" width="100%"/></td>
-    <td><img src="screenshots/aw8.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw7.jpeg" width="48%"/></td>
+    <td><img src="screenshots/aw8.jpeg" width="48%"/></td>
   </tr>
 </table>
 
