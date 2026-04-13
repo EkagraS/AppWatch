@@ -111,4 +111,4 @@ git clone https://github.com/EkagraS/AppWatch.git
 ## 👨‍💻 Author
 
 **Ekagra Shandilya**
-[LinkedIn](https://www.linkedin.com/in/ekagra-shandilya) • [GitHub](https://github.com/EkagraS)
+[LinkedIn](https://www.linkedin.com/in/ekagra-shandilya-3944a0256) • [GitHub](https://github.com/EkagraS)
