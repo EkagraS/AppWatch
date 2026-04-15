@@ -9,20 +9,16 @@ AppWatch is a system-level Android app that gives you complete visibility into h
 
 <table>
   <tr>
-    <td><img src="screenshots/screenshot_1.png" width="100%"/></td>
-    <td><img src="screenshots/screenshot_2.png" width="100%"/></td>
+    <td><img src="screenshots/aw1.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw2.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw3.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw4.jpeg" width="100%"/></td>
   </tr>
   <tr>
-    <td><img src="screenshots/screenshot_3.png" width="100%"/></td>
-    <td><img src="screenshots/screenshot_4.png" width="100%"/></td>
-  </tr>
-  <tr>
-    <td><img src="screenshots/screenshot_5.png" width="100%"/></td>
-    <td><img src="screenshots/screenshot_6.png" width="100%"/></td>
-  </tr>
-  <tr>
-    <td><img src="screenshots/screenshot_7.png" width="100%"/></td>
-    <td><img src="screenshots/screenshot_8.png" width="100%"/></td>
+    <td><img src="screenshots/aw5.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw6.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw7.jpeg" width="100%"/></td>
+    <td><img src="screenshots/aw8.jpeg" width="100%"/></td>
   </tr>
 </table>
 
@@ -115,4 +111,4 @@ git clone https://github.com/EkagraS/AppWatch.git
 ## 👨‍💻 Author
 
 **Ekagra Shandilya**
-[LinkedIn](https://www.linkedin.com/in/ekagra-shandilya) • [GitHub](https://github.com/EkagraS)
+[LinkedIn](https://www.linkedin.com/in/ekagra-shandilya-3944a0256) • [GitHub](https://github.com/EkagraS)
