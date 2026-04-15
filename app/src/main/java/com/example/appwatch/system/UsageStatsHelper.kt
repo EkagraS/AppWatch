@@ -82,7 +82,7 @@ class UsageStatsHelper @Inject constructor(
             val end = dayCalendar.timeInMillis
 
             val stats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_BEST,
+                UsageStatsManager.INTERVAL_WEEKLY,
                 start,
                 end
             )
