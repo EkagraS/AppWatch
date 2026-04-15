@@ -6,6 +6,7 @@ import androidx.work.*
 import com.example.appwatch.worker.AppDiscoveryWorker
 import com.example.appwatch.worker.UsageSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -21,8 +22,10 @@ class AppWatchApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        scheduleAppDiscovery()
-        scheduleUsageSnapshot()
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+            scheduleAppDiscovery()
+            scheduleUsageSnapshot()
+        }
     }
 
     private fun scheduleAppDiscovery() {

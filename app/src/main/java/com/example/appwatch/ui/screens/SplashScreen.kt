@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(onNavigateNext: (String) -> Unit) {
@@ -36,36 +37,29 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
     val scale = remember { Animatable(0f) }
     val alpha = remember { Animatable(0f) }
 
-    // Splash logic: 2.5 seconds total wait time
     LaunchedEffect(key1 = true) {
-        // 1. Run branding animations (~1 second)
-        scale.animateTo(
-            targetValue = 1.1f, // Slight overshoot for a "pop" effect
-            animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
-        )
-        scale.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 200)
-        )
-        alpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 800)
-        )
+        // 1. Run animations in PARALLEL using launch
+        launch {
+            scale.animateTo(
+                targetValue = 1.1f,
+                animationSpec = tween(800, easing = FastOutSlowInEasing)
+            )
+            scale.animateTo(targetValue = 1f, animationSpec = tween(200))
+        }
 
-        // 2. Remaining delay to reach exactly 2.5 seconds
-        delay(1500L)
+        launch {
+            alpha.animateTo(1f, animationSpec = tween(800))
+        }
 
-        // 3. Simple First Launch Check using SharedPreferences
+        // 2. TOTAL wait time (Parallel to animations)
+        // Reduce this. 2.5s total is better for UX.
+        delay(2000L)
+
+        // 3. Navigation Logic
         val sharedPref = context.getSharedPreferences("app_watch_prefs", Context.MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("is_first_run", true)
 
-        if (isFirstRun) {
-            // Navigate to Onboarding
-            onNavigateNext("onboarding")
-        } else {
-            // Navigate straight to Dashboard
-            onNavigateNext("dashboard")
-        }
+        onNavigateNext(if (isFirstRun) "onboarding" else "dashboard")
     }
 
     Box(

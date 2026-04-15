@@ -1,5 +1,12 @@
 package com.example.appwatch.presentation.viewmodel
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Environment
+import android.os.StatFs
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appwatch.data.local.dao.AppInfoDao
@@ -7,10 +14,19 @@ import com.example.appwatch.system.AppStorageInfo
 import com.example.appwatch.system.DeviceStorageInfo
 import com.example.appwatch.system.StorageStatsHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class MediaStorageInfo(
+    val photosBytes: Long = 0L,
+    val videosBytes: Long = 0L,
+    val musicBytes: Long = 0L,
+    val downloadsBytes: Long = 0L,
+    val hasPermission: Boolean = false
+)
 
 data class StorageUiState(
     val deviceStorage: DeviceStorageInfo? = null,
@@ -18,6 +34,7 @@ data class StorageUiState(
     val systemApps: List<AppStorageInfo> = emptyList(),
     val totalUserAppsBytes: Long = 0L,
     val totalSystemAppsBytes: Long = 0L,
+    val mediaStorage: MediaStorageInfo = MediaStorageInfo(),
     val isLoadingFromRoom: Boolean = true,
     val isRefreshing: Boolean = false,
     val lastUpdated: Long = 0L
@@ -26,7 +43,8 @@ data class StorageUiState(
 @HiltViewModel
 class StorageViewModel @Inject constructor(
     private val storageStatsHelper: StorageStatsHelper,
-    private val appInfoDao: AppInfoDao
+    private val appInfoDao: AppInfoDao,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StorageUiState())
@@ -35,6 +53,7 @@ class StorageViewModel @Inject constructor(
     init {
         loadFromRoom()
         refreshInBackground()
+        checkMediaPermission()
     }
 
     private fun loadFromRoom() {
@@ -85,17 +104,9 @@ class StorageViewModel @Inject constructor(
     fun refreshInBackground() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isRefreshing = true) }
-
-            // Get device storage
             val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
-
-            // Get all apps from Room
             val allEntities = appInfoDao.getAllAppsAlphabetical().first()
-
-            // Fetch fresh storage for each app
             val freshStorageList = storageStatsHelper.getAllAppsStorageInfo(allEntities)
-
-            // Update Room with fresh data
             val now = System.currentTimeMillis()
             freshStorageList.forEach { storageInfo ->
                 appInfoDao.updateAppStorage(
@@ -107,7 +118,6 @@ class StorageViewModel @Inject constructor(
                     updatedAt = now
                 )
             }
-
             _uiState.update { current ->
                 current.copy(
                     deviceStorage = deviceStorage,
@@ -116,5 +126,63 @@ class StorageViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun checkMediaPermission() {
+        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasPermission) {
+            loadMediaStorage()
+        } else {
+            _uiState.update { it.copy(mediaStorage = MediaStorageInfo(hasPermission = false)) }
+        }
+    }
+
+    fun loadMediaStorage() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val photos = getFolderSize(Environment.DIRECTORY_PICTURES) +
+                    getFolderSize(Environment.DIRECTORY_DCIM)
+            val videos = getFolderSize(Environment.DIRECTORY_MOVIES)
+            val music = getFolderSize(Environment.DIRECTORY_MUSIC)
+            val downloads = getFolderSize(Environment.DIRECTORY_DOWNLOADS)
+
+            _uiState.update {
+                it.copy(
+                    mediaStorage = MediaStorageInfo(
+                        photosBytes = photos,
+                        videosBytes = videos,
+                        musicBytes = music,
+                        downloadsBytes = downloads,
+                        hasPermission = true
+                    )
+                )
+            }
+        }
+    }
+
+    private fun getFolderSize(directory: String): Long {
+        return try {
+            val folder = Environment.getExternalStoragePublicDirectory(directory)
+            calculateFolderSize(folder)
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
+    private fun calculateFolderSize(folder: java.io.File): Long {
+        if (!folder.exists()) return 0L
+        var size = 0L
+        folder.walkTopDown().forEach { file ->
+            if (file.isFile) size += file.length()
+        }
+        return size
     }
 }

@@ -24,6 +24,7 @@ class UsageStatsHelper @Inject constructor(
      * Fetches usage data for all apps used today.
      * Maps raw system data into our UsageEntity for the database.
      */
+
     fun getDailyAppUsage(): List<UsageEntity> {
         val calendar = Calendar.getInstance()
         val endTime = calendar.timeInMillis
@@ -66,30 +67,32 @@ class UsageStatsHelper @Inject constructor(
      */
     fun getWeeklyActivityData(): List<Float> {
         val weeklyData = mutableListOf<Float>()
-        val calendar = Calendar.getInstance()
 
-        // Loop through last 7 days
+        // We fetch 7 days of data ending today
         for (i in 6 downTo 0) {
-            val dayCalendar = Calendar.getInstance()
-            dayCalendar.add(Calendar.DAY_OF_YEAR, -i)
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, -i)
 
-            dayCalendar.set(Calendar.HOUR_OF_DAY, 0)
-            dayCalendar.set(Calendar.MINUTE, 0)
-            val start = dayCalendar.timeInMillis
+            // Set to start of that specific day
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            val start = calendar.timeInMillis
 
-            dayCalendar.set(Calendar.HOUR_OF_DAY, 23)
-            dayCalendar.set(Calendar.MINUTE, 59)
-            val end = dayCalendar.timeInMillis
+            // Set to end of that specific day
+            calendar.set(Calendar.HOUR_OF_DAY, 23)
+            calendar.set(Calendar.MINUTE, 59)
+            calendar.set(Calendar.SECOND, 59)
+            val end = calendar.timeInMillis
 
-            val stats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_WEEKLY,
-                start,
-                end
-            )
+            // Use INTERVAL_DAILY for precise 24h blocks
+            val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end)
 
-            val totalMillis = stats?.sumOf { it.totalTimeInForeground } ?: 0L
-            // Convert to hours for the chart (e.g., 3.5f hours)
-            weeklyData.add(totalMillis / (1000f * 60 * 60))
+            val totalMillis = stats?.sumByDouble { it.totalTimeInForeground.toDouble() }?.toLong() ?: 0L
+            // Convert to hours.
+            // Cap it at 24h just in case of system bugs, but 0-10h is our UI scale.
+            val hours = totalMillis / (1000f * 60 * 60)
+            weeklyData.add(hours)
         }
         return weeklyData
     }

@@ -29,4 +29,14 @@ interface UsageDao {
 
     @Query("SELECT SUM(totalTimeInForeground) FROM app_usage WHERE packageName = :packageName")
     fun getMonthlyTotalForApp(packageName: String): Flow<Long?>
+
+    @Query("""
+    SELECT SUM(totalTimeInForeground) as total, usageDate 
+    FROM app_usage 
+    WHERE usageDate >= :startDate 
+    GROUP BY usageDate 
+    ORDER BY usageDate ASC
+""")
+    suspend fun getWeeklyTotals(startDate: Long): List<DayTotal>
+    data class DayTotal(val total: Long, val usageDate: Long)
 }

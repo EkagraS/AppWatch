@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.appwatch.ui.screens.AllAppsStorageScreen
 import com.example.appwatch.ui.screens.AppDetailScreen
 import com.example.appwatch.ui.screens.AppListScreen
 import com.example.appwatch.ui.screens.AppsWithPermissionScreen
@@ -71,6 +72,12 @@ fun AppWatchNavigation(navController: NavHostController) {
         }
         composable("storage_detail") {
             StorageDetailScreen(navController)
+        }
+        composable("storage_detail") {
+            StorageDetailScreen(navController)
+        }
+        composable("all_apps_storage") {
+            AllAppsStorageScreen(navController)
         }
     }
 }

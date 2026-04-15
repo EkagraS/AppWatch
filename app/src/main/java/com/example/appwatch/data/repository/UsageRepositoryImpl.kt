@@ -6,6 +6,7 @@ import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.domain.repository.UsageRepository
 import com.example.appwatch.system.UsageStatsHelper
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
@@ -42,9 +43,37 @@ class UsageRepositoryImpl @Inject constructor(
         emit(usageStatsHelper.formatDuration(totalMillis))
     }
 
-    override fun getWeeklyActivity(): Flow<List<Float>> {
-        return usageDao.getUsageByDate(0).map {
-            usageStatsHelper.getWeeklyActivityData()
+    override fun getWeeklyActivity(): Flow<List<Float>> = flow {
+        while(true) { // Keeps the chart updated if data changes
+            val weeklyData = mutableListOf<Float>()
+
+            // Loop through last 7 days (6 days ago -> Today)
+            for (i in 6 downTo 0) {
+                val calendar = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, -i)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val dayTimestamp = calendar.timeInMillis
+
+                val totalForDay = if (i == 0) {
+                    // TODAY: Get live data from System Stats Manager
+                    usageStatsHelper.getTotalScreenTimeToday()
+                } else {
+                    // PAST: Get from Room DB.
+                    // We use firstOrNull because it's a Flow and we want the current snapshot
+                    usageDao.getTotalScreenTime(dayTimestamp).firstOrNull() ?: 0L
+                }
+
+                // Convert ms to hours (e.g., 2.5f hours)
+                val hours = totalForDay / (1000f * 60 * 60)
+                weeklyData.add(hours)
+            }
+
+            emit(weeklyData)
+            kotlinx.coroutines.delay(60000) // Refresh every minute for the "Today" bar
         }
     }
 

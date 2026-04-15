@@ -30,16 +30,27 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.appwatch.presentation.viewmodel.AppDetailViewModel
+import com.example.appwatch.presentation.viewmodel.StorageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppDetailScreen(
     navController: NavController,
     packageName: String?,
-    viewModel: AppDetailViewModel = hiltViewModel()
+    viewModel: AppDetailViewModel = hiltViewModel(),
+    storageViewModel: StorageViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+
+    val storageUiState by storageViewModel.uiState.collectAsState()  // ← add
+
+    // Get storage for this specific app
+    val appStorage = storageUiState.userApps.find {
+        it.packageName == packageName
+    } ?: storageUiState.systemApps.find {
+        it.packageName == packageName
+    }
 
     LaunchedEffect(packageName) {
         if (packageName != null) {
@@ -90,7 +101,8 @@ fun AppDetailScreen(
                         packageName = app?.packageName ?: packageName ?: "",
                         status = if (app?.isSystemApp == true) "System Application" else "User Application",
                         accentColor = Color(0xFF6366F1),
-                        icon = app?.iconDrawable
+                        icon = app?.iconDrawable,
+                        totalStorageBytes = appStorage?.totalSizeBytes ?: 0L  // ← add
                     )
                 }
 
@@ -227,12 +239,15 @@ fun AppDetailHeader(
     packageName: String,
     status: String,
     accentColor: Color,
-    icon: android.graphics.drawable.Drawable?
+    icon: android.graphics.drawable.Drawable?,
+    totalStorageBytes: Long = 0L  // ← add this
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -252,13 +267,26 @@ fun AppDetailHeader(
                         modifier = Modifier.size(40.dp)
                     )
                 } else {
-                    Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(32.dp), tint = accentColor)
+                    Icon(
+                        Icons.Default.Apps,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = accentColor
+                    )
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(appName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-                Text(packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    appName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
                     color = accentColor.copy(alpha = 0.1f),
@@ -270,6 +298,22 @@ fun AppDetailHeader(
                         style = MaterialTheme.typography.labelSmall,
                         color = accentColor,
                         fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            // Total size on the right — only show if available
+            if (totalStorageBytes > 0L) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        formatStorageSize(totalStorageBytes),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accentColor
+                    )
+                    Text(
+                        "Storage",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
