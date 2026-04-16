@@ -6,9 +6,11 @@ import com.example.appwatch.system.AppOpsHelper
 import com.example.appwatch.system.PackageManagerHelper
 import com.example.appwatch.system.StorageStatsHelper
 import com.example.appwatch.system.UsageStatsHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class GetDashboardSummaryUseCase @Inject constructor(
@@ -41,9 +43,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 val lastUsed = usageStatsHelper.getAppUsageLastTimestamp(app.packageName)
 
                 // IGNORE apps with 0 timestamp to prevent the 20558 days bug
-                if (lastUsed == 0L) continue
-
-                val daysUnused = (System.currentTimeMillis() - lastUsed) / (1000 * 60 * 60 * 24)
+                val daysUnused = if (lastUsed == 0L) 999L else (System.currentTimeMillis() - lastUsed) / (1000 * 60 * 60 * 24)
 
                 // --- NEW FORMATTING LOGIC START ---
                 val daysText = when {
@@ -148,9 +148,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 SmsAppsCount = packageManagerHelper.getAppsWithPermission("READ_SMS"),
                 usedStorage = storageStatsHelper.formatSize(deviceStorage.freeBytes),
                 totalStorage = storageStatsHelper.formatSize(deviceStorage.totalBytes),
-                attentionItems = attentionItems.sortedBy {
-                    when(it.severity) { "High" -> 0; "Medium" -> 1; else -> 2 }
-                }.take(3),
+                attentionItems = finalAttentionList,
                 recentActivity = listOf(
                     ActivityItem(
                         "New Installations",
@@ -169,6 +167,6 @@ class GetDashboardSummaryUseCase @Inject constructor(
                     )
                 )
             )
-        }
+        }.flowOn(Dispatchers.IO)
     }
 }

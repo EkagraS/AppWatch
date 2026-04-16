@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.content.MediaType.Companion.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -153,7 +154,7 @@ fun DashboardScreen(
                             value = summary?.totalApps?.toString() ?: "0",
                             icon = Icons.Default.Apps,
                             color = Color(0xFF6366F1),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("app_list")})
                         )
                         StatCard(
                             label = "Storage",
@@ -161,14 +162,14 @@ fun DashboardScreen(
                             subValue = summary?.totalStorage ?: "--",
                             icon = Icons.Default.SdStorage,
                             color = Color(0xFF10B981),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("storage_detail")})
                         )
                         StatCard(
                             label = "Screen time",
                             value = summary?.totalScreenTime ?: "0m",
                             icon = Icons.Default.TrendingUp,
                             color = Color(0xFFF59E0B),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("usage_stats")})
                         )
                     }
                 }

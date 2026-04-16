@@ -5,6 +5,8 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,18 +31,18 @@ class AppOpsHelper @Inject constructor(
      */
     private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
 
-    fun getLastPermissionAccess(packageName: String, permission: String): Long {
+    suspend fun getLastPermissionAccess(packageName: String, permission: String): Long = withContext(Dispatchers.IO){
         // AppOps tracking for last access requires Android 11 (API 30)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return 0L
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return@withContext 0L
 
         val op = when (permission) {
             "CAMERA" -> AppOpsManager.OPSTR_CAMERA
             "RECORD_AUDIO" -> AppOpsManager.OPSTR_RECORD_AUDIO
             "FINE_LOCATION" -> AppOpsManager.OPSTR_FINE_LOCATION
-            else -> return 0L
+            else -> return@withContext 0L
         }
 
-        return try {
+        try {
             var lastAccess = 0L
 
             // 1. Get the hidden method 'getPackagesForOps'

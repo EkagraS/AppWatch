@@ -73,9 +73,6 @@ fun AppWatchNavigation(navController: NavHostController) {
         composable("storage_detail") {
             StorageDetailScreen(navController)
         }
-        composable("storage_detail") {
-            StorageDetailScreen(navController)
-        }
         composable("all_apps_storage") {
             AllAppsStorageScreen(navController)
         }

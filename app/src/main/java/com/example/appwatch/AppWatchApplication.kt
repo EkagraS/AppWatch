@@ -22,7 +22,7 @@ class AppWatchApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).launch {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
             scheduleAppDiscovery()
             scheduleUsageSnapshot()
         }
