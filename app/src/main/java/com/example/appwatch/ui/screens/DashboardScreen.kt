@@ -3,7 +3,9 @@ package com.example.appwatch.ui.screens
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.content.MediaType.Companion.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,10 +31,12 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.GppMaybe
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PriorityHigh
@@ -43,6 +47,7 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -55,6 +60,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,6 +80,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
+import androidx.compose.runtime.remember
+import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,31 +249,66 @@ fun DashboardScreen(
             }
 
             // 3. Needs Attention Section - UPDATED WITH DYNAMIC DATA
+// ... inside LazyColumn
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Needs Attention",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF111827)
                     )
-                    IconButton(onClick = { navController.navigate("permission_audit") }) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "See All Issues")
+                    TextButton(onClick = { navController.navigate("permission_audit") }) {
+                        Text("Audit All", color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(16.dp))
                     }
                 }
             }
-            items(summary?.attentionItems ?: emptyList()) { item ->
-                AppAttentionItem(
-                    appName = item.appName,
-                    reason = item.reason,
-                    severity = item.severity,
-                    onActionClick = {
-                        navController.navigate("app_detail/${item.packageName}")
+
+            val attentionItems = summary?.attentionItems ?: emptyList()
+
+            if (attentionItems.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.Shield, null, tint = Color(0xFF10B981), modifier = Modifier.size(32.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "System Secure",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1F2937)
+                            )
+                            Text(
+                                "No immediate privacy risks detected.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
-                )
+                }
+            } else {
+                items(attentionItems) { item ->
+                    AppAttentionItem(
+                        appName = item.appName,
+                        reason = item.reason,
+                        severity = item.severity,
+                        packageName = item.packageName,
+                        onActionClick = {
+                            navController.navigate("app_detail/${item.packageName}")
+                        }
+                    )
+                }
             }
 
             // 4. Recent Activity - UPDATED WITH DYNAMIC DATA
@@ -447,73 +493,70 @@ fun InsightCard(
 
 @Composable
 fun AppAttentionItem(
+    packageName: String,
     appName: String,
     reason: String,
     severity: String,
     onActionClick: () -> Unit
 ) {
-    val severityColor = when (severity) {
-        "High" -> Color(0xFFEF4444)
-        "Medium" -> Color(0xFFF59E0B)
-        else -> Color(0xFF10B981)
+    val statusColor = when (severity) {
+        "High" -> Color(0xFFEF4444)   // Red for Background Actors
+        "Medium" -> Color(0xFFF59E0B) // Amber for Ghost Risks
+        else -> Color(0xFF6366F1)     // Indigo for Data Hogs/New Apps
+    }
+    val context = LocalContext.current
+    val appIcon = remember(packageName) {
+        try {
+            context.packageManager.getApplicationIcon(packageName)
+        } catch (e: Exception) { null }
     }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
+    Surface(
         onClick = onActionClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = 1.dp
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Icon Background
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(severityColor.copy(alpha = 0.15f), CircleShape),
+                modifier = Modifier.size(44.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.PriorityHigh,
-                    "Alert",
-                    tint = severityColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(appName, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(severityColor.copy(alpha = 0.2f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            severity,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = severityColor,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                if (appIcon != null) {
+                    Image(
+                        bitmap = appIcon.toBitmap().asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    // Fallback to your colored box if icon fails
+                    Box(modifier = Modifier.fillMaxSize().background(statusColor.copy(0.1f), CircleShape))
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    reason,
+                    text = appName,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF1F2937)
+                )
+                Text(
+                    text = reason,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = statusColor,
+                    fontWeight = FontWeight.Medium
                 )
             }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

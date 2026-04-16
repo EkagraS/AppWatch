@@ -27,6 +27,51 @@ class AppOpsHelper @Inject constructor(
      * Since getPackagesForOps is a hidden API, we use UsageStatsManager
      * to provide the "Last used" data for the "30 days" logic.
      */
+    private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+
+    fun getLastPermissionAccess(packageName: String, permission: String): Long {
+        // AppOps tracking for last access requires Android 11 (API 30)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return 0L
+
+        val op = when (permission) {
+            "CAMERA" -> AppOpsManager.OPSTR_CAMERA
+            "RECORD_AUDIO" -> AppOpsManager.OPSTR_RECORD_AUDIO
+            "FINE_LOCATION" -> AppOpsManager.OPSTR_FINE_LOCATION
+            else -> return 0L
+        }
+
+        return try {
+            var lastAccess = 0L
+
+            // 1. Get the hidden method 'getPackagesForOps'
+            val getPackagesForOpsMethod = appOps.javaClass.getMethod("getPackagesForOps", Array<String>::class.java)
+            val packageOps = getPackagesForOpsMethod.invoke(appOps, arrayOf(op)) as? List<*>
+
+            packageOps?.forEach { packageOp ->
+                // 2. Get the package name from the hidden PackageOp class
+                val pkgName = packageOp?.javaClass?.getMethod("getPackageName")?.invoke(packageOp) as? String
+
+                if (pkgName == packageName) {
+                    // 3. Get the list of ops (OpEntry objects)
+                    val opsList = packageOp.javaClass.getMethod("getOps").invoke(packageOp) as? List<*>
+                    opsList?.forEach { opEntry ->
+                        // 4. Check if it's the right operation
+                        val opStr = opEntry?.javaClass?.getMethod("getOpStr")?.invoke(opEntry) as? String
+                        if (opStr == op) {
+                            // 5. Call getLastTimeAccess. '31' is the value for OP_FLAGS_ALL
+                            val getLastTimeAccessMethod = opEntry?.javaClass?.getMethod("getLastTimeAccess", Int::class.java)
+                            val time = getLastTimeAccessMethod?.invoke(opEntry, 31) as? Long ?: 0L
+                            lastAccess = lastAccess.coerceAtLeast(time)
+                        }
+                    }
+                }
+            }
+            lastAccess
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0L
+        }
+    }
 
     fun getLastAppUsageTime(packageName: String): Long {
         val endTime = System.currentTimeMillis()

@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.system.AppStorageInfo
 import com.example.appwatch.system.DeviceStorageInfo
+import com.example.appwatch.system.PackageManagerHelper
 import com.example.appwatch.system.StorageStatsHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,6 +45,7 @@ data class StorageUiState(
 class StorageViewModel @Inject constructor(
     private val storageStatsHelper: StorageStatsHelper,
     private val appInfoDao: AppInfoDao,
+    private val packageManagerHelper: PackageManagerHelper,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -104,20 +106,37 @@ class StorageViewModel @Inject constructor(
     fun refreshInBackground() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isRefreshing = true) }
+
+            // Get device storage
             val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
-            val allEntities = appInfoDao.getAllAppsAlphabetical().first()
-            val freshStorageList = storageStatsHelper.getAllAppsStorageInfo(allEntities)
-            val now = System.currentTimeMillis()
-            freshStorageList.forEach { storageInfo ->
-                appInfoDao.updateAppStorage(
-                    packageName = storageInfo.packageName,
-                    appSize = storageInfo.appSizeBytes,
-                    dataSize = storageInfo.dataSizeBytes,
-                    cacheSize = storageInfo.cacheSizeBytes,
-                    totalSize = storageInfo.totalSizeBytes,
-                    updatedAt = now
-                )
+
+            // Check if Room has apps, if not fetch from PackageManager first
+            val roomApps = appInfoDao.getAllAppsAlphabetical().first()
+            val allEntities = if (roomApps.isEmpty()) {
+                // Room is empty — fetch live from PackageManager
+                val liveApps = packageManagerHelper.getInstalledAppsMetadata()
+                appInfoDao.insertAllMetadata(liveApps) // Save to Room
+                liveApps
+            } else {
+                roomApps
             }
+
+            // Fetch fresh storage for each app
+            val now = System.currentTimeMillis()
+            allEntities.forEach { entity ->
+                val storageInfo = storageStatsHelper.getAppStorageInfo(entity.packageName)
+                if (storageInfo != null) {
+                    appInfoDao.updateAppStorage(
+                        packageName = entity.packageName,
+                        appSize = storageInfo.appSizeBytes,
+                        dataSize = storageInfo.dataSizeBytes,
+                        cacheSize = storageInfo.cacheSizeBytes,
+                        totalSize = storageInfo.totalSizeBytes,
+                        updatedAt = now
+                    )
+                }
+            }
+
             _uiState.update { current ->
                 current.copy(
                     deviceStorage = deviceStorage,
@@ -127,7 +146,6 @@ class StorageViewModel @Inject constructor(
             }
         }
     }
-
     fun checkMediaPermission() {
         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -185,4 +203,6 @@ class StorageViewModel @Inject constructor(
         }
         return size
     }
+
+
 }

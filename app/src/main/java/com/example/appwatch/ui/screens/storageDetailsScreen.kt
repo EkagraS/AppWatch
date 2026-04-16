@@ -43,7 +43,8 @@ fun StorageDetailScreen(
     ) { permissions ->
         val granted = permissions.values.any { it }
         if (granted) {
-            viewModel.loadMediaStorage()
+            viewModel.loadMediaStorage()  // ← load immediately
+            viewModel.checkMediaPermission() // ← also update permission state
         }
     }
 
