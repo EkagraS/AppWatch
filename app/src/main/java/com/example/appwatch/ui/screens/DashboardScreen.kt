@@ -120,7 +120,7 @@ fun DashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-//                        navController.navigate("settings")
+                        navController.navigate("settings")
                     }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }

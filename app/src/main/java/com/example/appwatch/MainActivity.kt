@@ -17,6 +17,7 @@ import com.example.appwatch.ui.screens.DashboardScreen
 import com.example.appwatch.ui.screens.OnboardingScreen
 import com.example.appwatch.ui.screens.PermissionAuditScreen
 import com.example.appwatch.ui.screens.PermissionScreen
+import com.example.appwatch.ui.screens.SettingsScreen
 import com.example.appwatch.ui.screens.SplashScreen
 import com.example.appwatch.ui.screens.StorageDetailScreen
 import com.example.appwatch.ui.screens.UsageStatsScreen
@@ -75,6 +76,9 @@ fun AppWatchNavigation(navController: NavHostController) {
         }
         composable("all_apps_storage") {
             AllAppsStorageScreen(navController)
+        }
+        composable("settings") {
+            SettingsScreen(navController)
         }
     }
 }
