@@ -175,82 +175,6 @@ fun DashboardScreen(
                 }
             }
 
-            // 2. Privacy Insights - UPDATED WITH DATA
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = "Privacy Insights",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        InsightCard(
-                            title = "Background Location",
-                            count = "${summary?.locationAppsCount ?: 0} apps",
-                            icon = Icons.Default.LocationOn,
-                            color = Color(0xFFEF4444),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/LOCATION") }
-                        )
-                        InsightCard(
-                            title = "Camera Access",
-                            count = "${summary?.cameraAppsCount ?: 0} apps",
-                            icon = Icons.Default.Camera,
-                            color = Color(0xFF8B5CF6),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/CAMERA") }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        InsightCard(
-                            title = "Microphone",
-                            count = "${summary?.micAppsCount ?: 0} apps",
-                            icon = Icons.Default.Mic,
-                            color = Color(0xFF06B6D4),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/RECORD_AUDIO") }
-                        )
-                        InsightCard(
-                            title = "Phone & Calls",
-                            count = "${summary?.contactAppsCount ?: 0} apps",
-                            icon = Icons.Default.Storage,
-                            color = Color(0xFFF97316),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/CALL_LOG") }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        InsightCard(
-                            title = "Contacts",
-                            count = "${summary?.phoneAppsCount ?: 0} apps",
-                            icon = Icons.Default.Mic,
-                            color = Color(0xFF10B981),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/CONTACTS") }
-                        )
-                        InsightCard(
-                            title = "SMS",
-                            count = "${summary?.SmsAppsCount ?: 0} apps",
-                            icon = Icons.Default.Storage,
-                            color = Color(0xFF84CC16),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate("apps_with_permission/SMS") }
-                        )
-                    }
-                }
-            }
-
-            // 3. Needs Attention Section - UPDATED WITH DYNAMIC DATA
-// ... inside LazyColumn
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -333,45 +257,76 @@ fun DashboardScreen(
                     onClick = { navController.navigate("app_list") }
                 )
             }
-
-            // 5. Quick Navigation Grid - REMAINS READY
             item {
-                Text(
-                    text = "Tools & Features",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NavigationRow(
-                        title = "Permission Audit",
-                        subtitle = "Cross-app privacy analysis",
-                        icon = Icons.Default.Security,
-                        iconColor = Color(0xFF6366F1),
-                        onClick = { navController.navigate("permission_audit") }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Privacy Insights",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
-                    NavigationRow(
-                        title = "Usage Statistics",
-                        subtitle = "Screen time and app behavior",
-                        icon = Icons.Default.DataUsage,
-                        iconColor = Color(0xFF10B981),
-                        onClick = { navController.navigate("usage_stats") }
-                    )
-                    NavigationRow(
-                        title = "App List",
-                        subtitle = "Manage all installed packages",
-                        icon = Icons.Default.Apps,
-                        iconColor = Color(0xFF8B5CF6),
-                        onClick = { navController.navigate("app_list") }
-                    )
-                    NavigationRow(
-                        title = "Storage",
-                        subtitle = "Manage your storage",
-                        icon = Icons.Default.Storage,
-                        iconColor = Color(0xFF8B5CF6),
-                        onClick = { navController.navigate("storage_detail") }
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        InsightCard(
+                            title = "Background Location",
+                            count = "${summary?.locationAppsCount ?: 0} apps",
+                            icon = Icons.Default.LocationOn,
+                            color = Color(0xFFEF4444),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/LOCATION") }
+                        )
+                        InsightCard(
+                            title = "Camera Access",
+                            count = "${summary?.cameraAppsCount ?: 0} apps",
+                            icon = Icons.Default.Camera,
+                            color = Color(0xFF8B5CF6),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/CAMERA") }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        InsightCard(
+                            title = "Microphone",
+                            count = "${summary?.micAppsCount ?: 0} apps",
+                            icon = Icons.Default.Mic,
+                            color = Color(0xFF06B6D4),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/RECORD_AUDIO") }
+                        )
+                        InsightCard(
+                            title = "Phone & Calls",
+                            count = "${summary?.contactAppsCount ?: 0} apps",
+                            icon = Icons.Default.Storage,
+                            color = Color(0xFFF97316),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/CALL_LOG") }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        InsightCard(
+                            title = "Contacts",
+                            count = "${summary?.phoneAppsCount ?: 0} apps",
+                            icon = Icons.Default.Mic,
+                            color = Color(0xFF10B981),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/CONTACTS") }
+                        )
+                        InsightCard(
+                            title = "SMS",
+                            count = "${summary?.SmsAppsCount ?: 0} apps",
+                            icon = Icons.Default.Storage,
+                            color = Color(0xFF84CC16),
+                            modifier = Modifier.weight(1f),
+                            onClick = { navController.navigate("apps_with_permission/SMS") }
+                        )
+                    }
                 }
             }
         }
@@ -606,61 +561,4 @@ fun ActivityCard(
             )
         }
     }
-}
-
-@Composable
-fun NavigationRow(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    iconColor: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(iconColor.copy(alpha = 0.15f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = iconColor
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-fun permissions(){
 }
