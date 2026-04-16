@@ -136,6 +136,35 @@ class GetDashboardSummaryUseCase @Inject constructor(
                     )
                 }
 
+            val newInstallsCount = userApps.count { System.currentTimeMillis() - it.installedAt < 7L * 24 * 60 * 60 * 1000 }
+
+            // 2. Storage Heavyweight (Find max size and calculate % of total used device storage)
+// Inside GetDashboardSummaryUseCase.kt combine block
+
+// 1. Find the REAL Storage Heavyweight
+            val largestApp = userApps
+                .filter { it.totalSizeBytes > 0 } // Ignore apps that failed to report size
+                .maxByOrNull { it.totalSizeBytes }
+
+// 2. Calculate Percentage
+            val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
+            val usedSpace = deviceStorage.totalBytes - deviceStorage.freeBytes // Corrected used space logic
+
+            val heavyweightDesc = if (largestApp != null && usedSpace > 0) {
+                val percentage = (largestApp.totalSizeBytes.toFloat() / usedSpace.toFloat()) * 100
+                "${largestApp.appName} takes up ${"%.1f".format(percentage)}% of your used space"
+            } else {
+                "No large apps detected"
+            }
+
+// 3. Sum up the Cache
+            val totalCache = userApps.sumOf { it.cacheSizeBytes }
+            val cacheDesc = if (totalCache > 0L) {
+                "You can free up ${storageStatsHelper.formatSize(totalCache)} by clearing caches"
+            } else {
+                "Cache is currently optimized"
+            }
+
             DashboardSummary(
                 totalApps = userApps.size,
                 highRiskApps = highRiskApps.size,
@@ -156,14 +185,14 @@ class GetDashboardSummaryUseCase @Inject constructor(
                         "INSTALL"
                     ),
                     ActivityItem(
-                        "Active Apps",
-                        "${userApps.size} user apps found",
-                        "ACTIVE"
+                        "Storage Heavyweight",
+                        heavyweightDesc,
+                        "STORAGE_HEAVY"
                     ),
                     ActivityItem(
-                        "High Risk",
-                        "${highRiskApps.size} apps need attention",
-                        "INACTIVE"
+                        "Cache Accumulation",
+                        cacheDesc,
+                        "CACHE"
                     )
                 )
             )

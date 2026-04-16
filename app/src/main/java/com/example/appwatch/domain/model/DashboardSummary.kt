@@ -31,5 +31,5 @@ data class AttentionItem(
 data class ActivityItem(
     val title: String,
     val description: String,
-    val iconType: String // e.g., "INSTALL", "ACTIVE", "INACTIVE"
+    val iconType: String
 )

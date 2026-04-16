@@ -15,9 +15,11 @@ import javax.inject.Singleton
 
 @Singleton
 class PackageManagerHelper @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val storageStatsManager: android.app.usage.StorageStatsManager
 ) {
-    private val packageManager: PackageManager = context.packageManager
+    private val packageManager = context.packageManager
+    private val userHandle = android.os.Process.myUserHandle()
 
     /**
      * Fetches metadata for all installed apps.
@@ -31,6 +33,22 @@ class PackageManagerHelper @Inject constructor(
 
             // Skip auditing ourselves
             if (packageInfo.packageName == context.packageName) return@mapNotNull null
+            var totalSize = 0L
+            var cacheSize = 0L
+
+            try {
+                // This is the call that gets the real numbers
+                val stats = storageStatsManager.queryStatsForPackage(
+                    appInfo.storageUuid,
+                    packageInfo.packageName,
+                    userHandle
+                )
+                // App Size + Data Size + Cache Size
+                totalSize = stats.appBytes + stats.dataBytes + stats.cacheBytes
+                cacheSize = stats.cacheBytes
+            } catch (e: Exception) {
+                // Fallback to 0 if permission is missing
+            }
 
             val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
 
@@ -47,7 +65,9 @@ class PackageManagerHelper @Inject constructor(
                 totalPermissions = packageInfo.requestedPermissions?.size ?: 0,
                 sensitivePermissionsCount = sensitiveCount,
                 isSystemApp = isSystem,
-                installedAt = packageInfo.firstInstallTime
+                installedAt = packageInfo.firstInstallTime,
+                totalSizeBytes = totalSize,
+                cacheSizeBytes = cacheSize
             )
         }
     }
