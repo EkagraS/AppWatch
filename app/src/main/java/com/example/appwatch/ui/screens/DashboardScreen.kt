@@ -3,6 +3,7 @@ package com.example.appwatch.ui.screens
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +65,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +87,9 @@ import androidx.compose.runtime.remember
 import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appwatch.presentation.viewmodel.DashboardUiState
+import com.example.appwatch.ui.DashboardShimmer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,9 +98,10 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val summary by viewModel.dashboardSummary.collectAsStateWithLifecycle()
+    // collectAsStateWithLifecycle use karna best practice hai
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Usage Stats Permission Check
+    // Usage Stats Permission Check (Keep this as is)
     LaunchedEffect(Unit) {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         val mode = appOps.checkOpNoThrow(
@@ -108,6 +114,32 @@ fun DashboardScreen(
         }
     }
 
+    // --- State Switching Logic ---
+    Crossfade(targetState = uiState, label = "DashboardStateTransition") { state ->
+        when (state) {
+            is DashboardUiState.Loading -> {
+                DashboardShimmer() // Jo humne ShimmerComponents.kt mein banaya tha
+            }
+            is DashboardUiState.Success -> {
+                // Pass the data to your content function
+                DashboardContent(
+                    navController = navController,
+                    summary = state.data
+                )
+            }
+            is DashboardUiState.Error -> {
+                // Simple Error UI (You can make this prettier)
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = state.message, color = Color.Red)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardContent(navController: NavController, summary: com.example.appwatch.domain.model.DashboardSummary){
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -149,27 +181,30 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        StatCard(
+                        com.example.appwatch.ui.screens.StatCard(
                             label = "Installed Apps",
                             value = summary?.totalApps?.toString() ?: "0",
                             icon = Icons.Default.Apps,
                             color = Color(0xFF6366F1),
-                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("app_list")})
+                            modifier = Modifier.weight(1f)
+                                .clickable(onClick = { navController.navigate("app_list") })
                         )
-                        StatCard(
+                        com.example.appwatch.ui.screens.StatCard(
                             label = "Storage",
                             value = summary?.usedStorage ?: "--",
                             subValue = summary?.totalStorage ?: "--",
                             icon = Icons.Default.SdStorage,
                             color = Color(0xFF10B981),
-                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("storage_detail")})
+                            modifier = Modifier.weight(1f)
+                                .clickable(onClick = { navController.navigate("storage_detail") })
                         )
-                        StatCard(
+                        com.example.appwatch.ui.screens.StatCard(
                             label = "Screen time",
                             value = summary?.totalScreenTime ?: "0m",
                             icon = Icons.Default.TrendingUp,
                             color = Color(0xFFF59E0B),
-                            modifier = Modifier.weight(1f).clickable(onClick = {navController.navigate("usage_stats")})
+                            modifier = Modifier.weight(1f)
+                                .clickable(onClick = { navController.navigate("usage_stats") })
                         )
                     }
                 }
@@ -224,7 +259,7 @@ fun DashboardScreen(
                 }
             } else {
                 items(attentionItems) { item ->
-                    AppAttentionItem(
+                    com.example.appwatch.ui.screens.AppAttentionItem(
                         appName = item.appName,
                         reason = item.reason,
                         severity = item.severity,
@@ -245,10 +280,10 @@ fun DashboardScreen(
                 )
             }
             items(summary?.recentActivity ?: emptyList()) { activity ->
-                ActivityCard(
+                com.example.appwatch.ui.screens.ActivityCard(
                     title = activity.title,
                     description = activity.description,
-                    icon = when(activity.iconType) {
+                    icon = when (activity.iconType) {
                         "INSTALL" -> Icons.Default.TrendingUp
                         "ACTIVE" -> Icons.Default.History
                         "INACTIVE" -> Icons.Default.Block
@@ -268,7 +303,7 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "Background Location",
                             count = "${summary?.locationAppsCount ?: 0} apps",
                             icon = Icons.Default.LocationOn,
@@ -276,7 +311,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { navController.navigate("apps_with_permission/LOCATION") }
                         )
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "Camera Access",
                             count = "${summary?.cameraAppsCount ?: 0} apps",
                             icon = Icons.Default.Camera,
@@ -289,7 +324,7 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "Microphone",
                             count = "${summary?.micAppsCount ?: 0} apps",
                             icon = Icons.Default.Mic,
@@ -297,7 +332,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { navController.navigate("apps_with_permission/RECORD_AUDIO") }
                         )
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "Phone & Calls",
                             count = "${summary?.contactAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
@@ -310,7 +345,7 @@ fun DashboardScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "Contacts",
                             count = "${summary?.phoneAppsCount ?: 0} apps",
                             icon = Icons.Default.Mic,
@@ -318,7 +353,7 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f),
                             onClick = { navController.navigate("apps_with_permission/CONTACTS") }
                         )
-                        InsightCard(
+                        com.example.appwatch.ui.screens.InsightCard(
                             title = "SMS",
                             count = "${summary?.SmsAppsCount ?: 0} apps",
                             icon = Icons.Default.Storage,
@@ -334,14 +369,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun StatCard(
-    label: String,
-    value: String,
-    subValue: String = "",
-    icon: ImageVector,
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
+fun StatCard(label: String, value: String, subValue: String = "", icon: ImageVector, color: Color, modifier: Modifier = Modifier, ) {
     ElevatedCard(
         modifier = modifier.fillMaxHeight(), // Fill height to match the Row's tallest item
         colors = CardDefaults.elevatedCardColors(
@@ -410,14 +438,7 @@ fun StatCard(
 }
 
 @Composable
-fun InsightCard(
-    title: String,
-    count: String,
-    icon: ImageVector,
-    color: Color,
-    modifier: Modifier,
-    onClick: () -> Unit
-) {
+fun InsightCard(title: String, count: String, icon: ImageVector, color: Color, modifier: Modifier, onClick: () -> Unit) {
     Card(
         modifier = modifier,
         onClick = onClick,
@@ -448,13 +469,7 @@ fun InsightCard(
 }
 
 @Composable
-fun AppAttentionItem(
-    packageName: String,
-    appName: String,
-    reason: String,
-    severity: String,
-    onActionClick: () -> Unit
-) {
+fun AppAttentionItem(packageName: String, appName: String, reason: String, severity: String, onActionClick: () -> Unit) {
     val statusColor = when (severity) {
         "High" -> Color(0xFFEF4444)   // Red for Background Actors
         "Medium" -> Color(0xFFF59E0B) // Amber for Ghost Risks
@@ -518,12 +533,7 @@ fun AppAttentionItem(
 }
 
 @Composable
-fun ActivityCard(
-    title: String,
-    description: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
+fun ActivityCard(title: String, description: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
