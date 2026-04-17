@@ -155,30 +155,7 @@ fun AppDetailScreen(
                     }
                 }
 
-                // 3. Behavioral Insights
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        BehaviorStatCard(
-                            title = "Launches Today",
-                            value = "${uiState.launchesToday} times",
-                            icon = Icons.Default.TrendingUp,
-                            color = Color(0xFF06B6D4),
-                            modifier = Modifier.weight(1f)
-                        )
-                        BehaviorStatCard(
-                            title = "Last Activity",
-                            value = uiState.lastUsed,
-                            icon = Icons.Default.AccessTime,
-                            color = Color(0xFFF59E0B),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // 4. Permission Audit (The "Evidence" Section)
+                // 3. Permission Audit (The "Evidence" Section)
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
@@ -225,6 +202,35 @@ fun AppDetailScreen(
                                     color = Color(0xFF6366F1)
                                 )
                             }
+                        }
+                    }
+                }
+                // 4. Behavioral Insights
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "Usage Statistics",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            BehaviorStatCard(
+                                title = "Launches Today",
+                                value = "${uiState.launchesToday} times",
+                                icon = Icons.Default.TrendingUp,
+                                color = Color(0xFF06B6D4),
+                                modifier = Modifier.weight(1f)
+                            )
+                            BehaviorStatCard(
+                                title = "Last Activity",
+                                value = uiState.lastUsed,
+                                icon = Icons.Default.AccessTime,
+                                color = Color(0xFFF59E0B),
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }

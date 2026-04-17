@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.appwatch.ui.screens.AllAppsStorageScreen
+import com.example.appwatch.ui.screens.AllUsageScreen
 import com.example.appwatch.ui.screens.AppDetailScreen
 import com.example.appwatch.ui.screens.AppListScreen
 import com.example.appwatch.ui.screens.AppsWithPermissionScreen
@@ -79,6 +80,10 @@ fun AppWatchNavigation(navController: NavHostController) {
         }
         composable("settings") {
             SettingsScreen(navController)
+        }
+        composable("all_usage/{dayIndex}") { backStackEntry ->
+            val dayIndex = backStackEntry.arguments?.getString("dayIndex")?.toIntOrNull() ?: 6
+            AllUsageScreen(navController, dayIndex)
         }
     }
 }
