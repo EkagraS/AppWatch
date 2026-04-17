@@ -43,7 +43,8 @@ class UsageStatsHelper @Inject constructor(
         // We return 0 so the UseCase can ignore it or use Install Time instead.
         return stats
         ?.filter { it.packageName == packageName }
-            ?.maxOfOrNull { it.lastTimeUsed } ?: 0L    }
+            ?.maxOfOrNull { it.lastTimeUsed } ?: 0L
+    }
 
     fun getDailyAppUsage(): List<UsageEntity> {
         val calendar = Calendar.getInstance()

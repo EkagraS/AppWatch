@@ -42,11 +42,10 @@
             android:exported="false"
             tools:node="merge">
             <meta-data
-                android:name="androidx.work.WorkInstaller"
+                android:name="androidx.work.impl.WorkManagerInitializer"
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"

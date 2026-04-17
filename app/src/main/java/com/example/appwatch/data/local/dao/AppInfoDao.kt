@@ -42,6 +42,27 @@ interface AppInfoDao {
     SET appSizeBytes = :appSize, dataSizeBytes = :dataSize, cacheSizeBytes = :cacheSize, totalSizeBytes = :totalSize, storageLastUpdated = :updatedAt
     WHERE packageName = :packageName""")
 
-    suspend fun updateAppStorage(packageName: String, appSize: Long, dataSize: Long, cacheSize: Long, totalSize: Long, updatedAt: Long
-    )
+    suspend fun updateAppStorage(packageName: String, appSize: Long, dataSize: Long, cacheSize: Long, totalSize: Long, updatedAt: Long)
+
+    @Query("SELECT COUNT(*) FROM app_info")
+    fun getTotalAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasLocation = 1")
+    fun getLocationAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasCamera = 1")
+    fun getCameraAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasMic = 1")
+    fun getMicAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasContacts = 1")
+    fun getContactAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasSms = 1")
+    fun getSmsAppsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM app_info WHERE hasPhone = 1")
+    fun getPhoneAppsCount(): Flow<Int>
+
 }

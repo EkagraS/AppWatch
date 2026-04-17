@@ -1,146 +1,138 @@
-package com.example.appwatch.ui
+package com.example.appwatch.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// --- SHARED BRUSH HELPER ---
 @Composable
-private fun rememberShimmerBrush(): Brush {
-    val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.3f),
-        Color.LightGray.copy(alpha = 0.1f),
-        Color.LightGray.copy(alpha = 0.3f),
+fun DashboardInitialLoader() {
+    // 1. Pulse Animation Logic for the Shield
+    val infiniteTransition = rememberInfiniteTransition(label = "PulseTransition")
+
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ), label = "IconScale"
     )
-    val transition = rememberInfiniteTransition(label = "Shimmer")
-    val translateAnim = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
+
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.3f,
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "ShimmerAnim"
+            repeatMode = RepeatMode.Reverse
+        ), label = "CircleAlpha"
     )
-    return Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset.Zero,
-        end = Offset(x = translateAnim.value, y = translateAnim.value)
-    )
-}
 
-// --- 1. DASHBOARD SCREEN SHIMMER ---
-@Composable
-fun DashboardShimmer() {
-    val brush = rememberShimmerBrush()
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Overview (3 Boxes)
-        Spacer(modifier = Modifier.height(80.dp))
-        Text(
-            "AppWatch Dashboard",
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(30.dp))
-        CircularProgressIndicator()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // --- CENTRAL SCANNER VISUAL ---
+        Box(contentAlignment = Alignment.Center) {
+            // Pulsing background circle
+            Box(
+                modifier = Modifier
+                    .size(140.dp)
+                    .scale(scale)
+                    .background(Color(0xFF10B981).copy(alpha = alpha), CircleShape)
+            )
+
+            // Static inner circle for depth
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color(0xFF10B981).copy(alpha = 0.05f), CircleShape)
+            )
+
+            // The main Security Icon
+            Icon(
+                imageVector = Icons.Default.Shield,
+                contentDescription = "Scanning",
+                modifier = Modifier.size(64.dp),
+                tint = Color(0xFF10B981)
+            )
+        }
+
         Spacer(modifier = Modifier.height(40.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            repeat(3) { Box(modifier = Modifier.weight(1f).height(110.dp).clip(RoundedCornerShape(16.dp)).background(brush)) }
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-        // Recent Activity (Text + 3 Rectangles)
-        Box(modifier = Modifier.width(140.dp).height(20.dp).background(brush))
-        Spacer(modifier = Modifier.height(16.dp))
-        repeat(3) {
-            Box(modifier = Modifier.fillMaxWidth().height(65.dp).clip(RoundedCornerShape(12.dp)).background(brush))
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-        // Privacy Insights (4 Boxes)
-        repeat(2) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                repeat(2) { Box(modifier = Modifier.weight(1f).height(100.dp).clip(RoundedCornerShape(16.dp)).background(brush)) }
-            }
-        }
-    }
-}
 
-// --- 2. STORAGE SCREEN SHIMMER ---
-@Composable
-fun StorageShimmer() {
-    val brush = rememberShimmerBrush()
-    Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-        // Large Chart Placeholder
-        Box(modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)).background(brush))
-        Spacer(modifier = Modifier.height(32.dp))
-        // List of Storage Categories
-        repeat(5) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(brush))
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Box(modifier = Modifier.width(120.dp).height(16.dp).background(brush))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box(modifier = Modifier.width(200.dp).height(12.dp).background(brush))
-                }
-            }
-        }
-    }
-}
+        // --- STATUS TEXT ---
+        Text(
+            text = "Initializing AppWatch",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onSurface
+        )
 
-// --- 3. APP LIST SHIMMER ---
-@Composable
-fun AppListShimmer() {
-    val brush = rememberShimmerBrush()
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        repeat(10) {
-            item {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(50.dp).clip(RoundedCornerShape(12.dp)).background(brush))
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Box(modifier = Modifier.width(150.dp).height(18.dp).background(brush))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Box(modifier = Modifier.width(100.dp).height(14.dp).background(brush))
-                    }
-                }
-            }
-        }
-    }
-}
+        Spacer(modifier = Modifier.height(8.dp))
 
-// --- 4. SCREEN USAGE SHIMMER ---
-@Composable
-fun UsageShimmer() {
-    val brush = rememberShimmerBrush()
-    Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-        // Big Header (Total Screen Time)
-        Box(modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(20.dp)).background(brush))
-        Spacer(modifier = Modifier.height(32.dp))
-        // Usage Bars List
-        repeat(6) {
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Box(modifier = Modifier.width(80.dp).height(14.dp).background(brush))
-                    Box(modifier = Modifier.width(40.dp).height(14.dp).background(brush))
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(brush))
+        Text(
+            text = "Analyzing system permissions...",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // --- SUBTLE PROGRESS INDICATOR ---
+        CircularProgressIndicator(
+            modifier = Modifier.size(28.dp),
+            strokeWidth = 3.dp,
+            color = Color(0xFF10B981),
+            trackColor = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // --- FOOTER SECURITY TAG ---
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(bottom = 20.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Row(
+                modifier = Modifier
+                    .background(Color(0xFFF3F4F6), RoundedCornerShape(50.dp))
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Shield,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = Color.DarkGray
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "PRIVATE & OFFLINE ANALYSIS",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray,
+                    letterSpacing = 0.5.sp
+                )
             }
         }
     }

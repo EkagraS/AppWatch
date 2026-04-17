@@ -13,6 +13,13 @@ data class AppInfoEntity(
     val installedAt: Long,
     val lastUpdatedAt: Long = System.currentTimeMillis(),
 
+    val hasLocation: Boolean = false,
+    val hasCamera: Boolean = false,
+    val hasMic: Boolean = false,
+    val hasContacts: Boolean = false,
+    val hasPhone: Boolean = false,
+    val hasSms: Boolean = false,
+
     val appSizeBytes: Long = 0L,
     val dataSizeBytes: Long = 0L,
     val cacheSizeBytes: Long = 0L,

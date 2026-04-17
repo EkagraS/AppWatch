@@ -30,6 +30,7 @@ class PackageManagerHelper @Inject constructor(
 
         return packages.mapNotNull { packageInfo ->
             val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
+            val permissions = packageInfo.requestedPermissions ?: emptyArray()
 
             // Skip auditing ourselves
             if (packageInfo.packageName == context.packageName) return@mapNotNull null
@@ -66,6 +67,12 @@ class PackageManagerHelper @Inject constructor(
                 sensitivePermissionsCount = sensitiveCount,
                 isSystemApp = isSystem,
                 installedAt = packageInfo.firstInstallTime,
+                hasLocation = permissions.contains("android.permission.ACCESS_FINE_LOCATION"),
+                hasCamera = permissions.contains("android.permission.CAMERA"),
+                hasMic = permissions.contains("android.permission.RECORD_AUDIO"),
+                hasContacts = permissions.contains("android.permission.READ_CONTACTS"),
+                hasPhone = permissions.contains("android.permission.READ_PHONE_STATE"),
+                hasSms = permissions.contains("android.permission.READ_SMS"),
                 totalSizeBytes = totalSize,
                 cacheSizeBytes = cacheSize
             )

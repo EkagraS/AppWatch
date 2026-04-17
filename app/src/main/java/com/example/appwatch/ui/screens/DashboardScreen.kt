@@ -58,6 +58,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -89,75 +90,56 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appwatch.presentation.viewmodel.DashboardUiState
-import com.example.appwatch.ui.DashboardShimmer
+import com.example.appwatch.ui.components.DashboardInitialLoader
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(
-    navController: NavController,
-    viewModel: DashboardViewModel = hiltViewModel()
-) {
-    val context = LocalContext.current
-    // collectAsStateWithLifecycle use karna best practice hai
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Usage Stats Permission Check (Keep this as is)
-    LaunchedEffect(Unit) {
-        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
-            context.packageName
+    if (uiState.isLoadingFromRoom && uiState.summary == null) {
+        DashboardInitialLoader()
+    } else {
+        DashboardContent(
+            navController = navController,
+            summary = uiState.summary!!, // Guaranteed to exist because of 'else'
+            isRefreshing = uiState.isRefreshing
         )
-        if (mode != AppOpsManager.MODE_ALLOWED) {
-            context.startActivity(Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        }
-    }
-
-    // --- State Switching Logic ---
-    Crossfade(targetState = uiState, label = "DashboardStateTransition") { state ->
-        when (state) {
-            is DashboardUiState.Loading -> {
-                DashboardShimmer() // Jo humne ShimmerComponents.kt mein banaya tha
-            }
-            is DashboardUiState.Success -> {
-                // Pass the data to your content function
-                DashboardContent(
-                    navController = navController,
-                    summary = state.data
-                )
-            }
-            is DashboardUiState.Error -> {
-                // Simple Error UI (You can make this prettier)
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message, color = Color.Red)
-                }
-            }
-        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardContent(navController: NavController, summary: com.example.appwatch.domain.model.DashboardSummary){
+fun DashboardContent(
+    navController: NavController,
+    summary: com.example.appwatch.domain.model.DashboardSummary,
+    isRefreshing: Boolean
+) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "AppWatch Dashboard",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                actions = {
-                    IconButton(onClick = {
-                        navController.navigate("settings")
-                    }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+            Column { // Column add kiya taaki Progress Bar TopBar ke neeche aaye
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            "AppWatch Dashboard",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = { navController.navigate("settings") }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        }
                     }
+                )
+                // CLAUDE'S SYNC INDICATOR: Yeh batayega ki piche heavy scan chal raha hai
+                if (isRefreshing) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(2.dp),
+                        color = Color(0xFF6366F1),
+                        trackColor = Color(0xFF6366F1).copy(alpha = 0.1f)
+                    )
                 }
-            )
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -168,48 +150,63 @@ fun DashboardContent(navController: NavController, summary: com.example.appwatch
             verticalArrangement = Arrangement.spacedBy(20.dp),
             contentPadding = PaddingValues(vertical = 16.dp, horizontal = 0.dp)
         ) {
-            // 1. Overview Stats Row - UPDATED WITH DATA
+            // 1. Overview Stats Row
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Overview",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Overview",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isRefreshing) {
+                            Text(
+                                "Syncing system data...",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF6366F1)
+                            )
+                        }
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        com.example.appwatch.ui.screens.StatCard(
+                        StatCard(
                             label = "Installed Apps",
-                            value = summary?.totalApps?.toString() ?: "0",
+                            value = summary.totalApps.toString(),
                             icon = Icons.Default.Apps,
                             color = Color(0xFF6366F1),
                             modifier = Modifier.weight(1f)
-                                .clickable(onClick = { navController.navigate("app_list") })
+                                .clickable { navController.navigate("app_list") }
                         )
-                        com.example.appwatch.ui.screens.StatCard(
+                        StatCard(
                             label = "Storage",
-                            value = summary?.usedStorage ?: "--",
-                            subValue = summary?.totalStorage ?: "--",
+                            value = summary.usedStorage,
+                            subValue = summary.totalStorage,
                             icon = Icons.Default.SdStorage,
                             color = Color(0xFF10B981),
                             modifier = Modifier.weight(1f)
-                                .clickable(onClick = { navController.navigate("storage_detail") })
+                                .clickable { navController.navigate("storage_detail") }
                         )
-                        com.example.appwatch.ui.screens.StatCard(
+                        StatCard(
                             label = "Screen time",
-                            value = summary?.totalScreenTime ?: "0m",
+                            value = summary.totalScreenTime,
                             icon = Icons.Default.TrendingUp,
                             color = Color(0xFFF59E0B),
                             modifier = Modifier.weight(1f)
-                                .clickable(onClick = { navController.navigate("usage_stats") })
+                                .clickable { navController.navigate("usage_stats") }
                         )
                     }
                 }
             }
 
+            // 2. Needs Attention Header
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -229,9 +226,9 @@ fun DashboardContent(navController: NavController, summary: com.example.appwatch
                 }
             }
 
-            val attentionItems = summary?.attentionItems ?: emptyList()
-
-            if (attentionItems.isEmpty()) {
+            // 3. Attention Items (Crossfade for smooth transition when data arrives)
+            val attentionItems = summary.attentionItems
+            if (attentionItems.isEmpty() && !isRefreshing) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -244,34 +241,24 @@ fun DashboardContent(navController: NavController, summary: com.example.appwatch
                         ) {
                             Icon(Icons.Default.Shield, null, tint = Color(0xFF10B981), modifier = Modifier.size(32.dp))
                             Spacer(Modifier.height(8.dp))
-                            Text(
-                                "System Secure",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1F2937)
-                            )
-                            Text(
-                                "No immediate privacy risks detected.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
+                            Text("System Secure", fontWeight = FontWeight.Bold)
+                            Text("No immediate privacy risks.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                     }
                 }
             } else {
                 items(attentionItems) { item ->
-                    com.example.appwatch.ui.screens.AppAttentionItem(
+                    AppAttentionItem(
                         appName = item.appName,
                         reason = item.reason,
                         severity = item.severity,
                         packageName = item.packageName,
-                        onActionClick = {
-                            navController.navigate("app_detail/${item.packageName}")
-                        }
+                        onActionClick = { navController.navigate("app_detail/${item.packageName}") }
                     )
                 }
             }
 
-            // 4. Recent Activity - UPDATED WITH DYNAMIC DATA
+            // 4. Activity & Insights (Same as before, but now UI knows they are refreshing)
             item {
                 Text(
                     text = "Recent Activity",
