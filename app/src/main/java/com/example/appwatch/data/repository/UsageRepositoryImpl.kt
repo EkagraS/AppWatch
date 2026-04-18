@@ -7,13 +7,18 @@ import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.domain.repository.UsageRepository
 import com.example.appwatch.system.UsageStatsHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
 
@@ -31,6 +36,74 @@ class UsageRepositoryImpl @Inject constructor(
         }.timeInMillis
     }
 
+    private fun getTimestampDaysAgo(days: Int): Long {
+        return Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -days)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    override fun getTopAppForRange(days: Int, limit: Int): Flow<List<AppUsage>> {
+        val startDate = getTimestampDaysAgo(days)
+
+        return usageDao.getTopAppForRange(startDate, limit).map { entities ->
+            entities.map { entity ->
+                // Yahan ho rahi hai asali mapping
+                AppUsage(
+                    packageName = entity.packageName,
+                    appName = entity.appName,
+                    usageTimeString = formatDuration(entity.totalTimeInForeground),
+                    usagePercentage = 0f,
+                    appOpenCount = entity.appUnlocks, // <--- YE MISSING THA
+                    lastUsedString = "Active"
+                )
+            }
+        }
+    }
+    override fun getTotalStatsForRange(days: Int): Flow<Pair<Long, Int>> {
+        val startDate = getTimestampDaysAgo(days)
+
+        // Total time aur Unlocks ko combine karke ek single stream bhejenge
+        return combine(
+            usageDao.getTotalTimeForRange(startDate),
+            usageDao.getTotalUnlocksForRange(startDate)
+        ) { time, unlocks ->
+            (time ?: 0L) to (unlocks ?: 0)
+        }
+    }
+
+    // Streak Calculation Logic
+    override fun getActiveStreak(): Flow<String> = flow {
+        while (true) {
+            val lastEvent = usageDao.getLastSystemEventTime()
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+            // Maan lo active period last event se 2 ghante pehle shuru hua (Logic for continuous)
+            val startTime = sdf.format(Date(lastEvent - (2 * 60 * 60 * 1000)))
+            val endTime = sdf.format(Date(lastEvent))
+
+            emit("$startTime - $endTime")
+            delay(60000)
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun getInActiveStreak(): Flow<String> = flow {
+        while (true) {
+            val lastEvent = usageDao.getLastSystemEventTime()
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+            // Maan lo phone raat 2 baje rakha aur subah 8 baje uthaya
+            val inactiveStart = "02:00"
+            val inactiveEnd = sdf.format(Date(lastEvent)) // Jab tak phone inactive raha
+
+            emit("$inactiveStart - $inactiveEnd")
+            delay(60000)
+        }
+    }.flowOn(Dispatchers.IO)
+
     override fun getDailyUsage(): Flow<List<AppUsage>> {
         val today = getTodayTimestamp()
 
@@ -41,6 +114,7 @@ class UsageRepositoryImpl @Inject constructor(
                     appName = entity.appName,
                     usageTimeString = usageStatsHelper.formatDuration(entity.totalTimeInForeground),
                     usagePercentage = calculatePercentage(entity.totalTimeInForeground, entities),
+                    appOpenCount = entity.appUnlocks,
                     lastUsedString = "Active today"
                 )
             }
@@ -105,4 +179,9 @@ class UsageRepositoryImpl @Inject constructor(
             lastTimeUsed = System.currentTimeMillis()
         )
     }
+}
+private fun formatDuration(millis: Long): String {
+    val hours = millis / (1000 * 60 * 60)
+    val minutes = (millis / (1000 * 60)) % 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 }

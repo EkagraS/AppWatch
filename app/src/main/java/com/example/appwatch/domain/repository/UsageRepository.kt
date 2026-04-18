@@ -1,5 +1,6 @@
 package com.example.appwatch.domain.repository
 
+import com.example.appwatch.data.local.entity.UsageEntity
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.domain.model.DashboardSummary
 import kotlinx.coroutines.flow.Flow
@@ -30,4 +31,11 @@ interface UsageRepository {
 
     suspend fun syncDailyUsage()
 
+    fun getTopAppForRange(days: Int, limit: Int): Flow<List<AppUsage>>
+
+    fun getTotalStatsForRange(days: Int): Flow<Pair<Long, Int>> // ScreenTime to Unlocks
+
+    fun getActiveStreak(): Flow<String>
+
+    fun getInActiveStreak(): Flow<String>
 }

@@ -6,4 +6,5 @@ data class AppUsage(
     val usageTimeString: String,
     val usagePercentage: Float,
     val lastUsedString: String,
+    val appOpenCount: Int
 )

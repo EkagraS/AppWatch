@@ -74,53 +74,10 @@ class UsageStatsHelper @Inject constructor(
         }
     }
 
-    /**
-     * Calculates the total screen time in milliseconds for the current day.
-     * This powers the "7 hrs" hero card on the Dashboard.
-     */
     fun getTotalScreenTimeToday(): Long {
         return getDailyAppUsage().sumOf { it.totalTimeInForeground }
     }
 
-    /**
-     * Gets screen time totals for the last 7 days.
-     * Used to populate the "Weekly Activity" bar chart.
-     */
-    fun getWeeklyActivityData(): List<Float> {
-        val weeklyData = mutableListOf<Float>()
-
-        // We fetch 7 days of data ending today
-        for (i in 6 downTo 0) {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, -i)
-
-            // Set to start of that specific day
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            val start = calendar.timeInMillis
-
-            // Set to end of that specific day
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            val end = calendar.timeInMillis
-
-            // Use INTERVAL_DAILY for precise 24h blocks
-            val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end)
-
-            val totalMillis = stats?.sumByDouble { it.totalTimeInForeground.toDouble() }?.toLong() ?: 0L
-            // Convert to hours.
-            // Cap it at 24h just in case of system bugs, but 0-10h is our UI scale.
-            val hours = totalMillis / (1000f * 60 * 60)
-            weeklyData.add(hours)
-        }
-        return weeklyData
-    }
-
-    /**
-     * Helper to format milliseconds into "1h 22m" style strings for the UI.
-     */
     fun formatDuration(millis: Long): String {
         val hours = millis / (1000 * 60 * 60)
         val minutes = (millis / (1000 * 60)) % 60
@@ -130,19 +87,6 @@ class UsageStatsHelper @Inject constructor(
         }
     }
 
-    fun getAppUsageToday(packageName: String): Long {
-        val calendar = Calendar.getInstance()
-        val endTime = calendar.timeInMillis
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        val startTime = calendar.timeInMillis
-
-        val stats = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY, startTime, endTime
-        )
-        return stats?.find { it.packageName == packageName }?.totalTimeInForeground ?: 0L
-    }
 
     fun getAppUsageThisWeek(packageName: String): Long {
         val calendar = Calendar.getInstance()

@@ -13,5 +13,7 @@ data class UsageEntity(
     val appName: String,
     val totalTimeInForeground: Long,
     val lastTimeUsed: Long,
-    val appUnlocks: Int = 0 // NAYA: Unlocks store karne ke liye
+    val appUnlocks: Int = 0,
+    val notificationCount: Int = 0, // Dashboard ke Right side ke liye
+    val lastEventTimestamp: Long = 0L// NAYA: Unlocks store karne ke liye
 )

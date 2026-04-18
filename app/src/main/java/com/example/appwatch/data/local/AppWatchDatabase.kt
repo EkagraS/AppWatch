@@ -17,7 +17,7 @@ import com.example.appwatch.data.local.entity.UsageEntity
         PermissionAccessEntity::class,
         AppInfoEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 

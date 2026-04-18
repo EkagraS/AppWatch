@@ -28,6 +28,23 @@ class UsageStatsViewModel @Inject constructor(
     val weeklyChartData = getAppUsageUseCase.getWeeklyStats()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val todayActiveStreak = usageRepository.getActiveStreak()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "00:00 - 00:00")
+
+    val todayInactiveStreak = usageRepository.getInActiveStreak()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "00:00 - 00:00")
+    // 2. Weekly Top App
+
+    val top3AppsWeekly = usageRepository.getTopAppForRange(days = 7, limit = 3)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<AppUsage>())
+
+    val top3AppsMonthly = usageRepository.getTopAppForRange(days = 30, limit = 3)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<AppUsage>())
+
+    // 4. Total Stats (Time & Unlocks) - Let's say for last 7 days
+    val weeklyStatsSummary = usageRepository.getTotalStatsForRange(7)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(0L, 0))
+
     init {
         viewModelScope.launch {
             // Sync first, THEN Room flow auto-updates UI
@@ -48,6 +65,7 @@ class UsageStatsViewModel @Inject constructor(
                     appName = entity.appName,
                     usageTimeString = formatDuration(entity.totalTimeInForeground),
                     usagePercentage = entity.totalTimeInForeground / total,
+                    appOpenCount = entity.appUnlocks,
                     lastUsedString = "Active"
                 )
             }
@@ -60,6 +78,7 @@ class UsageStatsViewModel @Inject constructor(
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
+
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
         return getUsageForDay(today)

@@ -247,6 +247,9 @@ fun UsageStatsScreen(
 
                 // 5. Analytics
                 item {
+                    KnowYourUsageSection(viewModel = viewModel)
+                    Spacer(modifier = Modifier.height(32.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
