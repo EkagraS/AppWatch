@@ -17,6 +17,7 @@ interface UsageRepository {
      * Provides the aggregated stats needed for the Dashboard "Hero" cards.
      */
     fun getTotalScreenTimeToday(): Flow<String>
+
     /**
      * Provides 7-day historical data for the activity bar chart.
      */
@@ -26,4 +27,7 @@ interface UsageRepository {
      * Persists a newly captured usage snapshot into the database.
      */
     suspend fun saveUsageSnapshot(usage: AppUsage)
+
+    suspend fun syncDailyUsage()
+
 }

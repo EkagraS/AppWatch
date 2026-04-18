@@ -48,6 +48,14 @@ class AppDetailViewModel @Inject constructor(
 
     private val _packageName = MutableStateFlow<String?>(null)
 
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+
     val uiState: StateFlow<AppDetailUiState> = _packageName
         .filterNotNull()
         .flatMapLatest { pkg ->
@@ -68,14 +76,15 @@ class AppDetailViewModel @Inject constructor(
 
             combine(
                 usageDao.getUsageForApp(pkg).onStart { emit(emptyList()) },
+                usageDao.getUsageByPackageAndDate(pkg, today).onStart { emit(null) },
                 usageDao.getTotalTimeForApp(pkg, weekStart).onStart { emit(null) },
                 usageDao.getMonthlyTotalForApp(pkg).onStart { emit(null) },
                 permissionAccessDao.getEventsForApp(pkg).onStart { emit(emptyList()) }
-            ) { appUsageHistory, weekTotal, monthTotal, permEvents ->
+            ) { appUsageHistory, todayEntity, weekTotal, monthTotal, permEvents ->
 
                 // Live data from system
                 val appInfo = packageManagerHelper.getAppInfo(pkg)
-                val usageTodayMs = usageStatsHelper.getAppUsageToday(pkg)
+                val usageTodayMs = todayEntity?.totalTimeInForeground ?: 0L
                 val launchesToday = usageStatsHelper.getAppLaunchesToday(pkg)
                 val lastUsed = usageStatsHelper.getLastUsedString(pkg)
 

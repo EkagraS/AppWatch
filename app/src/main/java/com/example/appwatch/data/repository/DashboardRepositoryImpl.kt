@@ -38,8 +38,6 @@ class DashboardRepositoryImpl @Inject constructor(
                 if (apps.isEmpty()) {
                     emptyDashboard()
                 } else {
-                    // FIX: Agar heavy cache ready hai toh wo lo,
-                    // warna Room data se "Fast Privacy Insights" generate karo
                     cachedSummary ?: calculateSummaryFast(apps)
                 }
             }

@@ -38,5 +38,33 @@ interface UsageDao {
     ORDER BY usageDate ASC
 """)
     suspend fun getWeeklyTotals(startDate: Long): List<DayTotal>
+
+    @Query("SELECT SUM(appUnlocks) FROM app_usage WHERE usageDate = :date")
+    fun getTotalUnlocksToday(date: Long): Flow<Int?>
+
+    @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate ORDER BY totalTimeInForeground DESC LIMIT 3")
+    fun getTopChamps(startDate: Long): Flow<List<UsageEntity>>
+
+    @Query("""
+        SELECT SUM(totalTimeInForeground) as total, usageDate 
+        FROM app_usage 
+        WHERE usageDate >= :startDate 
+        GROUP BY usageDate 
+        ORDER BY usageDate ASC
+    """)
+    fun getWeeklyStats(startDate: Long): Flow<List<DayUsageTuple>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUsageList(usageList: List<UsageEntity>) // Yeh line missing thi
+
+    @Query("SELECT * FROM app_usage WHERE packageName = :packageName AND usageDate = :date LIMIT 1")
+    fun getUsageByPackageAndDate(packageName: String, date: Long): Flow<UsageEntity?>
+
+// Separate data class for grouping
+data class DayUsageTuple(
+    val total: Long,
+    val usageDate: Long
+)
+
     data class DayTotal(val total: Long, val usageDate: Long)
 }
