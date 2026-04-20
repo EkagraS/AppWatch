@@ -24,6 +24,39 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    val totalUnlocksToday: StateFlow<Int> = dashboardRepository.getTodayTotalUnlocks()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000), // 5 seconds baad inactive
+            initialValue = 0
+        )
+
+    val totalNotificationsToday: StateFlow<Int> = dashboardRepository.getTodayTotalNotifications()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    val totalDataUsageBytes: StateFlow<Long> = dashboardRepository.getTodayDataUsage()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
+
+    val systemUpdate: StateFlow<String> = dashboardRepository.getSystemUpdateInfo()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Loading..."
+        )
+
+    fun formatDataUsage(bytes: Long): String {
+        if (bytes == 0L) return "0 MB"
+        val megabytes = bytes / (1024 * 1024).toDouble()
+        return if (megabytes > 1024) {
+            String.format("%.1f GB", megabytes / 1024)
+        } else {
+            String.format("%.0f MB", megabytes)
+        }
+    }
     init {
         // Step 1: Start observing Room
         viewModelScope.launch {

@@ -78,6 +78,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     testImplementation (libs.kotlinx.coroutines.test)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
 //configurations.all {
 //    exclude(group = "com.intellij", module = "annotations")

@@ -1,9 +1,11 @@
 package com.example.appwatch.system
 
+import android.app.usage.NetworkStatsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.net.ConnectivityManager
 import com.example.appwatch.data.local.entity.UsageEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.SimpleDateFormat
@@ -233,5 +235,64 @@ class UsageStatsHelper @Inject constructor(
         val inactiveString = if (bestBreakEnd == 0L) "No Data" else "${sdf.format(Date(bestBreakStart))} - ${sdf.format(Date(bestBreakEnd))}"
 
         return Pair(activeString, inactiveString)
+    }
+
+    fun getTodayDeviceVitals(): Pair<Int, Int> {
+        // 1. Aaj raat 12 baje ka time nikalna
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+
+        // 2. System se events ki stream mangna
+        val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
+        val event = UsageEvents.Event()
+
+        var unlocks = 0
+        var notifications = 0
+
+        // 3. Ek ek event ko check karna
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(event)
+
+            when (event.eventType) {
+                // Event Type 18: KEYGUARD_HIDDEN (Matlab user ne phone unlock kiya)
+                18 -> unlocks++
+
+                // Event Type 12: NOTIFICATION_INTERRUPTION (Matlab koi alert/notification aayi)
+                12 -> notifications++
+            }
+        }
+
+        return Pair(unlocks, notifications)
+    }
+
+    // UsageStatsHelper.kt ke andar
+    fun getTodayTotalDataUsage(): Long {
+        val networkStatsManager = context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        var totalBytes = 0L
+        try {
+            // Mobile Data
+            val mobileBucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, calendar.timeInMillis, System.currentTimeMillis())
+            totalBytes += mobileBucket.rxBytes + mobileBucket.txBytes
+
+            // WiFi
+            val wifiBucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_WIFI, "", calendar.timeInMillis, System.currentTimeMillis())
+            totalBytes += wifiBucket.rxBytes + wifiBucket.txBytes
+        } catch (e: Exception) { e.printStackTrace() }
+
+        return totalBytes
     }
 }

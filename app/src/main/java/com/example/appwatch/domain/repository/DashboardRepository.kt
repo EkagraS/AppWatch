@@ -6,4 +6,12 @@ import kotlinx.coroutines.flow.Flow
 interface DashboardRepository {
     fun getDashboardSummaryFlow(): Flow<DashboardSummary>
     suspend fun refreshAllData()
+
+    fun getTodayTotalUnlocks(): Flow<Int>
+
+    fun getTodayTotalNotifications(): Flow<Int>
+
+    fun getTodayDataUsage(): Flow<Long>
+
+    fun getSystemUpdateInfo(): Flow<String>
 }

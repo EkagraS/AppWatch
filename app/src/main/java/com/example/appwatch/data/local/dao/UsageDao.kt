@@ -82,7 +82,6 @@ interface UsageDao {
     suspend fun getLastSystemEventTime(): Long
 // Separate data class for grouping
 
-
     @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate")
     fun getUsageStatsForNoiseAnalysis(startDate: Long): Flow<List<UsageEntity>>
 

@@ -1,13 +1,8 @@
 package com.example.appwatch.ui.screens
 
-import android.app.AppOpsManager
-import android.content.Context
-import android.content.Intent
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.content.MediaType.Companion.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,36 +16,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DataUsage
-import androidx.compose.material.icons.filled.GppMaybe
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.SdStorage
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -65,7 +50,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -74,34 +58,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 import androidx.compose.runtime.remember
 import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appwatch.presentation.viewmodel.DashboardUiState
+import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.ui.components.DashboardInitialLoader
 
 @Composable
 fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    val totalUnlocks = viewModel.totalUnlocksToday.collectAsState().value
+    val totalNotifications = viewModel.totalNotificationsToday.collectAsState().value
+    val dataUsageBytes = viewModel.totalDataUsageBytes.collectAsState().value
+    val formattedDataUsage = viewModel.formatDataUsage(dataUsageBytes)
+    val patch = viewModel.systemUpdate.collectAsState().value
 
     if (uiState.isLoadingFromRoom && uiState.summary == null) {
         DashboardInitialLoader()
     } else {
         DashboardContent(
             navController = navController,
-            summary = uiState.summary!!, // Guaranteed to exist because of 'else'
+            summary = uiState.summary!!, // Gua
+            totalUnlocks = totalUnlocks,
+            totalNotifications = totalNotifications,
+            formattedDataUsage = formattedDataUsage,
+            patch = patch,
             isRefreshing = uiState.isRefreshing
         )
     }
@@ -111,7 +98,11 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
 @Composable
 fun DashboardContent(
     navController: NavController,
-    summary: com.example.appwatch.domain.model.DashboardSummary,
+    summary: DashboardSummary,
+    totalUnlocks: Int,
+    totalNotifications: Int,
+    formattedDataUsage: String,
+    patch: String,
     isRefreshing: Boolean
 ) {
     Scaffold(
@@ -195,8 +186,8 @@ fun DashboardContent(
                                 .clickable { navController.navigate("storage_detail") }
                         )
                         StatCard(
-                            label = "Screen time",
-                            value = summary.totalScreenTime,
+                            label = "Last device update",
+                            value = patch,
                             icon = Icons.Default.TrendingUp,
                             color = Color(0xFFF59E0B),
                             modifier = Modifier.weight(1f)
@@ -205,6 +196,87 @@ fun DashboardContent(
                     }
                 }
             }
+
+            item {
+                Text(
+                    text = "Today's activity",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp), // Thoda spacing upar se
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InsightCard(
+                        title = "Phone Unlocks",
+                        count = "Device unlocked $totalUnlocks times",
+                        icon = Icons.Default.LockOpen,
+                        color = Color(0xFF3B82F6),
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Optional: Navigate to detail if you want */ }
+                    )
+
+                    // Right Card: Notifications
+                    InsightCard(
+                        title = "Notifications",
+                        count = "$totalNotifications notifications received", // Yahan apna 'totalNotifications' state pass kar dena
+                        icon = Icons.Default.Notifications,
+                        color = Color(0xFFEAB308), // Amber/Yellow theme
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Optional: Navigate to notifications detail */ }
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp), // Thoda spacing upar se
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InsightCard(
+                        title = "Screen time",
+                        count = summary.totalScreenTime,
+                        icon = Icons.Default.TrendingUp,
+                        color = Color(0xFFF59E0B),
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate("usage_stats") }
+                    )
+
+                    // Right Card: Notifications
+                    InsightCard(
+                        title = "Data usage",
+                        count = formattedDataUsage, // Yahan apna 'totalNotifications' state pass kar dena
+                        icon = Icons.Default.SwapVert,
+                        color = Color(0xFF10B981), // Amber/Yellow theme
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Optional: Navigate to notifications detail */ }
+                    )
+                }
+            }
+
+            // 4. Activity & Insights (Same as before, but now UI knows they are refreshing)
+            item {
+                Text(
+                    text = "Recent Activity",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            items(summary?.recentActivity ?: emptyList()) { activity ->
+                com.example.appwatch.ui.screens.ActivityCard(
+                    title = activity.title,
+                    description = activity.description,
+                    icon = when (activity.iconType) {
+                        "INSTALL" -> Icons.Default.TrendingUp
+                        "ACTIVE" -> Icons.Default.History
+                        "INACTIVE" -> Icons.Default.Block
+                        else -> Icons.Default.History
+                    },
+                    onClick = { navController.navigate("app_list") }
+                )
+            }
+
 
             // 2. Needs Attention Header
             item {
@@ -226,7 +298,7 @@ fun DashboardContent(
                 }
             }
 
-            // 3. Attention Items (Crossfade for smooth transition when data arrives)
+            // 4. Attention Items (Crossfade for smooth transition when data arrives)
             val attentionItems = summary.attentionItems
             if (attentionItems.isEmpty() && !isRefreshing) {
                 item {
@@ -258,27 +330,6 @@ fun DashboardContent(
                 }
             }
 
-            // 4. Activity & Insights (Same as before, but now UI knows they are refreshing)
-            item {
-                Text(
-                    text = "Recent Activity",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            items(summary?.recentActivity ?: emptyList()) { activity ->
-                com.example.appwatch.ui.screens.ActivityCard(
-                    title = activity.title,
-                    description = activity.description,
-                    icon = when (activity.iconType) {
-                        "INSTALL" -> Icons.Default.TrendingUp
-                        "ACTIVE" -> Icons.Default.History
-                        "INACTIVE" -> Icons.Default.Block
-                        else -> Icons.Default.History
-                    },
-                    onClick = { navController.navigate("app_list") }
-                )
-            }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(

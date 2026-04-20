@@ -1,6 +1,10 @@
 package com.example.appwatch.data.repository
 
+import android.app.admin.SystemUpdateInfo
+import android.os.Build
 import com.example.appwatch.data.local.dao.AppInfoDao
+import com.example.appwatch.data.local.dao.UsageDao
+import com.example.appwatch.data.local.datastore.VitalsDataStore
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.domain.model.ActivityItem
 import com.example.appwatch.domain.model.AttentionItem
@@ -13,6 +17,9 @@ import com.example.appwatch.system.UsageStatsHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +29,8 @@ class DashboardRepositoryImpl @Inject constructor(
     private val packageManagerHelper: PackageManagerHelper,
     private val storageStatsHelper: StorageStatsHelper,
     private val usageStatsHelper: UsageStatsHelper,
-    private val appOpsHelper: AppOpsHelper
+    private val appOpsHelper: AppOpsHelper,
+    private val vitalsDataStore: VitalsDataStore,
 ) : DashboardRepository {
 
     // Caching system data to prevent 20s lag on every Room emission
@@ -85,6 +93,25 @@ class DashboardRepositoryImpl @Inject constructor(
                 val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
                 cachedUsedStorage = storageStatsHelper.formatSize(deviceStorage.usedBytes)
                 cachedTotalStorage = storageStatsHelper.formatSize(deviceStorage.totalBytes)
+
+                var formattedPatch = "Unknown"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val rawDate = Build.VERSION.SECURITY_PATCH
+                    if (rawDate.isNotEmpty()) {
+                        try {
+                            val parser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
+                            val date = parser.parse(rawDate)
+                            if (date != null) formattedPatch = formatter.format(date)
+                        } catch (e: Exception) { formattedPatch = rawDate }
+                    }
+                }
+                val vitals = usageStatsHelper.getTodayDeviceVitals()
+                val currentUnlocks = vitals.first
+                val currentNotifications = vitals.second
+                val currentDataUsageBytes = usageStatsHelper.getTodayTotalDataUsage()
+
+                vitalsDataStore.saveVitals(currentUnlocks, currentNotifications, currentDataUsageBytes, formattedPatch)
 
                 // 2. Refresh App Metadata
                 val liveApps = packageManagerHelper.getInstalledAppsMetadata()
@@ -211,6 +238,15 @@ class DashboardRepositoryImpl @Inject constructor(
             )
         )
     }
+
+    override fun getTodayTotalUnlocks(): Flow<Int> = vitalsDataStore.vitalsFlow.map { it.unlocks }
+
+    override fun getTodayTotalNotifications(): Flow<Int> = vitalsDataStore.vitalsFlow.map { it.notifications }
+
+    override fun getTodayDataUsage(): Flow<Long> = vitalsDataStore.vitalsFlow.map { it.dataUsage }
+
+    override fun getSystemUpdateInfo(): Flow<String> = vitalsDataStore.vitalsFlow.map { it.patchDate }
+
 
     private fun emptyDashboard() = DashboardSummary(
         totalApps = 0,
