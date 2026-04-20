@@ -83,6 +83,8 @@ interface UsageDao {
 // Separate data class for grouping
 
 
+    @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate")
+    fun getUsageStatsForNoiseAnalysis(startDate: Long): Flow<List<UsageEntity>>
 
     data class DayUsageTuple(val total: Long, val usageDate: Long)
     data class DayTotal(val total: Long, val usageDate: Long)

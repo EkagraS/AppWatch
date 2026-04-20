@@ -38,4 +38,6 @@ interface UsageRepository {
     fun getActiveStreak(): Flow<String>
 
     fun getInActiveStreak(): Flow<String>
+
+    fun getHighNoiseApps(limit: Int): Flow<List<UsageEntity>>
 }

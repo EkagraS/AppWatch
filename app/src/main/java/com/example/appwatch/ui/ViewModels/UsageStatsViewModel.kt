@@ -45,6 +45,13 @@ class UsageStatsViewModel @Inject constructor(
     val weeklyStatsSummary = usageRepository.getTotalStatsForRange(7)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(0L, 0))
 
+    val highNoiseApps = usageRepository.getHighNoiseApps(limit = 5)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
+
     init {
         viewModelScope.launch {
             // Sync first, THEN Room flow auto-updates UI

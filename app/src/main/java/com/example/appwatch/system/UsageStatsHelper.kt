@@ -1,10 +1,12 @@
 package com.example.appwatch.system
 
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.example.appwatch.data.local.entity.UsageEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,9 +69,12 @@ class UsageStatsHelper @Inject constructor(
             UsageEntity(
                 packageName = usageStat.packageName,
                 usageDate = todayTimestamp,
+                appName = usageStat.packageName,
                 totalTimeInForeground = usageStat.totalTimeInForeground,
                 lastTimeUsed = usageStat.lastTimeUsed,
-                appName = usageStat.packageName
+                appUnlocks = 0,
+                notificationCount = 0,
+                lastEventTimestamp = 0L
             )
         }
     }
@@ -148,5 +153,85 @@ class UsageStatsHelper @Inject constructor(
             hours < 24 -> "${hours}h ago"
             else -> "${days}d ago"
         }
+    }
+
+    fun getTodayStreaks(): Pair<String, String> {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = UsageEvents.Event()
+
+        var longestSession = 0L
+        var longestBreak = 0L
+
+        var sessionStart = 0L
+        var breakStart = startTime // Assume midnight se pehle phone lock tha
+
+        var bestSessionStart = 0L
+        var bestSessionEnd = 0L
+        var bestBreakStart = startTime
+        var bestBreakEnd = 0L
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val timestamp = event.timeStamp
+
+            // 15 = SCREEN_INTERACTIVE (Phone unlock hua / chalu hua)
+            if (event.eventType == 15) {
+                if (breakStart > 0L) {
+                    val breakDuration = timestamp - breakStart
+                    if (breakDuration > longestBreak) {
+                        longestBreak = breakDuration
+                        bestBreakStart = breakStart
+                        bestBreakEnd = timestamp
+                    }
+                }
+                sessionStart = timestamp
+                breakStart = 0L // Break khatam
+            }
+            // 16 = SCREEN_NON_INTERACTIVE (Phone lock hua / band hua)
+            else if (event.eventType == 16) {
+                if (sessionStart > 0L) {
+                    val sessionDuration = timestamp - sessionStart
+                    if (sessionDuration > longestSession) {
+                        longestSession = sessionDuration
+                        bestSessionStart = sessionStart
+                        bestSessionEnd = timestamp
+                    }
+                }
+                breakStart = timestamp
+                sessionStart = 0L // Session khatam
+            }
+        }
+
+        // Loop ke baad check karo: Agar abhi tak session ya break chal hi raha hai
+        if (sessionStart > 0L) {
+            val sessionDuration = endTime - sessionStart
+            if (sessionDuration > longestSession) {
+                bestSessionStart = sessionStart
+                bestSessionEnd = endTime
+            }
+        }
+        if (breakStart > 0L) {
+            val breakDuration = endTime - breakStart
+            if (breakDuration > longestBreak) {
+                bestBreakStart = breakStart
+                bestBreakEnd = endTime
+            }
+        }
+
+        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+        val activeString = if (bestSessionStart == 0L) "No Data" else "${sdf.format(Date(bestSessionStart))} - ${sdf.format(Date(bestSessionEnd))}"
+        val inactiveString = if (bestBreakEnd == 0L) "No Data" else "${sdf.format(Date(bestBreakStart))} - ${sdf.format(Date(bestBreakEnd))}"
+
+        return Pair(activeString, inactiveString)
     }
 }

@@ -247,9 +247,13 @@ fun UsageStatsScreen(
 
                 // 5. Analytics
                 item {
-                    KnowYourUsageSection(viewModel = viewModel)
-                    Spacer(modifier = Modifier.height(32.dp))
-
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        "This day",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextMain
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -272,6 +276,8 @@ fun UsageStatsScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    KnowYourUsageSection(viewModel = viewModel)
                 }
             }
         }

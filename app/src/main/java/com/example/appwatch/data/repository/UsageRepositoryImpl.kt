@@ -75,31 +75,18 @@ class UsageRepositoryImpl @Inject constructor(
         }
     }
 
-    // Streak Calculation Logic
     override fun getActiveStreak(): Flow<String> = flow {
         while (true) {
-            val lastEvent = usageDao.getLastSystemEventTime()
-            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Maan lo active period last event se 2 ghante pehle shuru hua (Logic for continuous)
-            val startTime = sdf.format(Date(lastEvent - (2 * 60 * 60 * 1000)))
-            val endTime = sdf.format(Date(lastEvent))
-
-            emit("$startTime - $endTime")
+            val streaks = usageStatsHelper.getTodayStreaks()
+            emit(streaks.first)
             delay(60000)
         }
     }.flowOn(Dispatchers.IO)
 
     override fun getInActiveStreak(): Flow<String> = flow {
         while (true) {
-            val lastEvent = usageDao.getLastSystemEventTime()
-            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Maan lo phone raat 2 baje rakha aur subah 8 baje uthaya
-            val inactiveStart = "02:00"
-            val inactiveEnd = sdf.format(Date(lastEvent)) // Jab tak phone inactive raha
-
-            emit("$inactiveStart - $inactiveEnd")
+            val streaks = usageStatsHelper.getTodayStreaks()
+            emit(streaks.second)
             delay(60000)
         }
     }.flowOn(Dispatchers.IO)
@@ -169,6 +156,31 @@ class UsageRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getHighNoiseApps(limit: Int): Flow<List<UsageEntity>> {
+        val sevenDaysAgo = getTimestampDaysAgo(7)
+
+        return usageDao.getUsageStatsForNoiseAnalysis(sevenDaysAgo).map { list ->
+            list.groupBy { it.packageName }
+                .map { (packageName, dailyRecords) ->
+                    // Saare 7 din ke data ko merge karke ek single entity bana rahe hain presentation ke liye
+                    UsageEntity(
+                        packageName = packageName,
+                        usageDate = dailyRecords.first().usageDate,
+                        appName = dailyRecords.first().appName,
+                        totalTimeInForeground = dailyRecords.sumOf { it.totalTimeInForeground },
+                        lastTimeUsed = dailyRecords.maxOf { it.lastTimeUsed },
+                        appUnlocks = dailyRecords.sumOf { it.appUnlocks },
+                        notificationCount = dailyRecords.sumOf { it.notificationCount }
+                    )
+                }
+                // Sorting Logic: Most Notifications vs Least Time
+                .filter { it.notificationCount > 0 }
+                .sortedWith(compareByDescending<UsageEntity> { it.notificationCount }
+                    .thenBy { it.totalTimeInForeground }
+                    .thenBy { it.appUnlocks })
+                .take(limit)
+        }
+    }
 
     override suspend fun saveUsageSnapshot(usage: AppUsage) {
         val entity = UsageEntity(
