@@ -250,7 +250,7 @@ fun DashboardContent(
                         icon = Icons.Default.SwapVert,
                         color = Color(0xFF10B981), // Amber/Yellow theme
                         modifier = Modifier.weight(1f),
-                        onClick = { /* Optional: Navigate to notifications detail */ }
+                        onClick = { navController.navigate("data_usage") }
                     )
                 }
             }

@@ -36,6 +36,7 @@ class NotificationKeeperService : NotificationListenerService() {
             val isSummary = (notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
             if (isSummary) return
             if (it.isOngoing) return
+            if (packageName == "android" || packageName == "com.android.systemui") return
             if (packageName == applicationContext.packageName) return
             val today = java.time.LocalDate.now().toString()
             serviceScope.launch {

@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.core.app.NotificationManagerCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,6 +26,7 @@ import com.example.appwatch.ui.screens.SettingsScreen
 import com.example.appwatch.ui.screens.SplashScreen
 import com.example.appwatch.ui.screens.StorageDetailScreen
 import com.example.appwatch.ui.screens.UsageStatsScreen
+import com.example.appwatch.ui.screens.today.AppDataUsageScreen
 import com.example.appwatch.ui.screens.today.AppNotificationScreen
 import com.example.appwatch.ui.theme.AppWatch2Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,6 +105,9 @@ fun AppWatchNavigation(navController: NavHostController) {
         }
         composable(route = "notification_screen") {
             AppNotificationScreen(navController = navController)
+        }
+        composable(route = "data_usage"){
+            AppDataUsageScreen(navController= navController)
         }
     }
 }
