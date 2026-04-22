@@ -17,15 +17,15 @@ data class DashboardSummary(
 
 
     // Dynamic Lists
-    val attentionItems: List<AttentionItem>,
-    val recentActivity: List<ActivityItem>
+    val recentActivity: List<RecentItem>,
+    val attentionItems: List<ActivityItem>
 )
 
-data class AttentionItem(
-    val packageName: String,
-    val appName: String,
-    val reason: String,
-    val severity: String
+data class RecentItem(
+    val eventType: String,
+    val title: String,
+    val description: String,
+    val isTimeline: Boolean
 )
 
 data class ActivityItem(

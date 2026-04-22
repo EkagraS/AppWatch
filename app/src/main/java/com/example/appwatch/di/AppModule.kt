@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.appwatch.data.local.AppWatchDatabase
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.data.local.dao.PermissionAccessDao
+import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
 import dagger.Module
 import dagger.Provides
@@ -30,4 +31,11 @@ object AppModule {
 
     @Provides
     fun provideUsageDao(db: AppWatchDatabase): UsageDao = db.usageDao()
+
+    @Provides
+    @Singleton
+    fun provideRecentEventDao(db: AppWatchDatabase): RecentEventDao {
+        return db.recentEventDao()
+    }
+
 }

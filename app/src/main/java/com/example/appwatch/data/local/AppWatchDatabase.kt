@@ -6,18 +6,21 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.data.local.dao.PermissionAccessDao
+import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.data.local.entity.PermissionAccessEntity
+import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.data.local.entity.UsageEntity
 
 @Database(
     entities = [
         UsageEntity::class,
         PermissionAccessEntity::class,
-        AppInfoEntity::class
+        AppInfoEntity::class,
+        RecentEventEntity::class
     ],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 
@@ -26,6 +29,8 @@ abstract class AppWatchDatabase: RoomDatabase() {
     abstract fun usageDao(): UsageDao
     abstract fun permissionAccessDao(): PermissionAccessDao
     abstract fun appInfoDao(): AppInfoDao
+    abstract fun recentEventDao(): RecentEventDao
+
 
     companion object {
         @Volatile

@@ -1,5 +1,7 @@
 package com.example.appwatch.di
 
+import com.example.appwatch.data.local.AppWatchDatabase
+import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.repository.AppInfoRepositoryImpl
 import com.example.appwatch.data.repository.DashboardRepositoryImpl
 import com.example.appwatch.data.repository.PermissionRepositoryImpl
@@ -10,6 +12,7 @@ import com.example.appwatch.domain.repository.PermissionRepository
 import com.example.appwatch.domain.repository.UsageRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton

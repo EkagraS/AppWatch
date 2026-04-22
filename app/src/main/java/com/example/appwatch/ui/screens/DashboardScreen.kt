@@ -79,12 +79,12 @@ fun DashboardScreen(navController: NavController, viewModel: DashboardViewModel 
     val formattedDataUsage = viewModel.formatDataUsage(dataUsageBytes)
     val patch = viewModel.systemUpdate.collectAsState().value
 
-    if (uiState.isLoadingFromRoom && uiState.summary == null) {
+    if (uiState.summary == null) {
         DashboardInitialLoader()
     } else {
         DashboardContent(
             navController = navController,
-            summary = uiState.summary!!, // Gua
+            summary = uiState.summary!!,
             totalUnlocks = totalUnlocks,
             totalNotifications = totalNotifications,
             formattedDataUsage = formattedDataUsage,
@@ -257,26 +257,10 @@ fun DashboardContent(
 
             // 4. Activity & Insights (Same as before, but now UI knows they are refreshing)
             item {
-                Text(
-                    text = "Recent Activity",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                RecentActivitySection(recentItems = summary.recentActivity,onNavigateToEventScreen = { type ->
+                    navController.navigate("recentEventScreen/$type")
+                })
             }
-            items(summary?.recentActivity ?: emptyList()) { activity ->
-                com.example.appwatch.ui.screens.ActivityCard(
-                    title = activity.title,
-                    description = activity.description,
-                    icon = when (activity.iconType) {
-                        "INSTALL" -> Icons.Default.TrendingUp
-                        "ACTIVE" -> Icons.Default.History
-                        "INACTIVE" -> Icons.Default.Block
-                        else -> Icons.Default.History
-                    },
-                    onClick = { navController.navigate("app_list") }
-                )
-            }
-
 
             // 2. Needs Attention Header
             item {
@@ -319,15 +303,15 @@ fun DashboardContent(
                     }
                 }
             } else {
-                items(attentionItems) { item ->
-                    AppAttentionItem(
-                        appName = item.appName,
-                        reason = item.reason,
-                        severity = item.severity,
-                        packageName = item.packageName,
-                        onActionClick = { navController.navigate("app_detail/${item.packageName}") }
-                    )
-                }
+//                items(attentionItems) { item ->
+//                    AppAttentionItem(
+//                        appName = item.appName,
+//                        reason = item.reason,
+//                        severity = item.severity,
+//                        packageName = item.packageName,
+//                        onActionClick = { navController.navigate("app_detail/${item.packageName}") }
+//                    )
+//                }
             }
 
             item {

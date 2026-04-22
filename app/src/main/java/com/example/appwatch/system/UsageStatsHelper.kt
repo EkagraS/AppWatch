@@ -6,12 +6,14 @@ import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.example.appwatch.data.local.entity.UsageEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.os.Process
 
 /**
  * The "Statistician" of the app.
@@ -294,5 +296,44 @@ class UsageStatsHelper @Inject constructor(
         } catch (e: Exception) { e.printStackTrace() }
 
         return totalBytes
+    }
+
+    fun getHeavyDataConsumers(sevenDaysAgo: Long): Map<String, Long> {
+        val networkStatsManager = context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
+        val packageManager = context.packageManager
+        val appDataMap = mutableMapOf<Int, Long>()
+
+        try {
+            val networkTypes = listOf(NetworkCapabilities.TRANSPORT_WIFI, NetworkCapabilities.TRANSPORT_CELLULAR)
+
+            for (networkType in networkTypes) {
+                val bucket = android.app.usage.NetworkStats.Bucket()
+                val stats = networkStatsManager.querySummary(networkType, null, sevenDaysAgo, System.currentTimeMillis())
+
+                while (stats.hasNextBucket()) {
+                    stats.getNextBucket(bucket)
+                    val uid = bucket.uid
+                    val totalBytes = bucket.rxBytes + bucket.txBytes
+
+                    // System apps ko ignore kar rahe hain
+                    if (uid >= Process.FIRST_APPLICATION_UID) {
+                        appDataMap[uid] = appDataMap.getOrDefault(uid, 0L) + totalBytes
+                    }
+                }
+                stats.close()
+            }
+
+            val packageDataMap = mutableMapOf<String, Long>()
+            appDataMap.forEach { (uid, bytes) ->
+                val packages = packageManager.getPackagesForUid(uid)
+                if (!packages.isNullOrEmpty()) {
+                    packageDataMap[packages[0]] = bytes
+                }
+            }
+            return packageDataMap
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return emptyMap()
+        }
     }
 }

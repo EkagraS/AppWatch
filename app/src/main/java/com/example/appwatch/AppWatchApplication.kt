@@ -3,8 +3,8 @@ package com.example.appwatch
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
-import com.example.appwatch.worker.AppDiscoveryWorker
-import com.example.appwatch.worker.UsageSnapshotWorker
+//import com.example.appwatch.worker.AppDiscoveryWorker
+//import com.example.appwatch.worker.UsageSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -23,53 +23,36 @@ class AppWatchApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-            scheduleAppDiscovery()
-            scheduleUsageSnapshot()
+//            scheduleAppDiscovery()
+//            scheduleUsageSnapshot()
         }
     }
 
-    private fun scheduleAppDiscovery() {
-        // Runs once on first install, then daily
-        val request = PeriodicWorkRequestBuilder<AppDiscoveryWorker>(1, TimeUnit.DAYS)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .build()
-            )
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "app_discovery",
-            ExistingPeriodicWorkPolicy.KEEP, // Don't restart if already scheduled
-            request
-        )
-    }
-
-    private fun scheduleUsageSnapshot() {
-        // Runs every night at approximately midnight to save daily usage to Room
-        val request = PeriodicWorkRequestBuilder<UsageSnapshotWorker>(1, TimeUnit.DAYS)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .build()
-            )
-            .setInitialDelay(calculateDelayUntilMidnight(), TimeUnit.MILLISECONDS)
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "usage_snapshot",
-            ExistingPeriodicWorkPolicy.KEEP,
-            request
-        )
-
-        // Also run immediately once to populate today's data
-        val immediateRequest = OneTimeWorkRequestBuilder<UsageSnapshotWorker>().build()
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "usage_snapshot_immediate",
-            ExistingWorkPolicy.KEEP,
-            immediateRequest
-        )
-    }
+//    private fun scheduleUsageSnapshot() {
+//        // Runs every night at approximately midnight to save daily usage to Room
+//        val request = PeriodicWorkRequestBuilder<UsageSnapshotWorker>(1, TimeUnit.DAYS)
+//            .setConstraints(
+//                Constraints.Builder()
+//                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+//                    .build()
+//            )
+//            .setInitialDelay(calculateDelayUntilMidnight(), TimeUnit.MILLISECONDS)
+//            .build()
+//
+//        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+//            "usage_snapshot",
+//            ExistingPeriodicWorkPolicy.KEEP,
+//            request
+//        )
+//
+//        // Also run immediately once to populate today's data
+//        val immediateRequest = OneTimeWorkRequestBuilder<UsageSnapshotWorker>().build()
+//        WorkManager.getInstance(this).enqueueUniqueWork(
+//            "usage_snapshot_immediate",
+//            ExistingWorkPolicy.KEEP,
+//            immediateRequest
+//        )
+//    }
 
     private fun calculateDelayUntilMidnight(): Long {
         val now = System.currentTimeMillis()

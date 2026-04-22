@@ -2,6 +2,7 @@ package com.example.appwatch.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.domain.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +48,10 @@ class DashboardViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = "Loading..."
         )
+
+    fun getEventsByType(eventType: String): Flow<List<RecentEventEntity>> {
+        return dashboardRepository.getEventsByType(eventType)
+    }
 
     fun formatDataUsage(bytes: Long): String {
         if (bytes == 0L) return "0 MB"

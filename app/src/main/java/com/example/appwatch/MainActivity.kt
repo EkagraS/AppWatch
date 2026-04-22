@@ -18,6 +18,7 @@ import com.example.appwatch.ui.screens.DashboardScreen
 import com.example.appwatch.ui.screens.OnboardingScreen
 import com.example.appwatch.ui.screens.PermissionAuditScreen
 import com.example.appwatch.ui.screens.PermissionScreen
+import com.example.appwatch.ui.screens.RecentEventScreen
 import com.example.appwatch.ui.screens.SettingsScreen
 import com.example.appwatch.ui.screens.SplashScreen
 import com.example.appwatch.ui.screens.StorageDetailScreen
@@ -84,6 +85,12 @@ fun AppWatchNavigation(navController: NavHostController) {
         composable("all_usage/{dayIndex}") { backStackEntry ->
             val dayIndex = backStackEntry.arguments?.getString("dayIndex")?.toIntOrNull() ?: 6
             AllUsageScreen(navController, dayIndex)
+        }
+        composable("recentEventScreen/{eventType}"){ backStackEntry ->
+            val type = backStackEntry.arguments?.getString("eventType") ?: "UNKNOWN"
+            RecentEventScreen(eventType = type,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

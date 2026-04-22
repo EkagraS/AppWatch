@@ -3,8 +3,10 @@ package com.example.appwatch.system
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.os.Build
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.domain.model.AppInfo
 import com.example.appwatch.domain.model.RiskLevel
@@ -101,25 +103,6 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 
-    fun getAppCounts(): Pair<Int, Int> {
-        val packages = packageManager.getInstalledPackages(0)
-        val systemApps = packages.count { (it.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM)) != 0 }
-        val userApps = packages.size - systemApps
-        return Pair(userApps, systemApps)
-    }
-
-    /**
-     * Helper to check specific counts for the Dashboard Insights grid.
-     */
-    fun getAppsWithPermission(permissionSubString: String): Int {
-        val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
-        return packages.count { pkg ->
-            pkg.requestedPermissions?.any {
-                it.contains(permissionSubString, ignoreCase = true)
-            } == true
-        }
-    }
-
     fun getPermissionsForApp(packageName: String): List<PermissionEvidence> {
         return try {
             val packageInfo = packageManager.getPackageInfo(
@@ -174,6 +157,64 @@ class PackageManagerHelper @Inject constructor(
             null
         } catch (e: Exception) {
             null
+        }
+    }
+
+    fun isAppSideloaded(packageName: String): Boolean {
+        return try {
+            val pm = context.packageManager
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+
+            // --- 1. SYSTEM APP CHECK ---
+            // Agar check hone wali app khud system app hai (jaise default camera), toh wo safe hai.
+            val isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+            if (isSystemApp) return false
+
+            // --- 2. ANDROID 13+ MODERN CHECK ---
+            // Naye Android versions OS level pe track karte hain ki file kahan se aayi.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val source = pm.getInstallSourceInfo(packageName).packageSource
+                if (source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE ||
+                    source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE) {
+                    return true // OS perfectly caught it
+                }
+            }
+
+            // --- 3. TERA IDEA: AAB (Split APK) vs Monolithic APK Check ---
+            // Play Store (AAB) hamesha splitSourceDirs mein multiple paths dega.
+            // Chrome/File Manager se download hui single .apk file mein yeh null ya empty hoga.
+            val isSingleMonolithicApk = appInfo.splitSourceDirs.isNullOrEmpty()
+
+            // --- 4. INSTALLER DYNAMICS ---
+            val installerPackage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                pm.getInstallSourceInfo(packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getInstallerPackageName(packageName)
+            }
+
+            // Agar installer null hai -> ADB ya old manual package installer tap.
+            if (installerPackage == null) return true
+
+            // Installer ka info nikalo
+            val installerInfo = pm.getApplicationInfo(installerPackage, 0)
+            val isInstallerSystemApp = (installerInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+
+            // --- THE FINAL DYNAMIC DECISION (ZERO HARDCODING) ---
+
+            // CONDITION A: Agar Chrome jaisi koi System App isko install kar rahi hai,
+            // PAR app ek single/monolithic APK hai (AAB nahi hai), toh it's a Chrome Sideload!
+            if (isInstallerSystemApp && isSingleMonolithicApk) {
+                return true
+            }
+
+            // CONDITION B: Agar jis app ne isko install kiya hai (like Telegram/ShareIt),
+            // wo khud ek User App hai, toh 100% Sideloaded hai.
+            return !isInstallerSystemApp
+
+        } catch (e: Exception) {
+            // App uninstall ho gayi ho ya data na mile, safely false return karo
+            false
         }
     }
 }
