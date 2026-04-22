@@ -3,9 +3,12 @@ package com.example.appwatch.di
 import android.content.Context
 import com.example.appwatch.data.local.AppWatchDatabase
 import com.example.appwatch.data.local.dao.AppInfoDao
+import com.example.appwatch.data.local.dao.AppNotificationDao
 import com.example.appwatch.data.local.dao.PermissionAccessDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
+import com.example.appwatch.data.repository.AppNotificationRepositoryImpl
+import com.example.appwatch.domain.repository.AppNotificationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,4 +41,17 @@ object AppModule {
         return db.recentEventDao()
     }
 
+    @Provides
+    @Singleton
+    fun provideNotificationDao(db: AppWatchDatabase): AppNotificationDao {
+        return db.appNotificationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationRepository(
+        dao: AppNotificationDao
+    ): AppNotificationRepository {
+        return AppNotificationRepositoryImpl(dao)
+    }
 }

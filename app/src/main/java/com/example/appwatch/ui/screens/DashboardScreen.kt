@@ -107,7 +107,7 @@ fun DashboardContent(
 ) {
     Scaffold(
         topBar = {
-            Column { // Column add kiya taaki Progress Bar TopBar ke neeche aaye
+            Column {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
@@ -122,7 +122,7 @@ fun DashboardContent(
                         }
                     }
                 )
-                // CLAUDE'S SYNC INDICATOR: Yeh batayega ki piche heavy scan chal raha hai
+
                 if (isRefreshing) {
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth().height(2.dp),
@@ -225,7 +225,7 @@ fun DashboardContent(
                         icon = Icons.Default.Notifications,
                         color = Color(0xFFEAB308), // Amber/Yellow theme
                         modifier = Modifier.weight(1f),
-                        onClick = { /* Optional: Navigate to notifications detail */ }
+                        onClick = { navController.navigate("notification_screen") }
                     )
                 }
                 Row(

@@ -1,10 +1,12 @@
 package com.example.appwatch
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +25,7 @@ import com.example.appwatch.ui.screens.SettingsScreen
 import com.example.appwatch.ui.screens.SplashScreen
 import com.example.appwatch.ui.screens.StorageDetailScreen
 import com.example.appwatch.ui.screens.UsageStatsScreen
+import com.example.appwatch.ui.screens.today.AppNotificationScreen
 import com.example.appwatch.ui.theme.AppWatch2Theme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,6 +34,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+//        fun checkNotificationPermission() {
+            val enabledListeners = NotificationManagerCompat.getEnabledListenerPackages(this)
+            if (!enabledListeners.contains(packageName)) {
+                // User ko settings mein bhejo
+                startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+            }
         setContent {
             AppWatch2Theme {
                 val navController = rememberNavController()
@@ -91,6 +100,9 @@ fun AppWatchNavigation(navController: NavHostController) {
             RecentEventScreen(eventType = type,
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(route = "notification_screen") {
+            AppNotificationScreen(navController = navController)
         }
     }
 }
