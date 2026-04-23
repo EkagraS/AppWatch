@@ -8,11 +8,7 @@ import android.graphics.drawable.Drawable
 data class AppInfo(
     val packageName: String,
     val appName: String,
-    val iconDrawable: Drawable? = null,
     val isSystemApp: Boolean,
     val totalPermissions: Int,
-    val installedAt: Long = 0L,
-    val riskLevel: RiskLevel = RiskLevel.LOW
+    val installedAt: Long = 0L
 )
-
-enum class RiskLevel { LOW, MEDIUM, HIGH }

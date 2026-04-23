@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.domain.model.RiskLevel
 import com.example.appwatch.presentation.viewmodel.PermissionEvidence
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -145,13 +144,7 @@ class PackageManagerHelper @Inject constructor(
                 appName = packageManager.getApplicationLabel(info).toString(),
                 isSystemApp = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
                 totalPermissions = packageInfo.requestedPermissions?.size ?: 0,
-                iconDrawable = getAppIcon(packageName),
                 installedAt = packageInfo.firstInstallTime,
-                riskLevel = when {
-                    (packageInfo.requestedPermissions?.size ?: 0) >= 15 -> RiskLevel.HIGH
-                    (packageInfo.requestedPermissions?.size ?: 0) >= 5 -> RiskLevel.MEDIUM
-                    else -> RiskLevel.LOW
-                }
             )
         } catch (e: PackageManager.NameNotFoundException) {
             null

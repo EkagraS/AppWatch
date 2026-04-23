@@ -1,16 +1,10 @@
 package com.example.appwatch.presentation.viewmodel
 
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appwatch.data.local.dao.PermissionAccessDao
 import com.example.appwatch.data.local.dao.UsageDao
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.domain.model.RiskLevel
-import com.example.appwatch.domain.repository.AppInfoRepository
-import com.example.appwatch.domain.repository.PermissionRepository
-import com.example.appwatch.domain.repository.UsageRepository
 import com.example.appwatch.system.PackageManagerHelper
 import com.example.appwatch.system.UsageStatsHelper
 import dagger.hilt.android.lifecycle.HiltViewModel

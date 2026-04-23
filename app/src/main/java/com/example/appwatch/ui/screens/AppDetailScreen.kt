@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.appwatch.presentation.viewmodel.AppDetailViewModel
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
 
@@ -101,7 +103,6 @@ fun AppDetailScreen(
                         packageName = app?.packageName ?: packageName ?: "",
                         status = if (app?.isSystemApp == true) "System Application" else "User Application",
                         accentColor = Color(0xFF6366F1),
-                        icon = app?.iconDrawable,
                         totalStorageBytes = appStorage?.totalSizeBytes ?: 0L  // ← add
                     )
                 }
@@ -245,9 +246,10 @@ fun AppDetailHeader(
     packageName: String,
     status: String,
     accentColor: Color,
-    icon: android.graphics.drawable.Drawable?,
     totalStorageBytes: Long = 0L  // ← add this
 ) {
+    val context = LocalContext.current
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -266,20 +268,18 @@ fun AppDetailHeader(
                     .background(accentColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                if (icon != null) {
-                    Image(
-                        bitmap = icon.toBitmap().asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp)
-                    )
-                } else {
-                    Icon(
-                        Icons.Default.Apps,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = accentColor
-                    )
-                }
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(try { context.packageManager.getApplicationIcon(packageName) } catch (e: Exception) { null })
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = appName,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps),
+                    placeholder = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps)
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -25,9 +26,11 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.domain.model.RiskLevel
 import com.example.appwatch.presentation.viewmodel.AppListViewModel
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Apps
 import com.example.appwatch.system.PackageManagerHelper
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +90,7 @@ fun AppListScreen(navController: NavController) {
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("All", "User Apps", "System Apps", "High Risk").forEach { filter ->
+                listOf("All", "User Apps", "System Apps").forEach { filter ->
                     val isSelected = selectedFilter == filter
                     FilterChip(
                         selected = isSelected,
@@ -162,6 +165,7 @@ fun AppListScreen(navController: NavController) {
 
 @Composable
 fun AppListItem(app: AppInfo, onClick: () -> Unit) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -174,32 +178,18 @@ fun AppListItem(app: AppInfo, onClick: () -> Unit) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // App Icon
-            if (app.iconDrawable != null) {
-                AsyncImage(
-                    model = app.iconDrawable,
-                    contentDescription = app.appName,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .background(
-                            Color(0xFF6366F1).copy(alpha = 0.1f),
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Apps,
-                        contentDescription = null,
-                        tint = Color(0xFF6366F1)
-                    )
-                }
-            }
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(context.packageManager.getApplicationIcon(app.packageName))
+                    .crossfade(true)
+                    .build(),
+                contentDescription = app.appName,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                error = rememberVectorPainter(Icons.Default.Apps),
+                placeholder = rememberVectorPainter(Icons.Default.Apps)
+            )
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -211,22 +201,6 @@ fun AppListItem(app: AppInfo, onClick: () -> Unit) {
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f)
                     )
-                    // System app badge
-                    if (app.isSystemApp) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Surface(
-                            color = Color(0xFF6366F1).copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                "System",
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF6366F1),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -242,30 +216,16 @@ fun AppListItem(app: AppInfo, onClick: () -> Unit) {
 
             // Permission count badge + warning icon
             Column(horizontalAlignment = Alignment.End) {
-                val riskColor = when (app.riskLevel) {
-                    RiskLevel.HIGH -> Color(0xFFEF4444)
-                    RiskLevel.MEDIUM -> Color(0xFFF59E0B)
-                    else -> Color(0xFF10B981)
-                }
                 Surface(
-                    color = riskColor.copy(alpha = 0.1f),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
                         "${app.totalPermissions} Perms",
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = riskColor,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
-                    )
-                }
-                if (app.riskLevel == RiskLevel.HIGH && !app.isSystemApp) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = "High Risk",
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(16.dp)
                     )
                 }
             }

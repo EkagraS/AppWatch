@@ -13,14 +13,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.appwatch.presentation.viewmodel.AppsWithPermissionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +35,7 @@ fun AppsWithPermissionScreen(
 ) {
     val apps by viewModel.apps.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val context = LocalContext.current
 
 //    LaunchedEffect(permissionType) {
 //        if (permissionType != null) {
@@ -160,31 +164,18 @@ fun AppsWithPermissionScreen(
                                     modifier = Modifier.padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // App icon
-                                    if (app.iconDrawable != null) {
-                                        AsyncImage(
-                                            model = app.iconDrawable,
-                                            contentDescription = app.appName,
-                                            modifier = Modifier
-                                                .size(46.dp)
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(46.dp)
-                                                .background(
-                                                    permissionColor.copy(alpha = 0.1f),
-                                                    RoundedCornerShape(10.dp)
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Apps,
-                                                contentDescription = null,
-                                                tint = permissionColor
-                                            )
-                                        }
-                                    }
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(context)
+                                            .data(try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null })
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = app.appName,
+                                        modifier = Modifier
+                                            .size(64.dp)
+                                            .clip(RoundedCornerShape(12.dp)),
+                                        error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps),
+                                        placeholder = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps)
+                                    )
 
                                     Spacer(modifier = Modifier.width(14.dp))
 

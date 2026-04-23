@@ -3,8 +3,7 @@ package com.example.appwatch.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.domain.model.RiskLevel
-import com.example.appwatch.system.PackageManagerHelper
+import com.example.appwatch.domain.repository.AppInfoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -13,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppListViewModel @Inject constructor(
-    private val packageManagerHelper: PackageManagerHelper
+    private val repository: AppInfoRepository
 ) : ViewModel() {
 
     private val _allApps = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -21,58 +20,50 @@ class AppListViewModel @Inject constructor(
     private val _selectedFilter = MutableStateFlow("All")
     private val _isLoading = MutableStateFlow(true)
 
-    val searchQuery: StateFlow<String> = _searchQuery
-    val selectedFilter: StateFlow<String> = _selectedFilter
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    val selectedFilter: StateFlow<String> = _selectedFilter.asStateFlow()
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Dashboard style Combine logic
     val apps: StateFlow<List<AppInfo>> = combine(
         _allApps, _searchQuery, _selectedFilter
     ) { apps, query, filter ->
         var result = apps
 
-        // Apply filter
+        // Apply filter (RiskLevel Filter Removed)
         result = when (filter) {
             "User Apps" -> result.filter { !it.isSystemApp }
             "System Apps" -> result.filter { it.isSystemApp }
-            "High Risk" -> result
-                .filter { it.riskLevel == RiskLevel.HIGH }
-                .sortedByDescending { it.totalPermissions }
             else -> result.sortedBy { it.appName }
         }
 
-        // Apply search on top of filter
         if (query.isNotEmpty()) {
             result = result.filter {
                 it.appName.contains(query, ignoreCase = true) ||
                         it.packageName.contains(query, ignoreCase = true)
             }
         }
-
         result
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
-        loadApps()
+        // Step 1: Room ko observe karo
+        viewModelScope.launch {
+            repository.getAllApps(false)
+                .collect { appsFromRoom ->
+                    _allApps.value = appsFromRoom
+                    if (appsFromRoom.isNotEmpty()) _isLoading.value = false
+                }
+        }
+
+        // Step 2: Background refresh (Sync OS -> Room)
+        refreshApps()
     }
 
-    private fun loadApps() {
+    fun refreshApps() {
         viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true
-            val entities = packageManagerHelper.getInstalledAppsMetadata()
-            _allApps.value = entities.map { entity ->
-                AppInfo(
-                    packageName = entity.packageName,
-                    appName = entity.appName,
-                    isSystemApp = entity.isSystemApp,
-                    totalPermissions = entity.totalPermissions,
-                    iconDrawable = packageManagerHelper.getAppIcon(entity.packageName),
-                    riskLevel = when {
-                        entity.totalPermissions > 10 -> RiskLevel.HIGH
-                        entity.totalPermissions > 5 -> RiskLevel.MEDIUM
-                        else -> RiskLevel.LOW
-                    }
-                )
-            }
+            _isLoading.value = _allApps.value.isEmpty()
+            repository.refreshAppCache()
             _isLoading.value = false
         }
     }
