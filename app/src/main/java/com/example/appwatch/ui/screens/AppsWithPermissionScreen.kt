@@ -33,12 +33,12 @@ fun AppsWithPermissionScreen(
     val apps by viewModel.apps.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    LaunchedEffect(permissionType) {
-        if (permissionType != null) {
-            viewModel.loadAppsWithPermission(permissionType)
-        }
-    }
-
+//    LaunchedEffect(permissionType) {
+//        if (permissionType != null) {
+//            viewModel.loadAppsWithPermission(permissionType)
+//        }
+//    }
+//
     val permissionColor = getPermissionTypeColor(permissionType ?: "")
     val permissionIcon = getPermissionTypeIcon(permissionType ?: "")
 
