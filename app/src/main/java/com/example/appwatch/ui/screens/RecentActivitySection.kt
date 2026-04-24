@@ -20,19 +20,41 @@ import com.example.appwatch.domain.model.RecentItem
 @Composable
 fun RecentActivitySection(
     recentItems: List<RecentItem>,
+    isUpdating: Boolean,
     onNavigateToEventScreen: (String) -> Unit
 ) {
     var selectedItem by remember { mutableStateOf<RecentItem?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Recent Activity",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Recent Activity",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            if (isUpdating) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Updating",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
         if (recentItems.isEmpty()) {
             EmptyActivityState()
         } else {
@@ -43,6 +65,7 @@ fun RecentActivitySection(
                 recentItems.forEach { item ->
                     ActivityRowCard(
                         item = item,
+                        isUpdating = isUpdating,
                         onClick = {
                             val count = item.description.filter { it.isDigit() }.toIntOrNull() ?: 1
                             if (count > 5) {
@@ -69,7 +92,7 @@ fun RecentActivitySection(
 }
 
 @Composable
-private fun ActivityRowCard(item: RecentItem, onClick: () -> Unit) {
+private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -> Unit) {
     val (iconTint, bgAlpha) = when (item.eventType) {
         "SIDELOADED_APK" -> Pair(Color(0xFFE53935), 0.1f)
         "DATA_HOG" -> Pair(Color(0xFFFB8C00), 0.1f)
@@ -77,7 +100,7 @@ private fun ActivityRowCard(item: RecentItem, onClick: () -> Unit) {
     }
 
     Card(
-        onClick = onClick,
+        onClick = if (isUpdating) ({}) else onClick,
         enabled = !item.isTimeline, // Data Hog pe click disable
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         modifier = Modifier.fillMaxWidth()

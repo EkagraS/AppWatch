@@ -24,6 +24,7 @@ import com.example.appwatch.domain.model.ActivityItem
 @Composable
 fun NeedsAttentionSection(
     attentionItems: List<ActivityItem>,
+    isUpdating: Boolean,
     onItemClick: (String) -> Unit
 ) {
     Column(
@@ -31,14 +32,36 @@ fun NeedsAttentionSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp) // Match with RecentActivitySection padding
     ) {
-        // --- Section Header ---
-        Text(
-            text = "Needs Attention",
-            style = MaterialTheme.typography.titleLarge, // titleMedium se titleLarge kiya (Match Recent)
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(vertical = 8.dp) // bottom 12 se vertical 8 kiya (Match Recent)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Needs Attention",
+                style = MaterialTheme.typography.titleLarge, // titleMedium se titleLarge kiya (Match Recent)
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(vertical = 8.dp) // bottom 12 se vertical 8 kiya (Match Recent)
+            )
+            if (isUpdating) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Updating",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
 
         // --- Attention Cards ---
         if (attentionItems.isEmpty()) {
@@ -63,6 +86,7 @@ fun NeedsAttentionSection(
                 attentionItems.forEach { item ->
                     AttentionCard(
                         item = item,
+                        isUpdating = isUpdating,
                         onClick = { onItemClick(item.iconType) }
                     )
                 }
@@ -73,7 +97,7 @@ fun NeedsAttentionSection(
 
 @Composable
 private fun AttentionCard(
-    item: ActivityItem,
+    item: ActivityItem, isUpdating: Boolean,
     onClick: () -> Unit
 ) {
     val (icon, color) = when (item.iconType) {
@@ -84,10 +108,10 @@ private fun AttentionCard(
     }
 
     Card(
+        onClick = if (isUpdating) ({}) else onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
+            .clip(RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
