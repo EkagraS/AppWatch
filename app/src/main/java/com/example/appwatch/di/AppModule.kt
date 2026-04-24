@@ -5,6 +5,7 @@ import com.example.appwatch.data.local.AppWatchDatabase
 import com.example.appwatch.data.local.dao.AppDataUsageDao
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.data.local.dao.AppNotificationDao
+import com.example.appwatch.data.local.dao.NeedsAttentionDao
 import com.example.appwatch.data.local.dao.PermissionAccessDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
@@ -42,6 +43,12 @@ object AppModule {
     @Singleton
     fun provideRecentEventDao(db: AppWatchDatabase): RecentEventDao {
         return db.recentEventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNeedsAttentionDao(db: AppWatchDatabase): NeedsAttentionDao {
+        return db.needsAttentionDao()
     }
 
     @Provides

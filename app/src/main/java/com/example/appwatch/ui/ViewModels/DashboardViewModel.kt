@@ -2,6 +2,7 @@ package com.example.appwatch.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.appwatch.data.local.entity.NeedsAttentionEntity
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.domain.repository.DashboardRepository
@@ -51,6 +52,17 @@ class DashboardViewModel @Inject constructor(
 
     fun getEventsByType(eventType: String): Flow<List<RecentEventEntity>> {
         return dashboardRepository.getEventsByType(eventType)
+    }
+
+    fun getNeedsAttentionEventsByType(eventType: String): Flow<List<NeedsAttentionEntity>> {
+        return dashboardRepository.getNeedsAttentionEventsByType(eventType)
+    }
+
+    private val _auditFilter = MutableStateFlow("30") // Unused apps ke liye default (30, 60, 90)
+    val auditFilter: StateFlow<String> = _auditFilter.asStateFlow()
+
+    fun updateUnusedFilter(days: String) {
+        _auditFilter.value = days
     }
 
     fun formatDataUsage(bytes: Long): String {

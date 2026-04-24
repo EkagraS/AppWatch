@@ -31,25 +31,20 @@ class UsageStatsHelper @Inject constructor(
      * Maps raw system data into our UsageEntity for the database.
      */
 
-    fun getAppUsageLastTimestamp(packageName: String): Long {
-        val calendar = Calendar.getInstance()
-        val endTime = calendar.timeInMillis
-        calendar.add(Calendar.YEAR, -1)
-        val startTime = calendar.timeInMillis
+    fun getAppLastUsedTime(packageName: String): Long {
+        val now = System.currentTimeMillis()
+        val startTime = now - (90L * 24 * 60 * 60 * 1000)
 
         val stats = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY,
+            UsageStatsManager.INTERVAL_BEST,
             startTime,
-            endTime
+            now
         )
 
-        val lastUsed = stats?.find { it.packageName == packageName }?.lastTimeUsed ?: 0L
-
-        // FIX: If lastUsed is 0, the system has no record.
-        // We return 0 so the UseCase can ignore it or use Install Time instead.
         return stats
-        ?.filter { it.packageName == packageName }
-            ?.maxOfOrNull { it.lastTimeUsed } ?: 0L
+            ?.filter { it.packageName == packageName && it.lastTimeUsed > 0 }
+            ?.maxByOrNull { it.lastTimeUsed }
+            ?.lastTimeUsed ?: 0L
     }
 
     fun getDailyAppUsage(): List<UsageEntity> {

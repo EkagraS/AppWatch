@@ -1,5 +1,7 @@
 package com.example.appwatch.system
 
+import android.app.AppOpsManager
+import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -13,6 +15,7 @@ import com.example.appwatch.presentation.viewmodel.PermissionEvidence
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.provider.Settings
 
 @Singleton
 class PackageManagerHelper @Inject constructor(
@@ -21,7 +24,84 @@ class PackageManagerHelper @Inject constructor(
 ) {
     private val packageManager = context.packageManager
     private val userHandle = android.os.Process.myUserHandle()
+    private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    private val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
+    fun getSpecialPermissions(packageName: String): List<String> {
+        val enabledSpecialPerms = mutableListOf<String>()
+        val appInfo = try {
+            packageManager.getPackageInfo(packageName, 0).applicationInfo
+        } catch (e: Exception) { null }
+
+        val uid = appInfo?.uid ?: return emptyList()
+
+        // 1. Accessibility Service
+        val enabledAccessibilityServices = Settings.Secure.getString(
+            context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: ""
+        if (enabledAccessibilityServices.contains(packageName)) {
+            enabledSpecialPerms.add("ACCESSIBILITY")
+        }
+
+        // 2. Notification Access
+        val enabledNotificationListeners = Settings.Secure.getString(
+            context.contentResolver, "enabled_notification_listeners"
+        ) ?: ""
+        if (enabledNotificationListeners.contains(packageName)) {
+            enabledSpecialPerms.add("NOTIFICATION_ACCESS")
+        }
+
+        // 3. Display Over Other Apps (Overlay)
+        if (checkOp(AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW, uid, packageName)) {
+            enabledSpecialPerms.add("OVERLAY")
+        }
+
+        // 4. Device Admin
+        val activeAdmins = dpm.activeAdmins
+        val isAdmin = activeAdmins?.any { it.packageName == packageName } ?: false
+        if (isAdmin) {
+            enabledSpecialPerms.add("DEVICE_ADMIN")
+        }
+
+        // 5. Install Unknown Apps
+        if (checkOp("android:request_install_packages", uid, packageName)) {
+            enabledSpecialPerms.add("INSTALL_UNKNOWN_APPS")
+        }
+
+        // 6. Write System Settings
+        if (checkOp(AppOpsManager.OPSTR_WRITE_SETTINGS, uid, packageName)) {
+            enabledSpecialPerms.add("WRITE_SETTINGS")
+        }
+
+        // 7. VPN Service
+        // VPN apps must declare a service with BIND_VPN_SERVICE permission.
+        // We check if the app has a service that handles 'android.net.VpnService'
+        val intent = android.content.Intent(android.net.VpnService.SERVICE_INTERFACE)
+        intent.setPackage(packageName)
+        val vpnServices = packageManager.queryIntentServices(intent, 0)
+        if (vpnServices.isNotEmpty()) {
+            enabledSpecialPerms.add("VPN_SERVICE")
+        }
+
+        return enabledSpecialPerms
+    }
+
+    /**
+     * Helper to check AppOps permissions for other apps
+     */
+    private fun checkOp(op: String, uid: Int, packageName: String): Boolean {
+        return try {
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                appOps.unsafeCheckOpNoThrow(op, uid, packageName)
+            } else {
+                @Suppress("DEPRECATION")
+                appOps.checkOpNoThrow(op, uid, packageName)
+            }
+            mode == AppOpsManager.MODE_ALLOWED
+        } catch (e: Exception) {
+            false
+        }
+    }
     /**
      * Fetches metadata for all installed apps.
      * Fixed the nullability mismatch for applicationInfo.
@@ -91,14 +171,6 @@ class PackageManagerHelper @Inject constructor(
             } == true
         } catch (e: Exception) {
             false
-        }
-    }
-
-    fun getAppIcon(packageName: String): Drawable? {
-        return try {
-            packageManager.getApplicationIcon(packageName)
-        } catch (e: PackageManager.NameNotFoundException) {
-            null
         }
     }
 

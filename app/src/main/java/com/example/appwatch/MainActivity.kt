@@ -1,5 +1,6 @@
 package com.example.appwatch
 
+import android.R.attr.type
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +20,7 @@ import com.example.appwatch.ui.screens.AppDetailScreen
 import com.example.appwatch.ui.screens.AppListScreen
 import com.example.appwatch.ui.screens.AppsWithPermissionScreen
 import com.example.appwatch.ui.screens.DashboardScreen
+import com.example.appwatch.ui.screens.NeedsAttentionScreen
 import com.example.appwatch.ui.screens.OnboardingScreen
 import com.example.appwatch.ui.screens.PermissionAuditScreen
 import com.example.appwatch.ui.screens.PermissionScreen
@@ -102,6 +105,10 @@ fun AppWatchNavigation(navController: NavHostController) {
             RecentEventScreen(eventType = type,
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable("needs_attention/{auditType}") {backStackEntry ->
+            val type= backStackEntry.arguments?.getString("auditType") ?: "UNKNOWN"
+            NeedsAttentionScreen(navController = navController, auditType = type)
         }
         composable(route = "notification_screen") {
             AppNotificationScreen(navController = navController)

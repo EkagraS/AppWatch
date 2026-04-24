@@ -3,10 +3,12 @@ package com.example.appwatch.data.repository
 import android.app.admin.SystemUpdateInfo
 import android.os.Build
 import com.example.appwatch.data.local.dao.AppInfoDao
+import com.example.appwatch.data.local.dao.NeedsAttentionDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
 import com.example.appwatch.data.local.datastore.VitalsDataStore
 import com.example.appwatch.data.local.entity.AppInfoEntity
+import com.example.appwatch.data.local.entity.NeedsAttentionEntity
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.domain.model.ActivityItem
 import com.example.appwatch.domain.model.DashboardSummary
@@ -29,15 +31,14 @@ import javax.inject.Singleton
 class DashboardRepositoryImpl @Inject constructor(
     private val appInfoDao: AppInfoDao,
     private val recentEventDao: RecentEventDao,
+    private val needsAttentionDao: NeedsAttentionDao,
     private val packageManagerHelper: PackageManagerHelper,
     private val storageStatsHelper: StorageStatsHelper,
     private val usageStatsHelper: UsageStatsHelper,
-    private val appOpsHelper: AppOpsHelper,
     private val vitalsDataStore: VitalsDataStore,
 ) : DashboardRepository {
 
     // Caching system data to prevent 20s lag on every Room emission
-    private var cachedSummary: DashboardSummary? = null
     private var cachedScreenTime: String = "0m"
     private var cachedUsedStorage: String = "0 B"
     private var cachedTotalStorage: String = "0 B"
@@ -46,16 +47,18 @@ class DashboardRepositoryImpl @Inject constructor(
         val sevenDaysAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000)
         return combine(
             appInfoDao.getAllAppsAlphabetical(),
-            recentEventDao.getRecentEventsFlow(sevenDaysAgo)
-        ) { apps, recentEvents -> // 🔴 FIX: Ab dono list aage bhej rahe hain
+            recentEventDao.getRecentEventsFlow(sevenDaysAgo),
+            needsAttentionDao.getNeedsAttentionFlow()
+        ) { apps, recentEvents, needsAttention -> // 🔴 FIX: Ab dono list aage bhej rahe hain
             if (apps.isEmpty()) {
                 emptyDashboard()
             } else {
                 // Ab events direct database-flow se aayenge
-                calculateSummaryFull(apps, recentEvents, cachedScreenTime)
+                calculateSummaryFull(entities = apps,recentEvents= recentEvents,needsAttention= needsAttention, screenTime = cachedScreenTime)
             }
         }.flowOn(Dispatchers.IO)
     }
+
     private fun calculateSummaryFast(entities: List<AppInfoEntity>): DashboardSummary {
         val userApps = entities.filter { !it.isSystemApp }
 
@@ -64,7 +67,11 @@ class DashboardRepositoryImpl @Inject constructor(
             .filter { !it.isSystemApp && it.totalPermissions >= 15 }
             .take(3)
             .map {
-                ActivityItem(it.packageName, it.appName, "High Permission Count (${it.totalPermissions})")
+                ActivityItem(
+                    it.packageName,
+                    it.appName,
+                    "High Permission Count (${it.totalPermissions})"
+                )
             }
 
         return DashboardSummary(
@@ -83,7 +90,12 @@ class DashboardRepositoryImpl @Inject constructor(
             recentActivity = listOf(
                 // Naya RecentItem data class use kiya as requested
                 RecentItem("PRIVACY", "Privacy Insights", "Scanning background access...", false),
-                RecentItem("INSTALL", "New Installations", "${userApps.count { System.currentTimeMillis() - it.installedAt < 7L*24*60*60*1000 }} this week", false)
+                RecentItem(
+                    "INSTALL",
+                    "New Installations",
+                    "${userApps.count { System.currentTimeMillis() - it.installedAt < 7L * 24 * 60 * 60 * 1000 }} this week",
+                    false
+                )
             )
         )
     }
@@ -108,7 +120,9 @@ class DashboardRepositoryImpl @Inject constructor(
                             val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
                             val date = parser.parse(rawDate)
                             if (date != null) formattedPatch = formatter.format(date)
-                        } catch (e: Exception) { formattedPatch = rawDate }
+                        } catch (e: Exception) {
+                            formattedPatch = rawDate
+                        }
                     }
                 }
                 val vitals = usageStatsHelper.getTodayDeviceVitals()
@@ -116,13 +130,19 @@ class DashboardRepositoryImpl @Inject constructor(
                 val currentNotifications = vitals.second
                 val currentDataUsageBytes = usageStatsHelper.getTodayTotalDataUsage()
 
-                vitalsDataStore.saveVitals(currentUnlocks, currentNotifications, currentDataUsageBytes, formattedPatch)
+                vitalsDataStore.saveVitals(
+                    currentUnlocks,
+                    currentNotifications,
+                    currentDataUsageBytes,
+                    formattedPatch
+                )
 
                 // 2. Refresh App Metadata
                 val liveApps = packageManagerHelper.getInstalledAppsMetadata()
 //                cachedSummary = calculateSummaryFast(liveApps, cachedScreenTime)
                 appInfoDao.insertAllMetadata(liveApps)
                 syncRecentEventsFromOS(liveApps)
+                syncNeedsAttentionFromOS(liveApps)
 
                 // 4. Update individual storage (Slowest part)
                 val now = System.currentTimeMillis()
@@ -154,6 +174,7 @@ class DashboardRepositoryImpl @Inject constructor(
     private fun calculateSummaryFull(
         entities: List<AppInfoEntity>,
         recentEvents: List<RecentEventEntity>,
+        needsAttention: List<NeedsAttentionEntity>,
         screenTime: String
     ): DashboardSummary {
         val userApps = entities.filter { !it.isSystemApp }
@@ -161,7 +182,8 @@ class DashboardRepositoryImpl @Inject constructor(
         // 🔴 NAYE EVENTS COUNTING
         val installsCount = recentEvents.count { it.eventType == "INSTALL" }
         val updatesCount = recentEvents.count { it.eventType == "UPDATE" }
-        val uninstallsCount = recentEvents.count { it.eventType == "UNINSTALL" } // Agar aage chal ke daala
+        val uninstallsCount =
+            recentEvents.count { it.eventType == "UNINSTALL" } // Agar aage chal ke daala
 
         // Data hogs aur Sideloaded ki list
         val dataHogs = recentEvents.filter { it.eventType == "DATA_HOG" }
@@ -172,14 +194,22 @@ class DashboardRepositoryImpl @Inject constructor(
 
         // 1. Privacy / Security: Sideloaded Apps (Top Priority - Bottom Sheet)
         if (sideloaded.isNotEmpty()) {
-            dynamicActivityList.add(RecentItem("SIDELOADED_APK", "Unknown Sources", "${sideloaded.size} apps installed outside Play Store", true))
+            dynamicActivityList.add(
+                RecentItem(
+                    "SIDELOADED_APK",
+                    "Unknown Sources",
+                    "${sideloaded.size} apps installed outside Play Store",
+                    true
+                )
+            )
         }
 
         // 2. Data Usage: Heavy Data Consumers (Bottom Sheet)
         if (dataHogs.isNotEmpty()) {
             val topHog = dataHogs.first()
 
-            val actualAppName = entities.find { it.packageName == topHog.packageName }?.appName ?: "An app"
+            val actualAppName =
+                entities.find { it.packageName == topHog.packageName }?.appName ?: "An app"
             val topAppSize = topHog.extraInfo ?: "massive data"
 
             dynamicActivityList.add(
@@ -194,25 +224,56 @@ class DashboardRepositoryImpl @Inject constructor(
 
         // 3. New Installations (Screen)
         if (installsCount > 0) {
-            dynamicActivityList.add(RecentItem("INSTALL", "New Installations", "$installsCount apps installed this week", false))
+            dynamicActivityList.add(
+                RecentItem(
+                    "INSTALL",
+                    "New Installations",
+                    "$installsCount apps installed this week",
+                    false
+                )
+            )
         }
 
         // 4. App Updates (Bottom Sheet)
         if (updatesCount > 0) {
-            dynamicActivityList.add(RecentItem("UPDATE", "App Updates", "$updatesCount apps updated this week", false))
+            dynamicActivityList.add(
+                RecentItem(
+                    "UPDATE",
+                    "App Updates",
+                    "$updatesCount apps updated this week",
+                    false
+                )
+            )
         }
 
         // Fallback for uninstalls
         if (uninstallsCount > 0) {
-            dynamicActivityList.add(RecentItem("UNINSTALL", "Apps Removed", "$uninstallsCount apps deleted this week", false))
+            dynamicActivityList.add(
+                RecentItem(
+                    "UNINSTALL",
+                    "Apps Removed",
+                    "$uninstallsCount apps deleted this week",
+                    false
+                )
+            )
         }
 
-        val ghostRisks = mutableListOf<ActivityItem>()
-        val backgroundActors = mutableListOf<ActivityItem>()
-        val dataHogsList = mutableListOf<ActivityItem>()
+        //Needs Attention
 
-        val finalAttentionList = mutableListOf<ActivityItem>()
-        backgroundActors.firstOrNull()?.let { finalAttentionList.add(it) }
+        val unused30 = needsAttention.count { it.eventType == "AUDIT_UNUSED_30" }
+        val unused60 = needsAttention.count { it.eventType == "AUDIT_UNUSED_60" }
+        val unused90 = needsAttention.count { it.eventType == "AUDIT_UNUSED_90" }
+        val totalUnused = unused30 + unused60 + unused90
+
+        val staleCount = needsAttention.count { it.eventType == "AUDIT_STALE_PERMS" }
+        val specialCount = needsAttention.count { it.eventType == "AUDIT_SPECIAL_ACCESS" }
+
+        val attentionItems = mutableListOf<ActivityItem>()
+
+        // Add items to list if counts > 0 (as you wrote before)
+        if (totalUnused > 0) attentionItems.add(ActivityItem("Unused Apps", "$totalUnused apps", "UNUSED"))
+        if (staleCount > 0) attentionItems.add(ActivityItem("Stale Permissions", "$staleCount apps", "STALE"))
+        if (specialCount > 0) attentionItems.add(ActivityItem("Highly Sensitive", "$specialCount apps", "SPECIAL"))
 
         return DashboardSummary(
             totalApps = userApps.size,
@@ -227,11 +288,14 @@ class DashboardRepositoryImpl @Inject constructor(
             usedStorage = cachedUsedStorage,
             totalStorage = cachedTotalStorage,
             recentActivity = dynamicActivityList,
-            attentionItems = finalAttentionList
+            attentionItems = attentionItems
         )
     }
+
     private suspend fun syncRecentEventsFromOS(entities: List<AppInfoEntity>) {
-        val sevenDaysAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000)
+        val now = System.currentTimeMillis()
+        val dayMillis = 24L * 60 * 60 * 1000
+        val sevenDaysAgo = now - (7L * 24 * 60 * 60 * 1000)
         val newEvents = mutableListOf<RecentEventEntity>()
 
         // 1. Heavy Data consumers nikal lo (Map of PackageName to Bytes)
@@ -242,32 +306,38 @@ class DashboardRepositoryImpl @Inject constructor(
 
             // --- FEATURE 1: Nayi Installations ---
             if (app.installedAt > sevenDaysAgo) {
-                newEvents.add(RecentEventEntity(
-                    packageName = app.packageName,
-                    eventType = "INSTALL",
-                    timestamp = app.installedAt
-                ))
+                newEvents.add(
+                    RecentEventEntity(
+                        packageName = app.packageName,
+                        eventType = "INSTALL",
+                        timestamp = app.installedAt
+                    )
+                )
             }
 
             // --- FEATURE 2: App Updates ---
             if (app.lastUpdatedAt > sevenDaysAgo && app.lastUpdatedAt > (app.installedAt + 60000)) {
-                newEvents.add(RecentEventEntity(
-                    packageName = app.packageName,
-                    eventType = "UPDATE",
-                    timestamp = app.lastUpdatedAt
-                ))
+                newEvents.add(
+                    RecentEventEntity(
+                        packageName = app.packageName,
+                        eventType = "UPDATE",
+                        timestamp = app.lastUpdatedAt
+                    )
+                )
             }
 
             // --- FEATURE 3: Sideloaded / Unknown Sources ---
             // Ise humesha check karenge, kyunki sideloaded app risky hoti hai.
             // Timestamp mein install time daalenge.
             if (packageManagerHelper.isAppSideloaded(app.packageName)) {
-                newEvents.add(RecentEventEntity(
-                    packageName = app.packageName,
-                    eventType = "SIDELOADED_APK",
-                    timestamp = app.installedAt,
-                    extraInfo = "Installed from unknown source"
-                ))
+                newEvents.add(
+                    RecentEventEntity(
+                        packageName = app.packageName,
+                        eventType = "SIDELOADED_APK",
+                        timestamp = app.installedAt,
+                        extraInfo = "Installed from unknown source"
+                    )
+                )
             }
 
             // --- FEATURE 4: Heavy Data Hogs ---
@@ -278,47 +348,109 @@ class DashboardRepositoryImpl @Inject constructor(
             // Minimum 10MB ka limit rakha hai taaki 5-10 KB use karne wali app faltu mein na dikhe
             if (topDataConsumer != null && topDataConsumer.value > (10L * 1024 * 1024)) {
                 val formattedSize = storageStatsHelper.formatSize(topDataConsumer.value)
-                newEvents.add(RecentEventEntity(
-                    packageName = topDataConsumer.key,
-                    eventType = "DATA_HOG",
-                    timestamp = System.currentTimeMillis(),
-                    extraInfo = formattedSize // Extra info mein humne size save kar liya (e.g., "1.2 GB")
-                ))
+                newEvents.add(
+                    RecentEventEntity(
+                        packageName = topDataConsumer.key,
+                        eventType = "DATA_HOG",
+                        timestamp = System.currentTimeMillis(),
+                        extraInfo = formattedSize // Extra info mein humne size save kar liya (e.g., "1.2 GB")
+                    )
+                )
+            }
+
+
+//        recentEventDao.clearSyncedEvents()
+            if (newEvents.isNotEmpty()) {
+                recentEventDao.insertEvents(newEvents)
+            }
+        }
+    }
+
+    private suspend fun syncNeedsAttentionFromOS(entities: List<AppInfoEntity>) {
+        val now = System.currentTimeMillis()
+        val dayMillis = 24L * 60 * 60 * 1000
+        val newEvents = mutableListOf<NeedsAttentionEntity>()
+
+        // Pehle purana audit data clear karo
+        needsAttentionDao.clearAuditEvents()
+
+        entities.filter { !it.isSystemApp }.forEach { app ->
+            // 1. Special Permissions
+            val specialPerms = packageManagerHelper.getSpecialPermissions(app.packageName)
+            if (specialPerms.isNotEmpty()) {
+                newEvents.add(
+                    NeedsAttentionEntity(
+                        packageName = app.packageName,
+                        eventType = "AUDIT_SPECIAL_ACCESS",
+                        timestamp = now,
+                        extraInfo = specialPerms.joinToString(", ")
+                    )
+                )
+            }
+
+            // 2. Unused & Stale Logic
+            val lastUsed = usageStatsHelper.getAppLastUsedTime(app.packageName)
+            if (lastUsed != 0L) {
+                val daysUnused = (now - lastUsed) / dayMillis
+
+                // Unused
+                val unusedType = when {
+                    daysUnused >= 90 -> "AUDIT_UNUSED_90"
+                    daysUnused >= 60 -> "AUDIT_UNUSED_60"
+                    daysUnused >= 30 -> "AUDIT_UNUSED_30"
+                    else -> null
+                }
+                if (unusedType != null) {
+                    newEvents.add(NeedsAttentionEntity(packageName = app.packageName, eventType=unusedType, timestamp=lastUsed,extraInfo= "Not used in $daysUnused days"))
+                }
+
+                // Stale
+                val hasSensitive = app.hasLocation || app.hasCamera || app.hasMic || app.hasSms || app.hasContacts
+                if (hasSensitive && daysUnused >= 30) {
+                    newEvents.add(NeedsAttentionEntity(packageName = app.packageName, eventType="AUDIT_STALE_PERMS", timestamp=lastUsed, extraInfo= "Sensitive perms active but app dormant"))
+                }
             }
         }
 
-//        recentEventDao.clearSyncedEvents()
         if (newEvents.isNotEmpty()) {
-            recentEventDao.insertEvents(newEvents)
+            needsAttentionDao.insertEvents(newEvents)
         }
     }
 
     override fun getEventsByType(eventType: String): Flow<List<RecentEventEntity>> {
-        return recentEventDao.getEventsByType(eventType)
+            return recentEventDao.getEventsByType(eventType)
+        }
+
+    override fun getNeedsAttentionEventsByType(eventType: String): Flow<List<NeedsAttentionEntity>> {
+        return needsAttentionDao.getEventsByType(eventType)
     }
 
-    override fun getTodayTotalUnlocks(): Flow<Int> = vitalsDataStore.vitalsFlow.map { it.unlocks }
+        override fun getTodayTotalUnlocks(): Flow<Int> =
+            vitalsDataStore.vitalsFlow.map { it.unlocks }
 
-    override fun getTodayTotalNotifications(): Flow<Int> = vitalsDataStore.vitalsFlow.map { it.notifications }
+        override fun getTodayTotalNotifications(): Flow<Int> =
+            vitalsDataStore.vitalsFlow.map { it.notifications }
 
-    override fun getTodayDataUsage(): Flow<Long> = vitalsDataStore.vitalsFlow.map { it.dataUsage }
+        override fun getTodayDataUsage(): Flow<Long> =
+            vitalsDataStore.vitalsFlow.map { it.dataUsage }
 
-    override fun getSystemUpdateInfo(): Flow<String> = vitalsDataStore.vitalsFlow.map { it.patchDate }
+        override fun getSystemUpdateInfo(): Flow<String> =
+            vitalsDataStore.vitalsFlow.map { it.patchDate }
 
 
-    private fun emptyDashboard() = DashboardSummary(
-        totalApps = 0,
-        highRiskApps = 0,
-        totalScreenTime = "0m",
-        locationAppsCount = 0,
-        cameraAppsCount = 0,
-        micAppsCount = 0,
-        contactAppsCount = 0,
-        phoneAppsCount = 0,
-        SmsAppsCount = 0,
-        usedStorage = "0 B",
-        totalStorage = "0 B",
-        attentionItems = emptyList(),
-        recentActivity = emptyList()
-    )
-}
+        private fun emptyDashboard() = DashboardSummary(
+            totalApps = 0,
+            highRiskApps = 0,
+            totalScreenTime = "0m",
+            locationAppsCount = 0,
+            cameraAppsCount = 0,
+            micAppsCount = 0,
+            contactAppsCount = 0,
+            phoneAppsCount = 0,
+            SmsAppsCount = 0,
+            usedStorage = "0 B",
+            totalStorage = "0 B",
+            attentionItems = emptyList(),
+            recentActivity = emptyList()
+        )
+    }

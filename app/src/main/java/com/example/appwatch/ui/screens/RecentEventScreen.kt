@@ -39,7 +39,6 @@ import kotlinx.coroutines.withContext
 fun RecentEventScreen(
     eventType: String,
     onNavigateBack: () -> Unit,
-    // 🔴 TERA ASLI VIEWMODEL JISE HUM DB SE CONNECT KARENGE
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     // DB se Live flow collect ho raha hai

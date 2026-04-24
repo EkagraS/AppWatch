@@ -260,59 +260,62 @@ fun DashboardContent(
                 RecentActivitySection(recentItems = summary.recentActivity,onNavigateToEventScreen = { type ->
                     navController.navigate("recentEventScreen/$type")
                 })
+                NeedsAttentionSection(attentionItems = summary.attentionItems, onItemClick = {type ->
+                    navController.navigate("needs_attention/$type")
+                })
             }
 
             // 2. Needs Attention Header
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Needs Attention",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF111827)
-                    )
-                    TextButton(onClick = { navController.navigate("permission_audit") }) {
-                        Text("Audit All", color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
-                        Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(16.dp))
-                    }
-                }
-            }
-
-            // 4. Attention Items (Crossfade for smooth transition when data arrives)
-            val attentionItems = summary.attentionItems
-            if (attentionItems.isEmpty() && !isRefreshing) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(Icons.Default.Shield, null, tint = Color(0xFF10B981), modifier = Modifier.size(32.dp))
-                            Spacer(Modifier.height(8.dp))
-                            Text("System Secure", fontWeight = FontWeight.Bold)
-                            Text("No immediate privacy risks.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        }
-                    }
-                }
-            } else {
-//                items(attentionItems) { item ->
-//                    AppAttentionItem(
-//                        appName = item.appName,
-//                        reason = item.reason,
-//                        severity = item.severity,
-//                        packageName = item.packageName,
-//                        onActionClick = { navController.navigate("app_detail/${item.packageName}") }
+//            item {
+//                Row(
+//                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = "Needs Attention",
+//                        style = MaterialTheme.typography.titleLarge,
+//                        fontWeight = FontWeight.ExtraBold,
+//                        color = Color(0xFF111827)
 //                    )
+//                    TextButton(onClick = { navController.navigate("permission_audit") }) {
+//                        Text("Audit All", color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
+//                        Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(16.dp))
+//                    }
 //                }
-            }
+//            }
+//
+//            // 4. Attention Items (Crossfade for smooth transition when data arrives)
+//            val attentionItems = summary.attentionItems
+//            if (attentionItems.isEmpty() && !isRefreshing) {
+//                item {
+//                    Card(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        colors = CardDefaults.cardColors(containerColor = Color.White),
+//                        shape = RoundedCornerShape(16.dp)
+//                    ) {
+//                        Column(
+//                            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+//                            horizontalAlignment = Alignment.CenterHorizontally
+//                        ) {
+//                            Icon(Icons.Default.Shield, null, tint = Color(0xFF10B981), modifier = Modifier.size(32.dp))
+//                            Spacer(Modifier.height(8.dp))
+//                            Text("System Secure", fontWeight = FontWeight.Bold)
+//                            Text("No immediate privacy risks.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+//                        }
+//                    }
+//                }
+//            } else {
+////                items(attentionItems) { item ->
+////                    AppAttentionItem(
+////                        appName = item.appName,
+////                        reason = item.reason,
+////                        severity = item.severity,
+////                        packageName = item.packageName,
+////                        onActionClick = { navController.navigate("app_detail/${item.packageName}") }
+////                    )
+////                }
+//            }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
