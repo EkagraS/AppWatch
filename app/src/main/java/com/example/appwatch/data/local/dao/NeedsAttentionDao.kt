@@ -23,4 +23,7 @@ interface NeedsAttentionDao {
 
     @Query("DELETE FROM needs_attention WHERE eventType LIKE 'AUDIT_%'")
     suspend fun clearAuditEvents()
+
+    @Query("DELETE FROM needs_attention WHERE packageName NOT IN (:packageNames)")
+    suspend fun deleteRemovedApps(packageNames: List<String>)
 }

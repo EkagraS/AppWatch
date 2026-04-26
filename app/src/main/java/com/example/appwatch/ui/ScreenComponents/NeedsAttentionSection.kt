@@ -1,7 +1,7 @@
-package com.example.appwatch.ui.screens
+package com.example.appwatch.ui.ScreenComponents
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,12 +30,12 @@ fun NeedsAttentionSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp) // Match with RecentActivitySection padding
+//            .padding(vertical = 8.dp) // Match with RecentActivitySection padding
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .fillMaxWidth(),
+//                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -46,7 +46,8 @@ fun NeedsAttentionSection(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(vertical = 8.dp) // bottom 12 se vertical 8 kiya (Match Recent)
             )
-            if (isUpdating) {
+            Spacer(modifier = Modifier.height(8.dp))
+            if (isUpdating && attentionItems.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "Updating",
@@ -169,7 +170,7 @@ private fun AttentionCard(
 
 object BoxDefaults {
     @Composable
-    fun borderStroke() = androidx.compose.foundation.BorderStroke(
+    fun borderStroke() = BorderStroke(
         width = 1.dp,
         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     )

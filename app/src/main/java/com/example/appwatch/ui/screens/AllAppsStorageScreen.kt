@@ -1,5 +1,6 @@
 package com.example.appwatch.ui.screens
 
+import android.content.pm.PackageManager
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -20,12 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage // 👈 Icons ke liye
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
 import com.example.appwatch.system.AppStorageInfo
+import com.example.appwatch.ui.theme.* // 👈 Naye colors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,54 +42,42 @@ fun AllAppsStorageScreen(
     val apps = uiState.userApps
     val maxSize = apps.firstOrNull()?.totalSizeBytes ?: 1L
 
-    // Track which card is expanded
-    var expandedIndex by remember { mutableStateOf<Int?>(null) }
+    // Storage Specific Colors (Teal Variety)
+    val StoragePrimary = Teal600
+
+    val expandedIndex by remember { mutableStateOf<Int?>(null) }
+    var localExpandedIndex by remember { mutableStateOf<Int?>(null) }
     val listState = rememberLazyListState()
 
-    // Auto-close expanded card when it scrolls out of view
-    LaunchedEffect(listState.firstVisibleItemIndex) {
-        expandedIndex?.let { index ->
-            val visibleItems = listState.layoutInfo.visibleItemsInfo
-            val isVisible = visibleItems.any { it.index == index + 1 } // +1 for header item
-            if (!isVisible) {
-                expandedIndex = null
-            }
-        }
-    }
-
     Scaffold(
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight),
                 title = {
                     Column {
-                        Text("All Apps", fontWeight = FontWeight.Bold)
+                        Text("All Apps", fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(
                             "${apps.size} downloaded apps",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = TextSecondary
                         )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 }
             )
         }
     ) { padding ->
         if (apps.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color(0xFF6366F1))
+                    CircularProgressIndicator(color = StoragePrimary)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "Loading app storage...",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("Analyzing app storage...", color = TextSecondary)
                 }
             }
         } else {
@@ -94,47 +87,36 @@ fun AllAppsStorageScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
-                // Total summary header
+                // Total Summary Header
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF6366F1).copy(alpha = 0.08f)
-                        )
+                        colors = CardDefaults.cardColors(containerColor = StoragePrimary.copy(alpha = 0.08f)),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Total",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                formatStorageSize(uiState.totalUserAppsBytes),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color(0xFF6366F1)
-                            )
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.PieChart, null, tint = StoragePrimary, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text("Total App Storage", style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f))
+                            Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Black, color = StoragePrimary)
                         }
                     }
                 }
 
                 itemsIndexed(apps, key = { _, app -> app.packageName }) { index, app ->
-                    val isExpanded = expandedIndex == index
+                    val isExpanded = localExpandedIndex == index
                     val fraction = if (maxSize > 0) app.totalSizeBytes.toFloat() / maxSize else 0f
 
                     ExpandableAppStorageCard(
                         app = app,
                         isExpanded = isExpanded,
                         fraction = fraction,
+                        accentColor = StoragePrimary,
                         onToggle = {
-                            expandedIndex = if (isExpanded) null else index
+                            localExpandedIndex = if (isExpanded) null else index
                         },
                         onClick = {
                             navController.navigate("app_detail/${app.packageName}")
@@ -151,132 +133,77 @@ fun ExpandableAppStorageCard(
     app: AppStorageInfo,
     isExpanded: Boolean,
     fraction: Float,
+    accentColor: Color,
     onToggle: () -> Unit,
     onClick: () -> Unit
 ) {
-    val animatedFraction by animateFloatAsState(
-        targetValue = fraction,
-        animationSpec = tween(600),
-        label = "storage_bar"
-    )
-    val arrowRotation by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
-        animationSpec = tween(300),
-        label = "arrow_rotation"
-    )
+    val context = LocalContext.current
+    val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(600), label = "bar")
+    val arrowRotation by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, animationSpec = tween(300), label = "arrow")
+
+    // Fetching Icon
+    val appIcon = remember(app.packageName) {
+        try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Main row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            Color(0xFF6366F1).copy(alpha = 0.1f),
-                            RoundedCornerShape(10.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Apps,
-                        contentDescription = null,
-                        tint = Color(0xFF6366F1),
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Main App Row
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                // 🔴 APP ICON ADDED
+                AsyncImage(
+                    model = appIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp))
+                )
+
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    app.appName,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1
-                )
-                Text(
-                    formatStorageSize(app.totalSizeBytes),
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6366F1),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                // Expand/collapse button
-                IconButton(
-                    onClick = onToggle,
-                    modifier = Modifier.size(32.dp)
-                ) {
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(app.appName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, maxLines = 1)
+                    Text(app.packageName, style = MaterialTheme.typography.labelSmall, color = TextSecondary, maxLines = 1)
+                }
+
+                Text(formatStorageSize(app.totalSizeBytes), fontWeight = FontWeight.Bold, color = accentColor)
+
+                IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
                     Icon(
                         Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .rotate(arrowRotation)
+                        null,
+                        tint = TextSecondary,
+                        modifier = Modifier.rotate(arrowRotation).size(20.dp)
                     )
                 }
             }
 
-            // Progress bar always visible
+            // Always visible progress bar
             LinearProgressIndicator(
                 progress = { animatedFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = Color(0xFF6366F1),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                color = accentColor,
+                trackColor = SurfaceVariantSoft
             )
 
-            // Expanded details
+            // Expanded Breakdown
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = expandVertically(tween(300)) + fadeIn(tween(300)),
-                exit = shrinkVertically(tween(300)) + fadeOut(tween(300))
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        StorageBreakdownItem(
-                            label = "App",
-                            bytes = app.appSizeBytes,
-                            color = Color(0xFF6366F1)
-                        )
-                        StorageBreakdownItem(
-                            label = "Data",
-                            bytes = app.dataSizeBytes,
-                            color = Color(0xFF10B981)
-                        )
-                        StorageBreakdownItem(
-                            label = "Cache",
-                            bytes = app.cacheSizeBytes,
-                            color = Color(0xFFF59E0B)
-                        )
-                        StorageBreakdownItem(
-                            label = "Total",
-                            bytes = app.totalSizeBytes,
-                            color = Color(0xFFEF4444)
-                        )
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Divider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
+                    Spacer(Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        StorageBreakdownItem(label = "App", bytes = app.appSizeBytes, color = StorageApp)
+                        StorageBreakdownItem(label = "Data", bytes = app.dataSizeBytes, color = StorageData)
+                        StorageBreakdownItem(label = "Cache", bytes = app.cacheSizeBytes, color = StorageCache)
+                        StorageBreakdownItem(label = "Total", bytes = app.totalSizeBytes, color = StorageTotal)
                     }
                 }
             }
@@ -287,16 +214,7 @@ fun ExpandableAppStorageCard(
 @Composable
 fun StorageBreakdownItem(label: String, bytes: Long, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            formatStorageSize(bytes),
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.bodySmall,
-            color = color
-        )
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Text(formatStorageSize(bytes), fontWeight = FontWeight.Black, fontSize = 13.sp, color = color)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
     }
 }

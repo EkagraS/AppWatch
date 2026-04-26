@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,11 +24,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage // 👈 Icon loading ke liye
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
+import com.example.appwatch.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +41,7 @@ fun StorageDetailScreen(
     viewModel: StorageViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -43,8 +49,8 @@ fun StorageDetailScreen(
     ) { permissions ->
         val granted = permissions.values.any { it }
         if (granted) {
-            viewModel.loadMediaStorage()  // ← load immediately
-            viewModel.checkMediaPermission() // ← also update permission state
+            viewModel.loadMediaStorage()
+            viewModel.checkMediaPermission()
         }
     }
 
@@ -62,22 +68,22 @@ fun StorageDetailScreen(
     }
 
     Scaffold(
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text("Storage Analysis", fontWeight = FontWeight.Bold) },
+                title = { Text("Storage Analysis", fontWeight = FontWeight.Bold, color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight),
                 actions = {
                     if (uiState.isRefreshing) {
                         CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(end = 16.dp),
+                            modifier = Modifier.size(20.dp).padding(end = 16.dp),
                             strokeWidth = 2.dp,
-                            color = Color(0xFF6366F1)
+                            color = Indigo600
                         )
                     }
                 }
@@ -98,26 +104,16 @@ fun StorageDetailScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF6366F1).copy(alpha = 0.08f)
+                            containerColor = Indigo600.copy(alpha = 0.08f)
                         )
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(14.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF6366F1)
-                            )
-                            Text(
-                                "Updating storage data...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6366F1)
-                            )
+                            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Indigo600)
+                            Text("Updating storage data...", style = MaterialTheme.typography.bodySmall, color = Indigo600)
                         }
                     }
                 }
@@ -134,155 +130,60 @@ fun StorageDetailScreen(
 
             // 2. Apps Storage
             item {
-                Text(
-                    "Apps Storage",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Apps Storage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // User Apps row
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { navController.navigate("all_apps_storage") },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF6366F1).copy(alpha = 0.08f)
-                        )
+                        colors = CardDefaults.cardColors(containerColor = Indigo50)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(
-                                        Color(0xFF6366F1).copy(alpha = 0.15f),
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Apps,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6366F1),
-                                    modifier = Modifier.size(22.dp)
-                                )
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(40.dp).background(Indigo100, CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Apps, null, tint = Indigo600, modifier = Modifier.size(22.dp))
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "Downloaded Apps",
-                                    fontWeight = FontWeight.SemiBold,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Text(
-                                    "${uiState.userApps.size} apps",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("Downloaded Apps", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                                Text("${uiState.userApps.size} apps", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
-                            Text(
-                                formatStorageSize(uiState.totalUserAppsBytes),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color(0xFF6366F1)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Bold, color = Indigo600)
+                            Icon(Icons.Default.ChevronRight, null, tint = TextSecondary)
                         }
                     }
 
-                    // System Apps row — no navigation, just info
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF8B5CF6).copy(alpha = 0.08f)
-                        )
+                        colors = CardDefaults.cardColors(containerColor = Purple50)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(
-                                        Color(0xFF8B5CF6).copy(alpha = 0.15f),
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = null,
-                                    tint = Color(0xFF8B5CF6),
-                                    modifier = Modifier.size(22.dp)
-                                )
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(40.dp).background(Purple100, CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Settings, null, tint = Purple600, modifier = Modifier.size(22.dp))
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "System Apps",
-                                    fontWeight = FontWeight.SemiBold,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Text(
-                                    "${uiState.systemApps.size} apps",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("System Apps", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                                Text("${uiState.systemApps.size} apps", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
-                            Text(
-                                formatStorageSize(uiState.totalSystemAppsBytes),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color(0xFF8B5CF6)
-                            )
+                            Text(formatStorageSize(uiState.totalSystemAppsBytes), fontWeight = FontWeight.Bold, color = Purple600)
                         }
                     }
                 }
             }
 
-            // 3. Top Apps by Size
+            // 3. Largest Apps by Size
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Top Apps by Size",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    TextButton(onClick = { navController.navigate("all_apps_storage") }) {
-                        Text("See all", color = Color(0xFF6366F1))
-                    }
-                }
+                Text("Largest Apps", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
 
-            // Top 3 user apps
             val top3 = uiState.userApps.take(3)
             val maxSize = top3.firstOrNull()?.totalSizeBytes ?: 1L
 
             if (uiState.isLoadingFromRoom && top3.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = Color(0xFF6366F1),
-                            modifier = Modifier.size(32.dp)
-                        )
+                    Box(modifier = Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Indigo600, modifier = Modifier.size(32.dp))
                     }
                 }
             } else {
@@ -292,9 +193,7 @@ fun StorageDetailScreen(
                             TopAppStorageRow(
                                 app = app,
                                 maxBytes = maxSize,
-                                onClick = {
-                                    navController.navigate("app_detail/${app.packageName}")
-                                }
+                                onClick = { navController.navigate("app_detail/${app.packageName}") }
                             )
                         }
                         if (uiState.userApps.size > 3) {
@@ -302,10 +201,7 @@ fun StorageDetailScreen(
                                 onClick = { navController.navigate("all_apps_storage") },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text(
-                                    "+ ${uiState.userApps.size - 3} more apps",
-                                    color = Color(0xFF6366F1)
-                                )
+                                Text("+ ${uiState.userApps.size - 3} more apps", color = Indigo600)
                             }
                         }
                     }
@@ -314,11 +210,7 @@ fun StorageDetailScreen(
 
             // 4. Media Storage
             item {
-                Text(
-                    "Media Storage",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Media Storage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
             item {
                 MediaStorageSection(
@@ -338,146 +230,77 @@ fun TopAppStorageRow(
     maxBytes: Long,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val fraction = if (maxBytes > 0) app.totalSizeBytes.toFloat() / maxBytes else 0f
-    val animatedFraction by animateFloatAsState(
-        targetValue = fraction,
-        animationSpec = tween(800),
-        label = "top_app_bar"
-    )
+    val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(800), label = "prog")
+
+    // Resolving Icon
+    val appIcon = remember(app.packageName) {
+        try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(
-                            Color(0xFF6366F1).copy(alpha = 0.1f),
-                            RoundedCornerShape(10.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Apps,
-                        contentDescription = null,
-                        tint = Color(0xFF6366F1),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                // 🔴 ICONS ADDED HERE
+                AsyncImage(
+                    model = appIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                )
+
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    app.appName,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1
-                )
-                Text(
-                    formatStorageSize(app.totalSizeBytes),
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6366F1),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(app.appName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f), maxLines = 1)
+                Text(formatStorageSize(app.totalSizeBytes), fontWeight = FontWeight.Bold, color = Indigo600, style = MaterialTheme.typography.bodyMedium)
             }
             LinearProgressIndicator(
                 progress = { animatedFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = Color(0xFF6366F1),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape),
+                color = Indigo600,
+                trackColor = SurfaceVariantSoft
             )
         }
     }
 }
 
 @Composable
-fun MediaStorageSection(
-    mediaStorage: com.example.appwatch.presentation.viewmodel.MediaStorageInfo,
-    onEnablePermission: () -> Unit
-) {
+fun MediaStorageSection(mediaStorage: com.example.appwatch.presentation.viewmodel.MediaStorageInfo, onEnablePermission: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        )
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!mediaStorage.hasPermission) {
-                // Locked state
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Lock, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Enable storage access to see media breakdown",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Text("Enable storage access to see media breakdown", style = MaterialTheme.typography.bodySmall, color = TextSecondary, modifier = Modifier.weight(1f))
                 }
                 listOf(
-                    Triple(Icons.Default.Photo, "Photos", Color(0xFFEF4444)),
-                    Triple(Icons.Default.VideoLibrary, "Videos", Color(0xFF8B5CF6)),
-                    Triple(Icons.Default.MusicNote, "Music", Color(0xFF06B6D4)),
-                    Triple(Icons.Default.Download, "Downloads", Color(0xFF10B981))
+                    Triple(Icons.Default.Photo, "Photos", Red500),
+                    Triple(Icons.Default.VideoLibrary, "Videos", Purple500),
+                    Triple(Icons.Default.MusicNote, "Music", Cyan500),
+                    Triple(Icons.Default.Download, "Downloads", Green500)
                 ).forEach { (icon, label, color) ->
                     MediaLockedRow(icon = icon, label = label, color = color)
                 }
-                Button(
-                    onClick = onEnablePermission,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF6366F1)
-                    )
-                ) {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = onEnablePermission, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Indigo600), shape = RoundedCornerShape(12.dp)) {
                     Text("Enable Storage Access")
                 }
             } else {
-                // Unlocked state with real data
                 listOf(
-                    Triple(Icons.Default.Photo, "Photos", mediaStorage.photosBytes to Color(0xFFEF4444)),
-                    Triple(Icons.Default.VideoLibrary, "Videos", mediaStorage.videosBytes to Color(0xFF8B5CF6)),
-                    Triple(Icons.Default.MusicNote, "Music", mediaStorage.musicBytes to Color(0xFF06B6D4)),
-                    Triple(Icons.Default.Download, "Downloads", mediaStorage.downloadsBytes to Color(0xFF10B981))
+                    Triple(Icons.Default.Photo, "Photos", mediaStorage.photosBytes to Red500),
+                    Triple(Icons.Default.VideoLibrary, "Videos", mediaStorage.videosBytes to Purple500),
+                    Triple(Icons.Default.MusicNote, "Music", mediaStorage.musicBytes to Cyan500),
+                    Triple(Icons.Default.Download, "Downloads", mediaStorage.downloadsBytes to Green500)
                 ).forEach { (icon, label, pair) ->
-                    val (bytes, color) = pair
-                    MediaUnlockedRow(
-                        icon = icon,
-                        label = label,
-                        bytes = bytes,
-                        color = color
-                    )
+                    MediaUnlockedRow(icon = icon, label = label, bytes = pair.first, color = pair.second)
                 }
             }
         }
@@ -486,158 +309,68 @@ fun MediaStorageSection(
 
 @Composable
 fun MediaLockedRow(icon: ImageVector, label: String, color: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(color.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(36.dp).background(color.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            Icons.Default.Lock,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(16.dp)
-        )
+        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+        Icon(Icons.Default.Lock, null, tint = TextDisabled, modifier = Modifier.size(16.dp))
     }
 }
 
 @Composable
 fun MediaUnlockedRow(icon: ImageVector, label: String, bytes: Long, color: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(color.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(36.dp).background(color.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            formatStorageSize(bytes),
-            fontWeight = FontWeight.Bold,
-            color = color,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+        Text(formatStorageSize(bytes), fontWeight = FontWeight.Bold, color = color)
     }
 }
 
 @Composable
 fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
     val usedFraction = if (totalBytes > 0) usedBytes.toFloat() / totalBytes else 0f
-    val animatedProgress by animateFloatAsState(
-        targetValue = usedFraction,
-        animationSpec = tween(800),
-        label = "storage_progress"
-    )
-    val progressColor by animateColorAsState(
-        targetValue = when {
-            usedFraction > 0.9f -> Color(0xFFEF4444)
-            usedFraction > 0.7f -> Color(0xFFF59E0B)
-            else -> Color(0xFF6366F1)
-        },
-        animationSpec = tween(800),
-        label = "storage_color"
-    )
+    val animatedProgress by animateFloatAsState(targetValue = usedFraction, animationSpec = tween(800), label = "prog")
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                "Device Storage",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("Device Storage", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 LinearProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(6.dp)),
-                    color = progressColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth().height(12.dp).clip(CircleShape),
+                    color = if (usedFraction > 0.9f) Red500 else Indigo600,
+                    trackColor = SurfaceVariantSoft,
                     strokeCap = StrokeCap.Round
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Used: ${formatStorageSize(usedBytes)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = progressColor,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        "Free: ${formatStorageSize(freeBytes)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF10B981),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Used: ${formatStorageSize(usedBytes)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text("Free: ${formatStorageSize(freeBytes)}", style = MaterialTheme.typography.bodySmall, color = Green600)
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StorageStatItem("Total", formatStorageSize(totalBytes), MaterialTheme.colorScheme.onSurface)
-                StorageStatItem("Used", formatStorageSize(usedBytes), progressColor)
-                StorageStatItem("Free", formatStorageSize(freeBytes), Color(0xFF10B981))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                StorageStatItem("Total", formatStorageSize(totalBytes), TextPrimary)
+                StorageStatItem("Used", formatStorageSize(usedBytes), Indigo600)
+                StorageStatItem("Free", formatStorageSize(freeBytes), Green600)
             }
         }
     }
 }
 
 @Composable
-fun StorageStatItem(
-    label: String,
-    value: String,
-    color: Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
+fun StorageStatItem(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = color)
     }
 }
 

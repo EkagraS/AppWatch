@@ -65,6 +65,7 @@ class DashboardViewModel @Inject constructor(
         _auditFilter.value = days
     }
 
+
     fun formatDataUsage(bytes: Long): String {
         if (bytes == 0L) return "0 MB"
         val megabytes = bytes / (1024 * 1024).toDouble()
@@ -80,10 +81,11 @@ class DashboardViewModel @Inject constructor(
             dashboardRepository.getDashboardSummaryFlow()
                 .catch { e -> _uiState.update { it.copy(error = e.message, isLoadingFromRoom = false) } }
                 .collect { summary ->
-                    _uiState.update { it.copy(summary = summary, isLoadingFromRoom = summary.totalApps == 0) }
+                    _uiState.update {
+                        it.copy(summary = summary, isLoadingFromRoom = summary.totalApps == 0)
+                    }
                 }
         }
-
         // Step 2: Refresh system data & cache
         refreshInBackground()
     }

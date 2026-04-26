@@ -1,4 +1,4 @@
-package com.example.appwatch.ui.screens
+package com.example.appwatch.ui.ScreenComponents
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,8 +29,8 @@ fun RecentActivitySection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .fillMaxWidth(),
+//                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -55,6 +55,7 @@ fun RecentActivitySection(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
         if (recentItems.isEmpty()) {
             EmptyActivityState()
         } else {

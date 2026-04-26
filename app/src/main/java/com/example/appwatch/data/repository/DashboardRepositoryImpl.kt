@@ -46,14 +46,13 @@ class DashboardRepositoryImpl @Inject constructor(
     override fun getDashboardSummaryFlow(): Flow<DashboardSummary> {
         val sevenDaysAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000)
         return combine(
-            appInfoDao.getAllAppsAlphabetical(),
-            recentEventDao.getRecentEventsFlow(sevenDaysAgo),
-            needsAttentionDao.getNeedsAttentionFlow()
+            appInfoDao.getAllAppsAlphabetical().onStart { emit(emptyList()) },
+            recentEventDao.getRecentEventsFlow(sevenDaysAgo).onStart { emit(emptyList()) },
+            needsAttentionDao.getNeedsAttentionFlow().onStart { emit(emptyList()) },
         ) { apps, recentEvents, needsAttention -> // 🔴 FIX: Ab dono list aage bhej rahe hain
             if (apps.isEmpty()) {
                 emptyDashboard()
             } else {
-                // Ab events direct database-flow se aayenge
                 calculateSummaryFull(entities = apps,recentEvents= recentEvents,needsAttention= needsAttention, screenTime = cachedScreenTime)
             }
         }.flowOn(Dispatchers.IO)
@@ -371,9 +370,6 @@ class DashboardRepositoryImpl @Inject constructor(
         val dayMillis = 24L * 60 * 60 * 1000
         val newEvents = mutableListOf<NeedsAttentionEntity>()
 
-        // Pehle purana audit data clear karo
-        needsAttentionDao.clearAuditEvents()
-
         entities.filter { !it.isSystemApp }.forEach { app ->
             // 1. Special Permissions
             val specialPerms = packageManagerHelper.getSpecialPermissions(app.packageName)
@@ -415,6 +411,8 @@ class DashboardRepositoryImpl @Inject constructor(
         if (newEvents.isNotEmpty()) {
             needsAttentionDao.insertEvents(newEvents)
         }
+        val currentPackages = entities.map { it.packageName }.toSet()
+        needsAttentionDao.deleteRemovedApps(currentPackages.toList())
     }
 
     override fun getEventsByType(eventType: String): Flow<List<RecentEventEntity>> {

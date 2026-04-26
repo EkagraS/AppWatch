@@ -1,5 +1,10 @@
 package com.example.appwatch.ui.screens
 
+import android.app.AppOpsManager
+import android.content.Context
+import android.content.Intent
+import android.os.Process
+import android.provider.Settings
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -27,17 +32,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
+import com.example.appwatch.ui.ScreenComponents.KnowYourUsageSection
+import com.example.appwatch.ui.ScreenComponents.UsageStatsLoader // 👈 Tera loader import
+import com.example.appwatch.ui.theme.* // 👈 Naye colors ke liye
 import java.text.SimpleDateFormat
 import java.util.*
 
-val TextMain = Color(0xFF111827)
-val TextSecondary = Color(0xFF6B7280)
-val SurfaceWhite = Color(0xFFFFFFFF)
+// Permission Check Helper
+private fun hasUsageStatsPermission(context: Context): Boolean {
+    val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    val mode = appOps.noteOpNoThrow(
+        AppOpsManager.OPSTR_GET_USAGE_STATS,
+        Process.myUid(),
+        context.packageName
+    )
+    return mode == AppOpsManager.MODE_ALLOWED
+}
 
 private fun formatDuration(millis: Long): String {
     val hours = millis / (1000 * 60 * 60)
@@ -57,20 +75,29 @@ fun UsageStatsScreen(
     val context = LocalContext.current
     val pm = remember { context.packageManager }
 
-    val AppThemeBlue = Color(0xFF2563EB)
-    val SoftGray = Color(0xFFF9FAFB)
-    val AppColors = listOf(
-        Color(0xFFF43F5E),
-        Color(0xFF8B5CF6),
-        Color(0xFF10B981),
-        Color(0xFFF59E0B),
-        Color(0xFF06B6D4)
-    )
+    // ─── Color Mapping from Theme ─────────────────────────────────────────────
+    val AppThemePrimary = Indigo600
+    val AppBackground = BackgroundLight
+    val AppColors = listOf(ChartBar1, ChartBar2, ChartBar3, ChartBar4, ChartBar5)
 
+    // ─── Permission State & Observer ──────────────────────────────────────────
+    var isPermissionGranted by remember { mutableStateOf(hasUsageStatsPermission(context)) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                isPermissionGranted = hasUsageStatsPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // ─── Data & UI States ──────────────────────────────────────────────────────
     var selectedDayIndex by remember { mutableStateOf(6) }
     var allDaysUsage by remember { mutableStateOf<Map<Int, List<AppUsage>>>(emptyMap()) }
     var isLoading by remember { mutableStateOf(true) }
-
 
     val weeklyChartData by viewModel.weeklyChartData.collectAsStateWithLifecycle()
     val dailyUsageList by viewModel.dailyUsageList.collectAsStateWithLifecycle()
@@ -87,197 +114,203 @@ fun UsageStatsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        isLoading = true
-        val result = mutableMapOf<Int, List<AppUsage>>()
-        for (i in 0..6) {
-            val daysAgo = 6 - i
-            val cal = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, -daysAgo)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
+    LaunchedEffect(isPermissionGranted) {
+        if (isPermissionGranted) {
+            isLoading = true
+            val result = mutableMapOf<Int, List<AppUsage>>()
+            for (i in 0..6) {
+                val daysAgo = 6 - i
+                val cal = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, -daysAgo)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val appsFromRoom = viewModel.getUsageForDay(cal.timeInMillis)
+                result[i] = appsFromRoom.map { app ->
+                    val realName = try {
+                        val info = pm.getApplicationInfo(app.packageName, 0)
+                        pm.getApplicationLabel(info).toString()
+                    } catch (e: Exception) { app.appName }
+                    app.copy(appName = realName)
+                }
             }
-            val appsFromRoom = viewModel.getUsageForDay(cal.timeInMillis)
-            result[i] = appsFromRoom.map { app ->
-                val realName = try {
-                    val info = pm.getApplicationInfo(app.packageName, 0)
-                    pm.getApplicationLabel(info).toString()
-                } catch (e: Exception) { app.appName }
-                app.copy(appName = realName)
-            }
+            allDaysUsage = result
+            isLoading = false
         }
-        allDaysUsage = result
-        isLoading = false
     }
 
-    val selectedDayUsage = remember(selectedDayIndex, dailyUsageList, allDaysUsage) {
-        if (selectedDayIndex == 6) {
-            dailyUsageList // Yeh ViewModel ka Flow hai, DB change pe turant badlega!
-        } else {
-            allDaysUsage[selectedDayIndex] ?: emptyList()
-        }
+    val selectedDayUsage = remember(selectedDayIndex, dailyUsageList, allDaysUsage, isPermissionGranted) {
+        if (!isPermissionGranted) emptyList()
+        else if (selectedDayIndex == 6) dailyUsageList
+        else allDaysUsage[selectedDayIndex] ?: emptyList()
     }
+
     val selectedDayLabel = dayLabels.getOrNull(selectedDayIndex)
     val isToday = selectedDayIndex == 6
 
-    val selectedTotalTime = remember(selectedDayIndex, weeklyChartData) {
-        val hours = weeklyChartData.getOrNull(
-            if (isToday) weeklyChartData.lastIndex else selectedDayIndex
-        ) ?: 0f
-        val ms = (hours * 60 * 60 * 1000).toLong()
-        formatDuration(ms)
+    val selectedTotalTime = remember(selectedDayIndex, weeklyChartData, isPermissionGranted) {
+        if (!isPermissionGranted) "0h 0m"
+        else {
+            val hours = weeklyChartData.getOrNull(if (isToday) weeklyChartData.lastIndex else selectedDayIndex) ?: 0f
+            formatDuration((hours * 3600000).toLong())
+        }
     }
 
-    val topApps = selectedDayUsage.take(3)
-    val remainingCount = (selectedDayUsage.size - 3).coerceAtLeast(0)
-
-    Scaffold(
-        containerColor = SoftGray,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Usage Statistics", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = SoftGray)
-            )
-        }
-    ) { padding ->
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = AppThemeBlue)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Loading usage data...", color = TextSecondary)
-                }
+    // ─── Conditional Content ──────────────────────────────────────────────────
+    if (!isPermissionGranted) {
+        UsageStatsLoader(onGrantPermissionClick = {
+            context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        })
+    } else {
+        Scaffold(
+            containerColor = AppBackground,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("Usage Statistics", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = AppBackground)
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
-            ) {
-                // 1. Hero Card
-                item {
-                    UsageHeroCard(
-                        totalTime = selectedTotalTime,
-                        dateLabel = if (isToday) "Today" else selectedDayLabel?.second ?: "",
-                        accentColor = AppThemeBlue,
-                        isToday = isToday
-                    )
-                }
-
-                // 2. Interactive chart
-                item {
-                    Text("Weekly Activity", fontWeight = FontWeight.ExtraBold, color = TextMain)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    InteractiveWeeklyChart(
-                        data = weeklyChartData,
-                        dayLabels = dayLabels.map { it.first },
-                        selectedIndex = selectedDayIndex,
-                        accentColor = AppThemeBlue,
-                        onDaySelected = { selectedDayIndex = it }
-                    )
-                }
-
-                // 3. Day header
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            if (isToday) "Today's Focus"
-                            else "${selectedDayLabel?.second ?: ""} Focus",
-                            fontWeight = FontWeight.ExtraBold,
-                            color = TextMain
-                        )
-                        Text(
-                            if (selectedDayUsage.isEmpty()) "No data"
-                            else "${selectedDayUsage.size} apps",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
+        ) { padding ->
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = AppThemePrimary)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Loading usage data...", color = TextSecondary)
                     }
                 }
-
-                // 4. App list
-                if (selectedDayUsage.isEmpty()) {
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
+                ) {
+                    // 1. Hero Card
                     item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(100.dp),
-                            contentAlignment = Alignment.Center
+                        UsageHeroCard(
+                            totalTime = selectedTotalTime,
+                            dateLabel = if (isToday) "Today" else selectedDayLabel?.second ?: "",
+                            accentColor = AppThemePrimary,
+                            isToday = isToday
+                        )
+                    }
+
+                    // 2. Interactive chart
+                    item {
+                        Text("Weekly Activity", fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        InteractiveWeeklyChart(
+                            data = weeklyChartData,
+                            dayLabels = dayLabels.map { it.first },
+                            selectedIndex = selectedDayIndex,
+                            accentColor = AppThemePrimary,
+                            onDaySelected = { selectedDayIndex = it }
+                        )
+                    }
+
+                    // 3. Day header
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("No usage recorded for this day", color = TextSecondary)
+                            Text(
+                                if (isToday) "Today's Focus"
+                                else "${selectedDayLabel?.second ?: ""} Focus",
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                if (selectedDayUsage.isEmpty()) "No data"
+                                else "${selectedDayUsage.size} apps",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
                         }
                     }
-                } else {
-                    items(topApps) { app ->
-                        UsageAppItem(
-                            app = app,
-                            accentColor = AppColors[topApps.indexOf(app) % AppColors.size],
-                            onClick = { navController.navigate("app_detail/${app.packageName}") }
-                        )
-                    }
-                    if (remainingCount > 0) {
+
+                    // 4. App list
+                    if (selectedDayUsage.isEmpty()) {
                         item {
-                            OutlinedButton(
-                                onClick = { navController.navigate("all_usage/$selectedDayIndex") },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color.LightGray)
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(100.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    "View all $remainingCount more apps",
-                                    color = TextMain,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text("No usage recorded for this day", color = TextSecondary)
+                            }
+                        }
+                    } else {
+                        items(selectedDayUsage.take(3)) { app ->
+                            UsageAppItem(
+                                app = app,
+                                accentColor = AppColors[selectedDayUsage.take(3).indexOf(app) % AppColors.size],
+                                onClick = { navController.navigate("app_detail/${app.packageName}") }
+                            )
+                        }
+                        if (selectedDayUsage.size > 3) {
+                            item {
+                                OutlinedButton(
+                                    onClick = { navController.navigate("all_usage/$selectedDayIndex") },
+                                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, BorderSoft)
+                                ) {
+                                    val count = selectedDayUsage.size - 3
+                                    Text(
+                                        "View all $count more apps",
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // 5. Analytics
-                item {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        "This day",
-                        fontWeight = FontWeight.ExtraBold,
-                        color = TextMain
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val mostUsed = selectedDayUsage.firstOrNull()
-                        AnalyticsCard(
-                            label = "Peak Usage",
-                            appName = mostUsed?.appName ?: "None",
-                            time = mostUsed?.usageTimeString ?: "0m",
-                            icon = Icons.Default.TrendingUp,
-                            color = Color(0xFF8B5CF6),
-                            modifier = Modifier.weight(1f)
+                    // 5. Analytics
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            "This day",
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextPrimary
                         )
-                        AnalyticsCard(
-                            label = "Apps Used",
-                            appName = "${selectedDayUsage.size} apps",
-                            time = selectedTotalTime,
-                            icon = Icons.Default.Apps,
-                            color = Color(0xFFF59E0B),
-                            modifier = Modifier.weight(1f)
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            val mostUsed = selectedDayUsage.firstOrNull()
+                            AnalyticsCard(
+                                label = "Peak Usage",
+                                appName = mostUsed?.appName ?: "None",
+                                time = mostUsed?.usageTimeString ?: "0m",
+                                icon = Icons.Default.TrendingUp,
+                                color = Purple500, // StatScreen logic
+                                modifier = Modifier.weight(1f)
+                            )
+                            AnalyticsCard(
+                                label = "Apps Used",
+                                appName = "${selectedDayUsage.size} apps",
+                                time = selectedTotalTime,
+                                icon = Icons.Default.Apps,
+                                color = Amber500, // StatSecurity logic
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
+                        KnowYourUsageSection(viewModel = viewModel)
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    KnowYourUsageSection(viewModel = viewModel)
                 }
             }
         }
@@ -396,7 +429,7 @@ fun UsageHeroCard(
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 if (isToday) "Screen Time Today" else "Screen Time — $dateLabel",
-                color = Color.White.copy(0.75f),
+                color = TextOnDark.copy(0.75f),
                 style = MaterialTheme.typography.labelLarge
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -404,14 +437,14 @@ fun UsageHeroCard(
                 totalTime,
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Black,
-                color = Color.White
+                color = TextOnDark
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Surface(color = Color.White.copy(0.15f), shape = CircleShape) {
+            Surface(color = TextOnDark.copy(0.15f), shape = CircleShape) {
                 Text(
                     if (isToday) "Live · Tap a bar to explore"
                     else "Tap today's bar for live data",
-                    color = Color.White,
+                    color = TextOnDark,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
@@ -460,7 +493,7 @@ fun UsageAppItem(app: AppUsage, accentColor: Color, onClick: () -> Unit) {
                     Text(
                         app.appName,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937),
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -504,7 +537,7 @@ fun AnalyticsCard(
             Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
             Spacer(Modifier.height(12.dp))
             Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-            Text(appName, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(appName, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, color = TextPrimary)
             Text(time, color = color, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
         }
     }

@@ -102,10 +102,6 @@ class PackageManagerHelper @Inject constructor(
             false
         }
     }
-    /**
-     * Fetches metadata for all installed apps.
-     * Fixed the nullability mismatch for applicationInfo.
-     */
     fun getInstalledAppsMetadata(): List<AppInfoEntity> {
         val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
 

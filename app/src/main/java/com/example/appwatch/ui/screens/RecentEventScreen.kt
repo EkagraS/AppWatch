@@ -29,6 +29,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
+import com.example.appwatch.ui.ScreenComponents.getIconForEventType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

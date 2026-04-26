@@ -39,12 +39,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        fun checkNotificationPermission() {
-            val enabledListeners = NotificationManagerCompat.getEnabledListenerPackages(this)
-            if (!enabledListeners.contains(packageName)) {
-                // User ko settings mein bhejo
-                startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
-            }
         setContent {
             AppWatch2Theme {
                 val navController = rememberNavController()

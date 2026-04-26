@@ -26,19 +26,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 @Composable
 fun SplashScreen(onNavigateNext: (String) -> Unit) {
     val context = LocalContext.current
 
-    // Animation states for the logo and text
     val scale = remember { Animatable(0f) }
     val alpha = remember { Animatable(0f) }
 
     LaunchedEffect(key1 = true) {
-        // 1. Run animations in PARALLEL using launch
         launch {
             scale.animateTo(
                 targetValue = 1.1f,
@@ -46,20 +46,18 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
             )
             scale.animateTo(targetValue = 1f, animationSpec = tween(200))
         }
-
         launch {
             alpha.animateTo(1f, animationSpec = tween(800))
         }
-
-        // 2. TOTAL wait time (Parallel to animations)
-        // Reduce this. 2.5s total is better for UX.
         delay(2000L)
-
-        // 3. Navigation Logic
         val sharedPref = context.getSharedPreferences("app_watch_prefs", Context.MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("is_first_run", true)
-
-        onNavigateNext(if (isFirstRun) "onboarding" else "dashboard")
+        if (isFirstRun) {
+            sharedPref.edit { putBoolean("is_first_run", false) }
+            onNavigateNext("onboarding")
+        } else {
+            onNavigateNext("dashboard")
+        }
     }
 
     Box(
@@ -68,8 +66,8 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF6366F1), // Indigo Primary
-                        Color(0xFF4F46E5)  // Deep Indigo
+                        Indigo500,  // top — slightly lighter
+                        Indigo600   // bottom — deeper
                     )
                 )
             )
@@ -80,12 +78,14 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Premium Logo Design
             Box(
                 modifier = Modifier
                     .size(120.dp)
                     .scale(scale.value)
-                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(32.dp)),
+                    .background(
+                        Color.White.copy(alpha = 0.15f),
+                        RoundedCornerShape(32.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -98,7 +98,6 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Bold Typography for App Name
             Text(
                 text = "AppWatch",
                 modifier = Modifier.alpha(alpha.value),
@@ -111,31 +110,28 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // The Punch-line
             Text(
-                text = "Watch the Watchers.\nAudit your Privacy.",
+                text = "Know what your apps\nare doing to you.",
                 modifier = Modifier
                     .padding(horizontal = 48.dp)
-                    .alpha(alpha.value * 0.8f),
+                    .alpha(alpha.value * 0.85f),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium,
-                    lineHeight = 24.sp
+                    lineHeight = 26.sp
                 ),
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
         }
 
-        // Professional Footer
+        // Version — minimal, bottom right only
         Text(
-            text = "SECURED BY ECE LOGIC • VERSION 1.0",
+            text = "v1.0.0",
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 40.dp)
-                .alpha(alpha.value * 0.4f),
-            style = MaterialTheme.typography.labelSmall.copy(
-                letterSpacing = 1.sp
-            ),
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 36.dp)
+                .alpha(alpha.value * 0.35f),
+            style = MaterialTheme.typography.labelSmall,
             color = Color.White
         )
     }

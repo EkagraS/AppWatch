@@ -45,8 +45,9 @@ fun NeedsAttentionScreen(
         viewModel.getNeedsAttentionEventsByType(dbType)
     }.collectAsState(initial = emptyList())
 
+
     val uiState by viewModel.uiState.collectAsState()
-    val isLoading = uiState.isRefreshing && events.isEmpty()// Refreshing check better rahega
+    val isLoading = uiState.isRefreshing && events.isEmpty()
     val context = LocalContext.current
 
     // State for Unused Filter (30, 60, 90)

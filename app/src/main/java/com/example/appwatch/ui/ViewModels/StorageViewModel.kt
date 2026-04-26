@@ -19,6 +19,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class MediaStorageInfo(
@@ -54,12 +55,14 @@ class StorageViewModel @Inject constructor(
 
     init {
         loadFromRoom()
-        refreshInBackground()
         checkMediaPermission()
     }
 
     private fun loadFromRoom() {
         viewModelScope.launch {
+            val initialDeviceStorage = withContext(Dispatchers.IO) {
+                storageStatsHelper.getDeviceStorageInfo()
+            }
             combine(
                 appInfoDao.getAppsByStorageSize(),
                 appInfoDao.getTotalUserAppsSize(),
@@ -98,6 +101,12 @@ class StorageViewModel @Inject constructor(
                         isLoadingFromRoom = false,
                         lastUpdated = apps.firstOrNull()?.storageLastUpdated ?: 0L
                     )
+                }
+                if (!uiState.value.isRefreshing && apps.isNotEmpty()) {
+                    refreshInBackground()
+                } else if (apps.isEmpty()) {
+                    // Agar DB ekdum khali hai (First run), toh turant refresh karo
+                    refreshInBackground()
                 }
             }
         }
@@ -203,6 +212,4 @@ class StorageViewModel @Inject constructor(
         }
         return size
     }
-
-
 }

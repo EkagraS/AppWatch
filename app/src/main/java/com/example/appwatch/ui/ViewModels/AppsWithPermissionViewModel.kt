@@ -29,6 +29,9 @@ class AppsWithPermissionViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         // Step 1: Start observing Room (Jaise DashboardViewModel mein hai)
         viewModelScope.launch {
@@ -53,21 +56,28 @@ class AppsWithPermissionViewModel @Inject constructor(
         if (permissionType.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
-            val allApps = packageManagerHelper.getInstalledAppsMetadata()
-            allApps.forEach { entity ->
-                if (packageManagerHelper.hasPermission(entity.packageName, permissionType)) {
-                    repository.logAccessEvent(
-                        SensitiveAccess(
-                            packageName = entity.packageName,
-                            appName = entity.appName,
-                            accessType = permissionType,
-                            timestampString = "",
-                            isRealTime = false
+            _isRefreshing.value = true
+            try {
+                val allApps = packageManagerHelper.getInstalledAppsMetadata()
+                allApps.forEach { entity ->
+                    // Permission check logic
+                    if (packageManagerHelper.hasPermission(entity.packageName, permissionType)) {
+                        repository.logAccessEvent(
+                            SensitiveAccess(
+                                packageName = entity.packageName,
+                                appName = entity.appName,
+                                accessType = permissionType,
+                                timestampString = "",
+                                isRealTime = false
+                            )
                         )
-                    )
+                    }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isRefreshing.value = false
             }
-            _isLoading.value = false
         }
     }
 }
