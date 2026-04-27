@@ -1,8 +1,10 @@
 package com.example.appwatch.ui.ScreenComponents
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -14,7 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.appwatch.domain.model.RecentItem
+import com.example.appwatch.ui.theme.* // Naye colors yahan se uthayega
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,34 +32,27 @@ fun RecentActivitySection(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-//                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = "Recent Activity",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
             if (isUpdating) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Updating",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(14.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                    color = Indigo500
+                )
             }
         }
+
         Spacer(modifier = Modifier.height(8.dp))
+
         if (recentItems.isEmpty()) {
             EmptyActivityState()
         } else {
@@ -84,7 +81,7 @@ fun RecentActivitySection(
             ModalBottomSheet(
                 onDismissRequest = { selectedItem = null },
                 sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = SurfaceWhite
             ) {
                 BottomSheetContent(item = selectedItem!!)
             }
@@ -94,17 +91,23 @@ fun RecentActivitySection(
 
 @Composable
 private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -> Unit) {
-    val (iconTint, bgAlpha) = when (item.eventType) {
-        "SIDELOADED_APK" -> Pair(Color(0xFFE53935), 0.1f)
-        "DATA_HOG" -> Pair(Color(0xFFFB8C00), 0.1f)
-        else -> Pair(MaterialTheme.colorScheme.primary, 0.1f)
+    // Semantic Color Mapping based on your file
+    val (iconTint, bgColor) = when (item.eventType) {
+        "SIDELOADED_APK" -> Red600 to Red50
+        "DATA_HOG" -> Amber600 to Amber50
+        "INSTALL" -> Green600 to Green50
+        "UPDATE" -> Blue600 to Blue50
+        "UNINSTALL" -> Red600 to Red50
+        else -> Indigo600 to Indigo50
     }
 
     Card(
         onClick = if (isUpdating) ({}) else onClick,
-        enabled = !item.isTimeline, // Data Hog pe click disable
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth()
+        enabled = !item.isTimeline,
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, DividerColor)
     ) {
         Row(
             modifier = Modifier
@@ -115,8 +118,7 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
-                    .background(iconTint.copy(alpha = bgAlpha)),
+                    .background(bgColor, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -134,12 +136,12 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (item.eventType == "SIDELOADED_APK") Color(0xFFE53935) else MaterialTheme.colorScheme.onSurface
+                    color = if (item.eventType == "SIDELOADED_APK") Red600 else TextPrimary
                 )
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = TextSecondary
                 )
             }
 
@@ -147,7 +149,7 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = TextDisabled,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -157,16 +159,16 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
 
 @Composable
 private fun BottomSheetContent(item: RecentItem) {
-    val sheetTitle = when(item.eventType) {
-        "INSTALL" -> "New Installations"
-        "UPDATE" -> "Recent Updates"
-        "SIDELOADED_APK" -> "Unknown Sources"
-        "UNINSTALL" -> "Removed Apps"
-        else -> "Details"
+    val (sheetTitle, titleColor) = when(item.eventType) {
+        "INSTALL" -> "New Installations" to TextPrimary
+        "UPDATE" -> "Recent Updates" to TextPrimary
+        "SIDELOADED_APK" -> "Unknown Sources" to Red600
+        "UNINSTALL" -> "Removed Apps" to TextPrimary
+        else -> "Details" to TextPrimary
     }
 
     val descriptionText = when(item.eventType) {
-        "SIDELOADED_APK" -> "These apps were not installed from an official store. They might pose a security risk."
+        "SIDELOADED_APK" -> "These apps were not installed from an official store. They might pose a security risk and monitor your system behavior."
         else -> item.description
     }
 
@@ -179,14 +181,15 @@ private fun BottomSheetContent(item: RecentItem) {
             text = sheetTitle,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = if (item.eventType == "SIDELOADED_APK") Color(0xFFE53935) else MaterialTheme.colorScheme.onSurface,
+            color = titleColor,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         Text(
             text = descriptionText,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextSecondary,
+            lineHeight = 24.sp
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -198,26 +201,27 @@ private fun EmptyActivityState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = 32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = null,
-            tint = Color(0xFF4CAF50),
+            tint = Green500,
             modifier = Modifier.size(48.dp)
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "All Caught Up",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
         )
         Text(
             text = "No recent events to show",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = TextSecondary
         )
     }
 }

@@ -110,7 +110,7 @@ class PackageManagerHelper @Inject constructor(
             val permissions = packageInfo.requestedPermissions ?: emptyArray()
 
             // Skip auditing ourselves
-            if (packageInfo.packageName == context.packageName) return@mapNotNull null
+//            if (packageInfo.packageName == context.packageName) return@mapNotNull null
             var totalSize = 0L
             var cacheSize = 0L
 
@@ -170,31 +170,29 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 
-    fun getPermissionsForApp(packageName: String): List<PermissionEvidence> {
+    fun getPermissionsForApp(packageName: String): List<PermissionRawData> {
         return try {
             val packageInfo = packageManager.getPackageInfo(
                 packageName, PackageManager.GET_PERMISSIONS
             )
-            val sensitiveKeywords = listOf(
-                "CAMERA", "RECORD_AUDIO", "LOCATION",
-                "CONTACTS", "SMS", "CALL_LOG", "STORAGE"
-            )
-            packageInfo.requestedPermissions?.map { permission ->
-                val shortName = permission.substringAfterLast(".")
-                val isSensitive = sensitiveKeywords.any {
-                    permission.contains(it, ignoreCase = true)
-                }
-                val isGranted = (packageInfo.requestedPermissionsFlags?.getOrNull(
-                    packageInfo.requestedPermissions?.indexOf(permission) ?: -1
-                ) ?: 0) and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0
 
-                PermissionEvidence(
-                    name = shortName,
-                    lastAccess = if (isGranted) "Granted" else "Not granted",
-                    isUnused = false,
-                    isSensitive = isSensitive
-                )
-            } ?: emptyList()
+            val permissionsList = mutableListOf<PermissionRawData>()
+
+            packageInfo.requestedPermissions?.forEachIndexed { index, permission ->
+                val flags = packageInfo.requestedPermissionsFlags?.getOrNull(index) ?: 0
+                val isGranted = (flags and PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0
+
+                // 🔥 Logic: Sirf wahi permissions return karo jo app ke paas ACTUALLY hain (Granted)
+                if (isGranted) {
+                    permissionsList.add(
+                        PermissionRawData(
+                            name = permission, // Pura naam bhejenge, short-naming ViewModel karega
+                            status = "Granted"
+                        )
+                    )
+                }
+            }
+            permissionsList
         } catch (e: Exception) {
             emptyList()
         }
@@ -279,3 +277,8 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 }
+
+data class PermissionRawData(
+    val name: String,
+    val status: String
+)

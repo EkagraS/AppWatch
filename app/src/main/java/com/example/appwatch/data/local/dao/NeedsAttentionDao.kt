@@ -15,7 +15,7 @@ interface NeedsAttentionDao {
     @Query("SELECT * FROM needs_attention WHERE eventType = :type ORDER BY timestamp DESC")
     fun getEventsByType(type: String): Flow<List<NeedsAttentionEntity>>
 
-    @Query("SELECT * FROM needs_attention ORDER BY timestamp DESC") // 👈 Filter hata diya
+    @Query("SELECT * FROM needs_attention ORDER BY timestamp DESC")
     fun getNeedsAttentionFlow(): Flow<List<NeedsAttentionEntity>>
 
     @Query("DELETE FROM needs_attention WHERE timestamp < :threshold")

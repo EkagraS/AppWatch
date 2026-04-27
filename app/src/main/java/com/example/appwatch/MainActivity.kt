@@ -97,7 +97,7 @@ fun AppWatchNavigation(navController: NavHostController) {
         composable("recentEventScreen/{eventType}"){ backStackEntry ->
             val type = backStackEntry.arguments?.getString("eventType") ?: "UNKNOWN"
             RecentEventScreen(eventType = type,
-                onNavigateBack = { navController.popBackStack() }
+                navController = navController
             )
         }
         composable("needs_attention/{auditType}") {backStackEntry ->

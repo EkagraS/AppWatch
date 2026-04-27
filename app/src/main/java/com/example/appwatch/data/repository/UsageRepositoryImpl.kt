@@ -21,10 +21,13 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 class UsageRepositoryImpl @Inject constructor(
     private val usageDao: UsageDao,
-    private val usageStatsHelper: UsageStatsHelper
+    private val usageStatsHelper: UsageStatsHelper,
+    @ApplicationContext private val context: Context
 ) : UsageRepository {
 
     private fun getTodayTimestamp(): Long {
@@ -44,6 +47,47 @@ class UsageRepositoryImpl @Inject constructor(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
+    }
+
+    override suspend fun getUnlockPace(): Double {
+        val vitals = usageStatsHelper.getTodayDeviceVitals()
+        val totalUnlocks = vitals.first // Total unlocks today
+
+        val calendar = Calendar.getInstance()
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+
+        // Time since midnight in hours (e.g., 2:30 AM = 2.5)
+        val hoursElapsed = currentHour + (currentMinute / 60.0)
+
+        // Safety: Division by zero se bachne ke liye (Min 6 mins/0.1 hr)
+        val safeHours = if (hoursElapsed < 0.1) 0.1 else hoursElapsed
+
+        return totalUnlocks / safeHours
+    }
+
+    override suspend fun getMarathonSession(): Pair<String, Long>? {
+        // Continuous max usage ka data Helper se uthaya
+        val marathon = usageStatsHelper.getMarathonSessionToday() ?: return null
+
+        val packageName = marathon.first
+        val duration = marathon.second
+
+        // Package name ko "Instagram" jaise readable name mein convert karna
+        val appName = getAppName(packageName)
+
+        return Pair(appName, duration)
+    }
+
+    private fun getAppName(packageName: String): String {
+        return try {
+            val pm = context.packageManager
+            val info = pm.getApplicationInfo(packageName, 0)
+            pm.getApplicationLabel(info).toString()
+        } catch (e: Exception) {
+            // Agar app name na mile toh package ka last part dikhao
+            packageName.split(".").last()
+        }
     }
 
     override fun getTopAppForRange(days: Int, limit: Int): Flow<List<AppUsage>> {
@@ -114,7 +158,7 @@ class UsageRepositoryImpl @Inject constructor(
 
             val liveEntities = usageStatsHelper.getDailyAppUsage()
             val normalizedUsage = liveEntities.map { entity ->
-                entity.copy(usageDate = today)
+                entity.copy(usageDate = today, appName = getAppName(entity.packageName))
             }
             if (normalizedUsage.isNotEmpty()) {
                 usageDao.insertUsageList(normalizedUsage)
@@ -162,7 +206,6 @@ class UsageRepositoryImpl @Inject constructor(
         return usageDao.getUsageStatsForNoiseAnalysis(sevenDaysAgo).map { list ->
             list.groupBy { it.packageName }
                 .map { (packageName, dailyRecords) ->
-                    // Saare 7 din ke data ko merge karke ek single entity bana rahe hain presentation ke liye
                     UsageEntity(
                         packageName = packageName,
                         usageDate = dailyRecords.first().usageDate,
@@ -173,11 +216,17 @@ class UsageRepositoryImpl @Inject constructor(
                         notificationCount = dailyRecords.sumOf { it.notificationCount }
                     )
                 }
-                // Sorting Logic: Most Notifications vs Least Time
-                .filter { it.notificationCount > 0 }
-                .sortedWith(compareByDescending<UsageEntity> { it.notificationCount }
-                    .thenBy { it.totalTimeInForeground }
-                    .thenBy { it.appUnlocks })
+                .filter { entity ->
+                    entity.notificationCount >= 5
+                }
+                .filter { entity ->
+                    entity.totalTimeInForeground >= 0
+                }
+                .sortedByDescending { entity ->
+                    val usageMinutes = entity.totalTimeInForeground / (1000f * 60f)
+                    val safeMinutes = usageMinutes.coerceAtLeast(0.5f)
+                    entity.notificationCount / safeMinutes
+                }
                 .take(limit)
         }
     }

@@ -41,7 +41,6 @@ interface AppInfoDao {
     UPDATE app_info 
     SET appSizeBytes = :appSize, dataSizeBytes = :dataSize, cacheSizeBytes = :cacheSize, totalSizeBytes = :totalSize, storageLastUpdated = :updatedAt
     WHERE packageName = :packageName""")
-
     suspend fun updateAppStorage(packageName: String, appSize: Long, dataSize: Long, cacheSize: Long, totalSize: Long, updatedAt: Long)
 
     @Query("SELECT COUNT(*) FROM app_info")

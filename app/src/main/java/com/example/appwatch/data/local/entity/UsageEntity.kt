@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "app_usage",
-    primaryKeys = ["packageName", "usageDate"] // Composite Key
+    primaryKeys = ["packageName", "usageDate"]
 )
 data class UsageEntity(
     val packageName: String,

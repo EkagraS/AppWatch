@@ -48,38 +48,112 @@ class UsageStatsHelper @Inject constructor(
     }
 
     fun getDailyAppUsage(): List<UsageEntity> {
-        val calendar = Calendar.getInstance()
-        val endTime = calendar.timeInMillis
-
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
         val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+        val elapsedSinceMidnight = endTime - startTime // Max possible usage right now
 
-        val stats = usageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY,
-            startTime,
-            endTime
-        ) ?: emptyList()
+        val usageMap = mutableMapOf<String, Long>()
+        val appLastResume = mutableMapOf<String, Long>()
+//        val handledMidnightOverlap = mutableSetOf<String>()
 
-        val todayTimestamp = startTime
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = UsageEvents.Event()
 
-        return stats.filter { it.totalTimeInForeground > 0 }.map { usageStat ->
+        var currentPackage: String? = null
+        var currentStart = 0L
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val pkg = event.packageName
+            val time = event.timeStamp
+
+            when (event.eventType) {
+
+                UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    val appInfo = try {
+                        context.packageManager.getApplicationInfo(pkg, 0)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    if (appInfo == null || (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0) { }
+
+                    if (pkg == currentPackage) { }
+
+                    if (time < currentStart) { }
+
+                    if (currentPackage != null && currentStart > 0 && time > currentStart && currentStart >= startTime) {
+                        val duration = time - currentStart
+                        usageMap[currentPackage] = (usageMap[currentPackage] ?: 0L) + duration
+                    }
+                    currentPackage = pkg
+                    currentStart = time
+                }
+
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                }
+
+                else -> {}
+            }
+        }
+
+        // 🚩 FINAL SANITY CHECK: Kisi bhi app ko 12:00 AM se zyada time mat do
+        return usageMap.filter { it.value > 1000 }.map { (pkg, duration) ->
+            val finalDuration = Math.min(duration, elapsedSinceMidnight)
             UsageEntity(
-                packageName = usageStat.packageName,
-                usageDate = todayTimestamp,
-                appName = usageStat.packageName,
-                totalTimeInForeground = usageStat.totalTimeInForeground,
-                lastTimeUsed = usageStat.lastTimeUsed,
+                packageName = pkg,
+                usageDate = startTime,
+                appName = pkg,
+                totalTimeInForeground = finalDuration,
+                lastTimeUsed = System.currentTimeMillis(),
                 appUnlocks = 0,
                 notificationCount = 0,
                 lastEventTimestamp = 0L
             )
-        }
+        }.sortedByDescending { it.totalTimeInForeground }
     }
 
     fun getTotalScreenTimeToday(): Long {
-        return getDailyAppUsage().sumOf { it.totalTimeInForeground }
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = UsageEvents.Event()
+
+        var totalTime = 0L
+        var screenOnTime = 0L
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            // 15 = SCREEN_INTERACTIVE, 16 = SCREEN_NON_INTERACTIVE
+            if (event.eventType == 15) {
+                screenOnTime = event.timeStamp
+            } else if (event.eventType == 16) {
+                if (screenOnTime > 0L) {
+                    totalTime += event.timeStamp - screenOnTime
+                    screenOnTime = 0L
+                }
+            }
+        }
+
+        if (screenOnTime > 0L) {
+            totalTime += endTime - screenOnTime
+        }
+
+        return totalTime
     }
 
     fun formatDuration(millis: Long): String {
@@ -252,6 +326,8 @@ class UsageStatsHelper @Inject constructor(
         var unlocks = 0
         var notifications = 0
 
+        val lastNotificationTimeMap = mutableMapOf<String, Long>()
+        val DEBOUNCE_THRESHOLD = 10000L
         // 3. Ek ek event ko check karna
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(event)
@@ -261,11 +337,85 @@ class UsageStatsHelper @Inject constructor(
                 18 -> unlocks++
 
                 // Event Type 12: NOTIFICATION_INTERRUPTION (Matlab koi alert/notification aayi)
-                12 -> notifications++
+                12 -> {
+                    val pkg = event.packageName
+                    val currentTime = event.timeStamp
+                    val lastTime = lastNotificationTimeMap[pkg] ?: 0L
+                    if (currentTime - lastTime > DEBOUNCE_THRESHOLD) {
+                        notifications++
+                        lastNotificationTimeMap[pkg] = currentTime
+                    }
+                }
             }
         }
 
         return Pair(unlocks, notifications)
+    }
+
+    fun getMarathonSessionToday(): Pair<String, Long>? {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val event = UsageEvents.Event()
+
+        var maxDuration = 0L
+        var marathonApp = ""
+
+        var currentPackage = ""
+        var currentSessionStart = 0L
+
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val pkg = event.packageName
+            val time = event.timeStamp
+
+            when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    // Agar app change hui hai, tabhi naya session start karo
+                    if (pkg != currentPackage) {
+                        // Pichle app ka duration calculate karo
+                        if (currentPackage.isNotEmpty() && currentSessionStart > 0) {
+                            val duration = time - currentSessionStart
+                            if (duration > maxDuration) {
+                                maxDuration = duration
+                                marathonApp = currentPackage
+                            }
+                        }
+                        currentPackage = pkg
+                        currentSessionStart = time
+                    }
+                }
+                // Screen OFF hone par session pakka khatam
+                16 -> { // SCREEN_NON_INTERACTIVE
+                    if (currentPackage.isNotEmpty() && currentSessionStart > 0) {
+                        val duration = time - currentSessionStart
+                        if (duration > maxDuration) {
+                            maxDuration = duration
+                            marathonApp = currentPackage
+                        }
+                    }
+                    currentPackage = ""
+                    currentSessionStart = 0L
+                }
+            }
+        }
+
+        // Handle session jo abhi chal raha hai
+        if (currentPackage.isNotEmpty() && currentSessionStart > 0) {
+            val duration = endTime - currentSessionStart
+            if (duration > maxDuration) {
+                maxDuration = duration
+                marathonApp = currentPackage
+            }
+        }
+
+        return if (marathonApp.isNotEmpty()) Pair(marathonApp, maxDuration) else null
     }
 
     // UsageStatsHelper.kt ke andar

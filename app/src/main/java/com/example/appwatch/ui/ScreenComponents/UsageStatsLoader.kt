@@ -158,7 +158,7 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                         Text("To show your usage habits, AppWatch needs 'Usage Access'.", style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Important: You might see a 10-second safety timer on your device settings. This is standard for security focused tools. We never read your private content.\n You can always remove this from the settings.",
+                            "Important: You might see a 10-second safety timer on your device settings. This is for security purposes and you can safely grant them. We never read your private content.\n You can always remove this from the settings.",
                             style = MaterialTheme.typography.bodySmall, color = TextSecondary
                         )
                     }

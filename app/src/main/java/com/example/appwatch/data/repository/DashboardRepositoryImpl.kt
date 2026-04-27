@@ -371,15 +371,18 @@ class DashboardRepositoryImpl @Inject constructor(
         val newEvents = mutableListOf<NeedsAttentionEntity>()
 
         entities.filter { !it.isSystemApp }.forEach { app ->
-            // 1. Special Permissions
+
+            // 1. Highly Sensitive Access (Special Permissions)
             val specialPerms = packageManagerHelper.getSpecialPermissions(app.packageName)
             if (specialPerms.isNotEmpty()) {
+                val permsJoined = specialPerms.joinToString(", ")
                 newEvents.add(
                     NeedsAttentionEntity(
                         packageName = app.packageName,
                         eventType = "AUDIT_SPECIAL_ACCESS",
                         timestamp = now,
-                        extraInfo = specialPerms.joinToString(", ")
+                        permissionName = permsJoined, // Exact names like OVERLAY, ACCESSIBILITY
+                        extraInfo = "App has high-level system control"
                     )
                 )
             }
@@ -387,30 +390,58 @@ class DashboardRepositoryImpl @Inject constructor(
             // 2. Unused & Stale Logic
             val lastUsed = usageStatsHelper.getAppLastUsedTime(app.packageName)
             if (lastUsed != 0L) {
-                val daysUnused = (now - lastUsed) / dayMillis
+                val daysDiff = ((now - lastUsed) / dayMillis).toInt()
 
-                // Unused
+                // --- STALE PERMISSIONS LOGIC ---
+                // Pehle check karo kaun-kaun si sensitive permissions hain
+                val sensitiveList = mutableListOf<String>()
+                if (app.hasLocation) sensitiveList.add("Location")
+                if (app.hasCamera) sensitiveList.add("Camera")
+                if (app.hasMic) sensitiveList.add("Microphone")
+                if (app.hasSms) sensitiveList.add("SMS")
+                if (app.hasContacts) sensitiveList.add("Contacts")
+
+                // Agar 30+ days se use nahi hui aur sensitive perms hain
+                if (sensitiveList.isNotEmpty() && daysDiff >= 30) {
+                    newEvents.add(
+                        NeedsAttentionEntity(
+                            packageName = app.packageName,
+                            eventType = "AUDIT_STALE_PERMS",
+                            timestamp = lastUsed,
+                            daysUnused = daysDiff,
+                            permissionName = sensitiveList.joinToString(", "),
+                            extraInfo = "Sensitive access active but app dormant"
+                        )
+                    )
+                }
+
+                // --- UNUSED APPS LOGIC ---
                 val unusedType = when {
-                    daysUnused >= 90 -> "AUDIT_UNUSED_90"
-                    daysUnused >= 60 -> "AUDIT_UNUSED_60"
-                    daysUnused >= 30 -> "AUDIT_UNUSED_30"
+                    daysDiff >= 90 -> "AUDIT_UNUSED_90"
+                    daysDiff >= 60 -> "AUDIT_UNUSED_60"
+                    daysDiff >= 30 -> "AUDIT_UNUSED_30"
                     else -> null
                 }
-                if (unusedType != null) {
-                    newEvents.add(NeedsAttentionEntity(packageName = app.packageName, eventType=unusedType, timestamp=lastUsed,extraInfo= "Not used in $daysUnused days"))
-                }
 
-                // Stale
-                val hasSensitive = app.hasLocation || app.hasCamera || app.hasMic || app.hasSms || app.hasContacts
-                if (hasSensitive && daysUnused >= 30) {
-                    newEvents.add(NeedsAttentionEntity(packageName = app.packageName, eventType="AUDIT_STALE_PERMS", timestamp=lastUsed, extraInfo= "Sensitive perms active but app dormant"))
+                if (unusedType != null) {
+                    newEvents.add(
+                        NeedsAttentionEntity(
+                            packageName = app.packageName,
+                            eventType = unusedType,
+                            timestamp = lastUsed,
+                            daysUnused = daysDiff,
+                            extraInfo = "Not used in $daysDiff days"
+                        )
+                    )
                 }
             }
         }
 
+        // Database operations
         if (newEvents.isNotEmpty()) {
             needsAttentionDao.insertEvents(newEvents)
         }
+
         val currentPackages = entities.map { it.packageName }.toSet()
         needsAttentionDao.deleteRemovedApps(currentPackages.toList())
     }

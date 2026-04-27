@@ -28,9 +28,11 @@ data class AppDetailUiState(
 data class PermissionEvidence(
     val name: String,
     val lastAccess: String,
-    val isUnused: Boolean,
-    val isSensitive: Boolean
+    val riskTier: RiskTier // High, Sensitive, ya Standard
 )
+
+enum class RiskTier { HIGH, SENSITIVE, STANDARD }
+
 
 @HiltViewModel
 class AppDetailViewModel @Inject constructor(
@@ -39,6 +41,49 @@ class AppDetailViewModel @Inject constructor(
     private val usageDao: UsageDao,
     private val permissionAccessDao: PermissionAccessDao
 ) : ViewModel() {
+
+    // Helper to format the timestamp into "Xh ago" etc.
+    private fun formatLastAccess(timestamp: Long): String {
+        val diff = System.currentTimeMillis() - timestamp
+        val minutes = diff / (1000 * 60)
+        val hours = minutes / 60
+        val days = hours / 24
+
+        return when {
+            minutes < 1 -> "Used just now"
+            minutes < 60 -> "${minutes}m ago"
+            hours < 24 -> "${hours}h ago"
+            days < 30 -> "${days}d ago"
+            else -> "Not used in 30+ days"
+        }
+    }
+
+    private fun mapToRiskTier(permission: String): RiskTier {
+        val p = permission.uppercase() // Case-insensitive matching ke liye safe side
+        return when {
+            p.contains("ACCESSIBILITY") ||
+                    p.contains("NOTIFICATION_LISTENER") ||
+                    p.contains("SYSTEM_ALERT_WINDOW") ||
+                    p.contains("BIND_DEVICE_ADMIN") ||
+                    p.contains("INSTALL_PACKAGES") ||
+                    p.contains("VPN") ||
+                    p.contains("WRITE_SETTINGS") -> RiskTier.HIGH
+
+            p.contains("LOCATION") ||
+                    p.contains("CAMERA") ||
+                    p.contains("RECORD_AUDIO") ||
+                    p.contains("SMS") ||
+                    p.contains("CONTACTS") ||
+                    p.contains("PHONE") ||
+                    p.contains("CALL_LOG") ||
+                    p.contains("STORAGE") ||
+                    p.contains("BLUETOOTH") ||
+                    p.contains("ACTIVITY_RECOGNITION") ||
+                    p.contains("CALENDAR") -> RiskTier.SENSITIVE
+
+            else -> RiskTier.STANDARD
+        }
+    }
 
     private val _packageName = MutableStateFlow<String?>(null)
 
@@ -49,18 +94,9 @@ class AppDetailViewModel @Inject constructor(
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-
     val uiState: StateFlow<AppDetailUiState> = _packageName
         .filterNotNull()
         .flatMapLatest { pkg ->
-
-            val monthStart = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, -30)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-            }.timeInMillis
-
             val weekStart = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, -7)
                 set(Calendar.HOUR_OF_DAY, 0)
@@ -76,13 +112,11 @@ class AppDetailViewModel @Inject constructor(
                 permissionAccessDao.getEventsForApp(pkg).onStart { emit(emptyList()) }
             ) { appUsageHistory, todayEntity, weekTotal, monthTotal, permEvents ->
 
-                // Live data from system
                 val appInfo = packageManagerHelper.getAppInfo(pkg)
                 val usageTodayMs = todayEntity?.totalTimeInForeground ?: 0L
                 val launchesToday = usageStatsHelper.getAppLaunchesToday(pkg)
                 val lastUsed = usageStatsHelper.getLastUsedString(pkg)
 
-                // Historical data from Room
                 val weekTotalMs = weekTotal ?: usageStatsHelper.getAppUsageThisWeek(pkg)
                 val monthTotalMs = monthTotal ?: 0L
                 val weeklyAvgMs = if (appUsageHistory.isNotEmpty()) {
@@ -91,30 +125,21 @@ class AppDetailViewModel @Inject constructor(
                     weekTotalMs / 7
                 }
 
-                // Permissions — live from PackageManager + access history from Room
+                // Logic: Deterministic Tiering
                 val permissions = packageManagerHelper.getPermissionsForApp(pkg).map { perm ->
-                    val lastAccess = permEvents.find {
+                    val lastAccessEvent = permEvents.find {
                         it.permissionName.contains(perm.name, ignoreCase = true)
                     }
-                    perm.copy(
+
+                    PermissionEvidence(
+                        name = perm.name,
+                        riskTier = mapToRiskTier(perm.name),
                         lastAccess = when {
-                            lastAccess != null -> {
-                                val diff = System.currentTimeMillis() - lastAccess.accessTimestamp
-                                val hours = diff / (1000 * 60 * 60)
-                                val days = hours / 24
-                                when {
-                                    hours < 1 -> "Used recently"
-                                    hours < 24 -> "${hours}h ago"
-                                    days < 30 -> "${days}d ago"
-                                    else -> "Not used in 30+ days"
-                                }
-                            }
-                            perm.lastAccess == "Granted" -> "No recent access recorded"
-                            else -> perm.lastAccess
-                        },
-                        isUnused = lastAccess == null && perm.lastAccess == "Granted"
+                            lastAccessEvent != null -> formatLastAccess(lastAccessEvent.accessTimestamp)
+                            else -> ""
+                        }
                     )
-                }
+                }.sortedBy { it.riskTier } // HIGH sabse upar aayenge
 
                 AppDetailUiState(
                     isLoading = false,

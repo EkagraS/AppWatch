@@ -10,5 +10,7 @@ data class NeedsAttentionEntity(
     val packageName: String,
     val eventType: String,
     val timestamp: Long,
+    val daysUnused: Int? = null,
+    val permissionName: String? = null,
     val extraInfo: String? = null 
 )

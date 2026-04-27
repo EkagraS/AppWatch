@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,10 +25,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 
@@ -71,6 +79,10 @@ fun SettingsScreen(navController: NavController) {
                 context, android.Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    val hasNotificationPermission = remember {
+        NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
     }
 
     Scaffold(
@@ -132,7 +144,7 @@ fun SettingsScreen(navController: NavController) {
                             Text(
                                 "AppWatch helps you understand what's happening on your phone. " +
                                         "See which apps use your camera, drain your storage, or sit unused " +
-                                        "with sensitive permissions. Everything runs on your device — " +
+                                        "with sensitive permissions. Everything runs on your device and " +
                                         "nothing is ever shared.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -166,10 +178,8 @@ fun SettingsScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            "AppWatch builds your privacy report over time. The longer you use it, " +
-                                    "the more accurate your history becomes. If you restart your phone or " +
-                                    "reinstall the app, today's live data resets — but everything stored " +
-                                    "before that is safe.",
+                            "AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. " +
+                                    "If you restart your phone today's live data resets but if you reinstall the app, everything stored is lost.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 18.sp
@@ -234,6 +244,33 @@ fun SettingsScreen(navController: NavController) {
             }
 
             item {
+                PermissionSettingsRow(
+                    title = "Notification Count",
+                    description = "Counted using Android's usage system. No notification content is ever read.",
+                    icon = Icons.Default.Notifications,
+                    iconColor = Color(0xFFEF4444),
+                    isGranted = hasNotificationPermission,
+                    isOptional = false,
+                    onActionClick = {
+                        if (hasNotificationPermission) {
+                            showRevokeDialog = Pair(
+                                Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS,
+                                "Turning this off will stop tracking how many notifications apps send you."
+                            )
+                        } else {
+                            try {
+                                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                })
+                            } catch (e: Exception) {
+                                context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                            }
+                        }
+                    }
+                )
+            }
+
+            item {
                 InfoSettingsRow(
                     title = "Installed Apps Visibility",
                     description = "Granted automatically. Lets AppWatch see all apps on your device.",
@@ -248,15 +285,6 @@ fun SettingsScreen(navController: NavController) {
                     description = "Granted automatically. Used to check what permissions each app has.",
                     icon = Icons.Default.Security,
                     iconColor = Color(0xFFF59E0B)
-                )
-            }
-
-            item {
-                InfoSettingsRow(
-                    title = "Notification Count",
-                    description = "Counted using Android's usage system. No notification content is ever read.",
-                    icon = Icons.Default.Notifications,
-                    iconColor = Color(0xFFEF4444)
                 )
             }
 
@@ -392,7 +420,7 @@ fun SettingsScreen(navController: NavController) {
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "Android Developer · LNMIIT Jaipur",
+                            "Android Developer",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -408,12 +436,13 @@ fun SettingsScreen(navController: NavController) {
                     color = Color(0xFF333333),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
                     onClick = {
-                        context.startActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse("https://github.com/shandilya-ekagra/AppWatch")
-                            ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-                        )
+                        Toast.makeText(context, "Feature currently unavailable", Toast.LENGTH_LONG).show()
+//                        context.startActivity(
+//                            Intent(
+//                                Intent.ACTION_VIEW,
+//                                Uri.parse("https://github.com/shandilya-ekagra/AppWatch")
+//                            ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+//                        )
                     }
                 )
             }
@@ -753,11 +782,11 @@ fun UsageDetailSheet() {
         Text("How we measure your screen time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
         SheetDetailPoint(Icons.Default.Timer, Color(0xFF6366F1), "Daily Screen Time",
-            "We track how long each app is open on your screen every day. This data is saved at the end of the day and shown in your weekly chart.")
+            "We track how long each app is open on your screen every day. This data gets updated the moment you open the app and shown in your weekly chart.")
         SheetDetailPoint(Icons.Default.TrendingUp, Color(0xFF8B5CF6), "App Launches",
             "Every time you open an app, we count it. This helps you see which apps you reach for the most.")
         SheetDetailPoint(Icons.Default.History, Color(0xFF10B981), "Inactive Apps",
-            "If an app hasn't been opened in 30, 60 or 90 days, we flag it. These apps often still have permissions they no longer need.")
+            "If an app hasn't been opened in 30, 60 or 90 days, we flag it. These apps often have sensitive permissions.")
         SheetDetailPoint(Icons.Default.DateRange, Color(0xFFF59E0B), "Active and Inactive Sessions",
             "We find your longest continuous screen-on and screen-off periods to show your phone usage patterns throughout the day.")
     }
@@ -770,13 +799,11 @@ fun PermissionDetailSheet() {
         Text("How we find which apps have sensitive access", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
         SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), "What Each App Can Access",
-            "We read every permission each app has been given — like Camera, Microphone, Location and Contacts — and show you the full list.")
-        SheetDetailPoint(Icons.Default.Warning, Color(0xFFF59E0B), "Unused Permissions",
-            "If an app has a sensitive permission like Camera but hasn't used it in over 30 days, we flag it. You can then go revoke it from Android Settings.")
+            "We read every permission each app has been given that includes Camera, Microphone, Location and Contacts and show you the full list.")
         SheetDetailPoint(Icons.Default.AdminPanelSettings, Color(0xFF8B5CF6), "High Risk Apps",
-            "Apps with special system access — like reading notifications or installing other apps — are highlighted separately as they have more power over your device.")
+            "Apps with special system access like reading notifications or permission to install other apps or accessibility permissions are highlighted separately as they have more power over your device.")
         SheetDetailPoint(Icons.Default.NewReleases, Color(0xFF10B981), "New Apps",
-            "Any app installed in the last 7 days that asks for 10 or more permissions is flagged immediately so you can review it.")
+            "Any app installed in the last 7 days is listed separately.")
     }
 }
 
@@ -787,13 +814,13 @@ fun StorageDetailSheet() {
         Text("How we calculate how much space apps are using", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
         SheetDetailPoint(Icons.Default.Storage, Color(0xFF10B981), "Device Storage",
-            "We read your phone's total, used and free storage directly. This is the same number your phone's Settings app shows.")
+            "We read your phone's total, used and free storage directly.")
         SheetDetailPoint(Icons.Default.Apps, Color(0xFF6366F1), "Per App Breakdown",
-            "For each app we calculate three things: the app's install size, your personal data inside it, and its temporary cache files.")
+            "For each app we calculate three things: the app's install size, data accumulated by the app, and its temporary cache files.")
         SheetDetailPoint(Icons.Default.Cached, Color(0xFFF59E0B), "Cache Files",
             "Cache is temporary data apps save to load faster. It is safe to clear and does not delete any of your personal files or settings.")
         SheetDetailPoint(Icons.Default.Photo, Color(0xFFEF4444), "Photos, Videos and Music",
-            "With optional storage permission, we also show how much space your media files are taking up — broken down by type.")
+            "With optional storage permission, we also show how much space your media files are taking up and are broken down by type.")
     }
 }
 
@@ -806,7 +833,7 @@ fun NotificationDetailSheet() {
         SheetDetailPoint(Icons.Default.LockOpen, Color(0xFF6366F1), "Phone Unlocks",
             "Every time you unlock your screen, we count it. This gives you a simple picture of how often you pick up your phone.")
         SheetDetailPoint(Icons.Default.Notifications, Color(0xFFF59E0B), "Notification Count",
-            "We count how many notifications each app sends you using Android's usage system. We never read the content of any notification.")
+            "We count how many notifications each app sends you using Android's usage system. We never read or store the content of any notification.")
         SheetDetailPoint(Icons.Default.NetworkCheck, Color(0xFF10B981), "Data Usage",
             "We show how much mobile and Wi-Fi data each app has used today. No actual network traffic is monitored or stored.")
         SheetDetailPoint(Icons.Default.Info, Color(0xFF8B5CF6), "Today Only",
@@ -825,7 +852,7 @@ fun PrivacyInsightsDetailSheet() {
         SheetDetailPoint(Icons.Default.Contacts, Color(0xFF10B981), "Contacts, SMS and Calls",
             "Apps with access to your contacts, messages and call history are listed separately as these are among the most personal types of data.")
         SheetDetailPoint(Icons.Default.Shield, Color(0xFF8B5CF6), "Needs Attention",
-            "We combine unused app data and permission data to highlight the apps that pose the biggest risk — like an old app that still has your camera access.")
+            "We combine unused app data and permission data to highlight the apps that pose the biggest risk like an old app that still has your camera access.")
         SheetDetailPoint(Icons.Default.Timeline, Color(0xFFF59E0B), "Recent Activity",
             "We track which apps were installed, updated or removed this week so you always know what changed on your phone recently.")
     }
@@ -854,11 +881,11 @@ fun PrivacyPolicySheet() {
         Text("Privacy Policy", fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(16.dp))
         SheetDetailPoint(Icons.Default.PhoneAndroid, Color(0xFF6366F1), "Everything Stays on Your Phone",
-            "All analysis — screen time, permissions, storage — happens entirely on your device. Nothing is ever sent anywhere.")
+            "All analysis including screen time, permissions, storage happens entirely on your device. Nothing is ever sent anywhere.")
         SheetDetailPoint(Icons.Default.Block, Color(0xFFEF4444), "No Tracking at All",
-            "AppWatch has no analytics tools, no crash reporting and no third-party SDKs. We have no way to track you even if we wanted to.")
+            "AppWatch has no third-party SDKs. We have no way to track or store any data.")
         SheetDetailPoint(Icons.Default.WifiOff, Color(0xFF10B981), "No Internet Permission",
-            "AppWatch does not have internet permission in its code. It is technically impossible for it to send any data anywhere.")
+            "AppWatch does not have internet permission. It is technically impossible for it to send any data anywhere.")
         SheetDetailPoint(Icons.Default.DeleteForever, Color(0xFFF59E0B), "Delete Anytime",
             "Uninstalling AppWatch removes everything. No data remains on your phone or anywhere else after uninstall.")
     }
@@ -876,7 +903,7 @@ fun TermsSheet() {
         SheetDetailPoint(Icons.Default.Warning, Color(0xFFF59E0B), "No Guarantee",
             "We do our best to keep data accurate but some readings may vary depending on your device model or Android version.")
         SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), "Your Responsibility",
-            "Any action you take based on AppWatch's information — like revoking a permission — is your own decision. We are not responsible for any outcome.")
+            "Any action you take based on AppWatch's information like revoking a permission is your own decision. We are not responsible for any outcome.")
     }
 }
 
@@ -916,8 +943,24 @@ fun LicensesSheet() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        val annotatedString = buildAnnotatedString {
+            append("All libraries above are licensed under Apache License 2.0, to view full license ")
+            withLink(
+                LinkAnnotation.Url(
+                    url = "https://www.apache.org/licenses/LICENSE-2.0",
+                    styles = TextLinkStyles(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary, // Link color
+                            textDecoration = TextDecoration.Underline // Underline for clarity
+                        )
+                    )
+                )
+            ) {
+                append("click here")
+            }
+        }
         Text(
-            "All libraries above are licensed under Apache License 2.0.\nFull license text: apache.org/licenses/LICENSE-2.0",
+            text = annotatedString,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 18.sp
