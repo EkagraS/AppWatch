@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "app_info")
 data class AppInfoEntity(
-    @PrimaryKey val packageName: String,
+    @PrimaryKey
+    val id: Int,
+    val packageName: String,
     val appName: String,
     val totalPermissions: Int,
     val sensitivePermissionsCount: Int,

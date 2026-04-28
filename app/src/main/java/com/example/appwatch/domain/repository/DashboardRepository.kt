@@ -22,4 +22,5 @@ interface DashboardRepository {
 
     fun getNeedsAttentionEventsByType(eventType: String): Flow<List<NeedsAttentionEntity>>
 
+    fun getTodayNotificationCount(): Flow<Int>
 }

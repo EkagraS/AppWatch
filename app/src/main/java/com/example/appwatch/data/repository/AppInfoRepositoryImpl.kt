@@ -20,6 +20,7 @@ class AppInfoRepositoryImpl @Inject constructor(
         return flow.map { entities ->
             entities.map { entity ->
                 AppInfo(
+                    id= entity.id,
                     packageName = entity.packageName,
                     appName = entity.appName,
                     isSystemApp = entity.isSystemApp,

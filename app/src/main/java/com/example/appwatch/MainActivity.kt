@@ -22,7 +22,6 @@ import com.example.appwatch.ui.screens.AppsWithPermissionScreen
 import com.example.appwatch.ui.screens.DashboardScreen
 import com.example.appwatch.ui.screens.NeedsAttentionScreen
 import com.example.appwatch.ui.screens.OnboardingScreen
-import com.example.appwatch.ui.screens.PermissionAuditScreen
 import com.example.appwatch.ui.screens.PermissionScreen
 import com.example.appwatch.ui.screens.RecentEventScreen
 import com.example.appwatch.ui.screens.SettingsScreen
@@ -67,7 +66,6 @@ fun AppWatchNavigation(navController: NavHostController) {
         }
         composable("dashboard") { DashboardScreen(navController) }
         composable("app_list") { AppListScreen(navController) }
-        composable("permission_audit") { PermissionAuditScreen(navController) }
         composable("usage_stats") { UsageStatsScreen(navController) }
         composable("app_detail/{packageName}") { backStackEntry ->
             val packageName = backStackEntry.arguments?.getString("packageName")

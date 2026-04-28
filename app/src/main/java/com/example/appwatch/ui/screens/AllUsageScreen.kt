@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
+import com.example.appwatch.ui.theme.BackgroundLight
+import com.example.appwatch.ui.theme.Teal50
+import com.example.appwatch.ui.theme.TextPrimary
 import com.example.appwatch.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,7 +76,13 @@ fun AllUsageScreen(
         isLoading = false
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
@@ -89,7 +99,15 @@ fun AllUsageScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = Teal50,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->

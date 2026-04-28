@@ -4,12 +4,18 @@ import android.app.AppOpsManager
 import android.app.usage.StorageStatsManager
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import androidx.room.Room
+import com.example.appwatch.data.local.AppWatchDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.jvm.java
+import com.example.appwatch.SecurityManager
+import net.sqlcipher.database.SQLiteDatabase
+import net.sqlcipher.database.SupportFactory
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -31,5 +37,28 @@ object SystemModule {
     @Singleton
     fun provideAppOpsManager(@ApplicationContext context: Context): AppOpsManager {
         return context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+        securityManager: SecurityManager
+    ): AppWatchDatabase {
+
+        // SQLCipher ki native libraries load karo
+        SQLiteDatabase.loadLibs(context)
+
+        val passphrase = securityManager.getDatabasePassphrase()
+        val factory = SupportFactory(passphrase)
+
+        return Room.databaseBuilder(
+            context,
+            AppWatchDatabase::class.java,
+            "app_watch_database"
+        )
+            .openHelperFactory(factory)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 }

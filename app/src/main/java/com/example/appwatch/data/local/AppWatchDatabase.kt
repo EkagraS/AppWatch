@@ -29,7 +29,7 @@ import com.example.appwatch.data.local.entity.UsageEntity
         AppNotificationEntity::class,
         AppDataUsageEntity::class
     ],
-    version = 16,
+    version = 25,
     exportSchema = false
 )
 

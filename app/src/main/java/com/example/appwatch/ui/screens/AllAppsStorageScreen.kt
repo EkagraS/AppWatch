@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,15 +46,18 @@ fun AllAppsStorageScreen(
     // Storage Specific Colors (Teal Variety)
     val StoragePrimary = Teal600
 
-    val expandedIndex by remember { mutableStateOf<Int?>(null) }
     var localExpandedIndex by remember { mutableStateOf<Int?>(null) }
     val listState = rememberLazyListState()
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = BackgroundLight,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight),
+            CenterAlignedTopAppBar(
                 title = {
                     Column {
                         Text("All Apps", fontWeight = FontWeight.Bold, color = TextPrimary)
@@ -68,7 +72,15 @@ fun AllAppsStorageScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = Teal50,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->

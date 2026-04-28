@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.appwatch.data.local.entity.AppDataUsageEntity
+import com.example.appwatch.ui.theme.BackgroundLight
+import com.example.appwatch.ui.theme.Teal50
+import com.example.appwatch.ui.theme.TextPrimary
 import com.example.appwatch.ui.viewmodels.AppDataUsageViewmodel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +40,13 @@ fun AppDataUsageScreen(
         }.sortedByDescending { it.mobileUsageBytes + it.wifiUsageBytes }
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = { Text("Today's Data Usage") },
@@ -44,7 +54,15 @@ fun AppDataUsageScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = Teal50,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->

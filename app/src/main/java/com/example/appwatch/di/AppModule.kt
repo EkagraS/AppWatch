@@ -25,12 +25,6 @@ import javax.inject.Singleton
 object AppModule {
 
     @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppWatchDatabase {
-        return AppWatchDatabase.getDatabase(context)
-    }
-
-    @Provides
     fun provideAppInfoDao(db: AppWatchDatabase): AppInfoDao = db.appInfoDao()
 
     @Provides

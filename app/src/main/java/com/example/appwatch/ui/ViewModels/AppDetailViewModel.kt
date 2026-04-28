@@ -112,7 +112,7 @@ class AppDetailViewModel @Inject constructor(
                 permissionAccessDao.getEventsForApp(pkg).onStart { emit(emptyList()) }
             ) { appUsageHistory, todayEntity, weekTotal, monthTotal, permEvents ->
 
-                val appInfo = packageManagerHelper.getAppInfo(pkg)
+                val appInfo = packageManagerHelper.getAppInfo(pkg, 0)
                 val usageTodayMs = todayEntity?.totalTimeInForeground ?: 0L
                 val launchesToday = usageStatsHelper.getAppLaunchesToday(pkg)
                 val lastUsed = usageStatsHelper.getLastUsedString(pkg)
@@ -136,7 +136,7 @@ class AppDetailViewModel @Inject constructor(
                         riskTier = mapToRiskTier(perm.name),
                         lastAccess = when {
                             lastAccessEvent != null -> formatLastAccess(lastAccessEvent.accessTimestamp)
-                            else -> ""
+                            else -> "No Activity Logged"
                         }
                     )
                 }.sortedBy { it.riskTier } // HIGH sabse upar aayenge

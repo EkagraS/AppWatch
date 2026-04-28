@@ -96,8 +96,9 @@ class StorageViewModel @Inject constructor(
                     current.copy(
                         userApps = userApps,
                         systemApps = systemApps,
-                        totalUserAppsBytes = userTotal ?: 0L,
-                        totalSystemAppsBytes = systemTotal ?: 0L,
+                        totalUserAppsBytes = initialDeviceStorage.totalUserAppsBytes,
+                        totalSystemAppsBytes = initialDeviceStorage.totalSystemAppsBytes,
+                        deviceStorage = initialDeviceStorage,
                         isLoadingFromRoom = false,
                         lastUpdated = apps.firstOrNull()?.storageLastUpdated ?: 0L
                     )
@@ -122,17 +123,17 @@ class StorageViewModel @Inject constructor(
             // Check if Room has apps, if not fetch from PackageManager first
             val roomApps = appInfoDao.getAllAppsAlphabetical().first()
             val allEntities = if (roomApps.isEmpty()) {
-                // Room is empty — fetch live from PackageManager
                 val liveApps = packageManagerHelper.getInstalledAppsMetadata()
-                appInfoDao.insertAllMetadata(liveApps) // Save to Room
+                appInfoDao.insertAllMetadata(liveApps)
                 liveApps
             } else {
                 roomApps
             }
+            val userEntities = allEntities.filter { !it.isSystemApp }
 
             // Fetch fresh storage for each app
             val now = System.currentTimeMillis()
-            allEntities.forEach { entity ->
+            userEntities.forEach { entity ->
                 val storageInfo = storageStatsHelper.getAppStorageInfo(entity.packageName)
                 if (storageInfo != null) {
                     appInfoDao.updateAppStorage(

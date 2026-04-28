@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,6 +26,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appwatch.presentation.viewmodel.AppsWithPermissionViewModel
+import com.example.appwatch.ui.theme.BackgroundLight
+import com.example.appwatch.ui.theme.SurfaceWhite
+import com.example.appwatch.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,7 +50,13 @@ fun AppsWithPermissionScreen(
     val permissionColor = getPermissionTypeColor(permissionType ?: "")
     val permissionIcon = getPermissionTypeIcon(permissionType ?: "")
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
@@ -62,7 +72,13 @@ fun AppsWithPermissionScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = SurfaceWhite,
+                    titleContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->
@@ -149,7 +165,7 @@ fun AppsWithPermissionScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        items(apps, key = { it.packageName }) { app ->
+                        items(apps, key = { it.id }) { app ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 onClick = {

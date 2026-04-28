@@ -52,7 +52,9 @@ class PermissionRepositoryImpl @Inject constructor(
     override fun getAppsWithPermission(permissionName: String): Flow<List<AppInfo>> {
         return permissionAccessDao.getEventsByPermission(permissionName).map { entities ->
             entities.mapNotNull { entity ->
-                packageManagerHelper.getAppInfo(entity.packageName)
+                val systemAppInfo = packageManagerHelper.getAppInfo(entity.packageName, entity.id)
+                systemAppInfo?.copy(id = entity.id)
+//                packageManagerHelper.getAppInfo(entity.packageName)
             }
         }
     }
@@ -61,7 +63,6 @@ class PermissionRepositoryImpl @Inject constructor(
             packageName = access.packageName,
             permissionName = access.accessType,
             accessTimestamp = System.currentTimeMillis(),
-            isGranted = true
         )
         permissionAccessDao.insertAccessEvent(entity)
     }

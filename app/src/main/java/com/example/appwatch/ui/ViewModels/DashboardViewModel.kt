@@ -33,12 +33,8 @@ class DashboardViewModel @Inject constructor(
             initialValue = 0
         )
 
-    val totalNotificationsToday: StateFlow<Int> = dashboardRepository.getTodayTotalNotifications()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
+    val totalNotificationsToday: StateFlow<Int> = dashboardRepository.getTodayNotificationCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val totalDataUsageBytes: StateFlow<Long> = dashboardRepository.getTodayDataUsage()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)

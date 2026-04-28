@@ -105,8 +105,8 @@ class PackageManagerHelper @Inject constructor(
     fun getInstalledAppsMetadata(): List<AppInfoEntity> {
         val packages = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
 
-        return packages.mapNotNull { packageInfo ->
-            val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
+        return packages.mapIndexedNotNull { index, packageInfo ->
+            val appInfo = packageInfo.applicationInfo ?: return@mapIndexedNotNull null
             val permissions = packageInfo.requestedPermissions ?: emptyArray()
 
             // Skip auditing ourselves
@@ -115,7 +115,6 @@ class PackageManagerHelper @Inject constructor(
             var cacheSize = 0L
 
             try {
-                // This is the call that gets the real numbers
                 val stats = storageStatsManager.queryStatsForPackage(
                     appInfo.storageUuid,
                     packageInfo.packageName,
@@ -138,6 +137,7 @@ class PackageManagerHelper @Inject constructor(
             } ?: 0
 
             AppInfoEntity(
+                id=index+1,
                 packageName = packageInfo.packageName,
                 appName = packageManager.getApplicationLabel(appInfo).toString(),
                 totalPermissions = packageInfo.requestedPermissions?.size ?: 0,
@@ -198,7 +198,7 @@ class PackageManagerHelper @Inject constructor(
         }
     }
 
-    fun getAppInfo(packageName: String): AppInfo? {
+    fun getAppInfo(packageName: String, id: Int = 0): AppInfo? {
         return try {
             val info = packageManager.getApplicationInfo(packageName, 0)
             val packageInfo = packageManager.getPackageInfo(
@@ -206,6 +206,7 @@ class PackageManagerHelper @Inject constructor(
                 PackageManager.GET_PERMISSIONS
             )
             AppInfo(
+                id=id,
                 packageName = packageName,
                 appName = packageManager.getApplicationLabel(info).toString(),
                 isSystemApp = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,

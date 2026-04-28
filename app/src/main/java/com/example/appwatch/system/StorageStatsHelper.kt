@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Environment
 import android.os.StatFs
 import android.os.storage.StorageManager
-import com.example.appwatch.data.local.entity.AppInfoEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
 import javax.inject.Inject
@@ -42,20 +41,55 @@ class StorageStatsHelper @Inject constructor(
 
     fun getDeviceStorageInfo(): DeviceStorageInfo {
         val ssm = context.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
+        val pm = context.packageManager
 
         return try {
             val total = ssm.getTotalBytes(StorageManager.UUID_DEFAULT)
             val free = ssm.getFreeBytes(StorageManager.UUID_DEFAULT)
 
+            val userHandle = android.os.Process.myUserHandle()
+            val totalAppsStats = ssm.queryStatsForUser(StorageManager.UUID_DEFAULT, userHandle)
+            val allAppsTotal = totalAppsStats.appBytes +
+                    totalAppsStats.dataBytes +
+                    totalAppsStats.cacheBytes
+
+            // Fix shared UID problem — track UIDs already counted
+            val installedApps = pm.getInstalledApplications(0)
+            var userAppsSum = 0L
+            val countedUids = mutableSetOf<Int>()
+
+            for (app in installedApps) {
+                val isSystem = (app.flags and
+                        android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                if (!isSystem && !countedUids.contains(app.uid)) {
+                    try {
+                        val stats = ssm.queryStatsForUid(
+                            StorageManager.UUID_DEFAULT, app.uid
+                        )
+                        userAppsSum += (stats.appBytes +
+                                stats.dataBytes +
+                                stats.cacheBytes)
+                        countedUids.add(app.uid)
+                    } catch (e: Exception) {}
+                }
+            }
+
             DeviceStorageInfo(
                 totalBytes = total,
                 usedBytes = total - free,
                 freeBytes = free,
-                totalUserAppsBytes = 0L, // Skipped for speed
-                totalSystemAppsBytes = 0L // Skipped for speed
+                totalUserAppsBytes = userAppsSum,
+                totalSystemAppsBytes = allAppsTotal - userAppsSum
             )
         } catch (e: Exception) {
-            DeviceStorageInfo(0L, 0L, 0L, 0L, 0L)
+            val statFs = StatFs(Environment.getDataDirectory().path)
+            DeviceStorageInfo(
+                totalBytes = statFs.totalBytes,
+                usedBytes = statFs.totalBytes - statFs.availableBytes,
+                freeBytes = statFs.availableBytes,
+                totalUserAppsBytes = 0L,
+                totalSystemAppsBytes = 0L
+            )
         }
     }
 
@@ -63,17 +97,25 @@ class StorageStatsHelper @Inject constructor(
         return try {
             val pm = context.packageManager
             val appInfo = pm.getApplicationInfo(packageName, 0)
-            val uid = appInfo.uid
-            val storageUuid = try {
-                storageManager.getUuidForPath(
-                    Environment.getDataDirectory()
+            val isSystemApp = (appInfo.flags and
+                    android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+
+            if (isSystemApp) {
+                return AppStorageInfo(
+                    packageName = packageName,
+                    appName = pm.getApplicationLabel(appInfo).toString(),
+                    appSizeBytes = 0L,
+                    dataSizeBytes = 0L,
+                    cacheSizeBytes = 0L,
+                    totalSizeBytes = 0L,
+                    isSystemApp = true
                 )
-            } catch (e: Exception) {
-                StorageManager.UUID_DEFAULT
             }
 
-            val storageStats = storageStatsManager.queryStatsForUid(storageUuid, uid)
-            val isSystemApp = (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+            val uid = appInfo.uid
+            val storageStats = storageStatsManager.queryStatsForUid(
+                StorageManager.UUID_DEFAULT, uid
+            )
 
             AppStorageInfo(
                 packageName = packageName,
@@ -81,18 +123,54 @@ class StorageStatsHelper @Inject constructor(
                 appSizeBytes = storageStats.appBytes,
                 dataSizeBytes = storageStats.dataBytes,
                 cacheSizeBytes = storageStats.cacheBytes,
-                totalSizeBytes = storageStats.appBytes + storageStats.dataBytes + storageStats.cacheBytes,
-                isSystemApp = isSystemApp
+                totalSizeBytes = storageStats.appBytes +
+                        storageStats.dataBytes +
+                        storageStats.cacheBytes,
+                isSystemApp = false
             )
         } catch (e: Exception) {
             null
         }
     }
 
-    fun getAllAppsStorageInfo(entities: List<AppInfoEntity>): List<AppStorageInfo> {
-        return entities.mapNotNull { entity ->
-            getAppStorageInfo(entity.packageName)
-        }.sortedByDescending { it.totalSizeBytes }
+    fun getSystemAppsStorageTotal(): Long {
+        return try {
+            val userHandle = android.os.Process.myUserHandle()
+            val pm = context.packageManager
+
+            val totalStats = storageStatsManager.queryStatsForUser(
+                StorageManager.UUID_DEFAULT,
+                userHandle
+            )
+            val allAppsTotal = totalStats.appBytes +
+                    totalStats.dataBytes +
+                    totalStats.cacheBytes
+
+            // Fix shared UID — track counted UIDs
+            val installedApps = pm.getInstalledApplications(0)
+            var userAppsSum = 0L
+            val countedUids = mutableSetOf<Int>()
+
+            for (app in installedApps) {
+                val isSystem = (app.flags and
+                        android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                if (!isSystem && !countedUids.contains(app.uid)) {
+                    try {
+                        val stats = storageStatsManager.queryStatsForUid(
+                            StorageManager.UUID_DEFAULT, app.uid
+                        )
+                        userAppsSum += (stats.appBytes +
+                                stats.dataBytes +
+                                stats.cacheBytes)
+                        countedUids.add(app.uid)
+                    } catch (e: Exception) {}
+                }
+            }
+
+            allAppsTotal - userAppsSum
+        } catch (e: Exception) {
+            0L
+        }
     }
 
     fun formatSize(bytes: Long): String {

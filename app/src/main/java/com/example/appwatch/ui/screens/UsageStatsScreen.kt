@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +66,9 @@ fun UsageStatsScreen(
 ) {
     val context = LocalContext.current
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
     // ─── Colors (Indigo Replaced with Blue/Purple) ──────────────────────────
     val AppThemePrimary = Blue600 // Tunhe Indigo mana kiya tha, toh Blue600 as Primary
     val AppBackground = BackgroundLight
@@ -129,6 +133,7 @@ fun UsageStatsScreen(
             }
         }else {
             Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 containerColor = AppBackground,
                 topBar = {
                     CenterAlignedTopAppBar(
@@ -148,7 +153,14 @@ fun UsageStatsScreen(
                                 )
                             }
                         },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = AppBackground)
+                        scrollBehavior = scrollBehavior,
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = BackgroundLight,
+                            scrolledContainerColor = Teal50,
+                            titleContentColor = TextPrimary,
+                            navigationIconContentColor = TextPrimary,
+                            actionIconContentColor = TextPrimary
+                        )
                     )
                 }
             ) { padding ->

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PermissionAccessDao{
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAccessEvent(event: PermissionAccessEntity)
 
     @Query("SELECT * FROM permission_access WHERE packageName = :packageName ORDER BY accessTimestamp DESC")

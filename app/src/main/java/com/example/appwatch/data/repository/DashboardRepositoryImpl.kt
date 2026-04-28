@@ -3,6 +3,7 @@ package com.example.appwatch.data.repository
 import android.app.admin.SystemUpdateInfo
 import android.os.Build
 import com.example.appwatch.data.local.dao.AppInfoDao
+import com.example.appwatch.data.local.dao.AppNotificationDao
 import com.example.appwatch.data.local.dao.NeedsAttentionDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
@@ -36,7 +37,9 @@ class DashboardRepositoryImpl @Inject constructor(
     private val storageStatsHelper: StorageStatsHelper,
     private val usageStatsHelper: UsageStatsHelper,
     private val vitalsDataStore: VitalsDataStore,
-) : DashboardRepository {
+    private val appNotificationDao: AppNotificationDao,
+
+    ) : DashboardRepository {
 
     // Caching system data to prevent 20s lag on every Room emission
     private var cachedScreenTime: String = "0m"
@@ -193,12 +196,19 @@ class DashboardRepositoryImpl @Inject constructor(
 
         // 1. Privacy / Security: Sideloaded Apps (Top Priority - Bottom Sheet)
         if (sideloaded.isNotEmpty()) {
+            val appName = entities.find {
+                it.packageName == sideloaded.first().packageName
+            }?.appName ?: sideloaded.first().packageName
+
             dynamicActivityList.add(
                 RecentItem(
-                    "SIDELOADED_APK",
-                    "Unknown Sources",
-                    "${sideloaded.size} apps installed outside Play Store",
-                    true
+                    eventType = "SIDELOADED_APK",
+                    title = "Unknown Sources",
+                    description = if (sideloaded.size == 1)
+                        "$appName installed from unknown source"
+                    else
+                        "${sideloaded.size} apps installed outside Play Store",
+                    isTimeline = sideloaded.size > 5 // bottom sheet for <=5, screen for >5
                 )
             )
         }
@@ -215,7 +225,7 @@ class DashboardRepositoryImpl @Inject constructor(
                 RecentItem(
                     eventType = "DATA_HOG",
                     title = "Highest Data Usage",
-                    description = "$actualAppName consumed $topAppSize recently",
+                    description = "$actualAppName consumed $topAppSize in past 7 days",
                     isTimeline = true
                 )
             )
@@ -305,13 +315,18 @@ class DashboardRepositoryImpl @Inject constructor(
 
             // --- FEATURE 1: Nayi Installations ---
             if (app.installedAt > sevenDaysAgo) {
-                newEvents.add(
-                    RecentEventEntity(
-                        packageName = app.packageName,
-                        eventType = "INSTALL",
-                        timestamp = app.installedAt
-                    )
+                val existing = recentEventDao.countExistingEvent(
+                    app.packageName, "INSTALL", sevenDaysAgo
                 )
+                if(existing==0) {
+                    newEvents.add(
+                        RecentEventEntity(
+                            packageName = app.packageName,
+                            eventType = "INSTALL",
+                            timestamp = app.installedAt
+                        )
+                    )
+                }
             }
 
             // --- FEATURE 2: App Updates ---
@@ -328,7 +343,7 @@ class DashboardRepositoryImpl @Inject constructor(
             // --- FEATURE 3: Sideloaded / Unknown Sources ---
             // Ise humesha check karenge, kyunki sideloaded app risky hoti hai.
             // Timestamp mein install time daalenge.
-            if (packageManagerHelper.isAppSideloaded(app.packageName)) {
+            if (packageManagerHelper.isAppSideloaded(app.packageName) && app.installedAt > sevenDaysAgo) {
                 newEvents.add(
                     RecentEventEntity(
                         packageName = app.packageName,
@@ -359,9 +374,9 @@ class DashboardRepositoryImpl @Inject constructor(
 
 
 //        recentEventDao.clearSyncedEvents()
-            if (newEvents.isNotEmpty()) {
-                recentEventDao.insertEvents(newEvents)
-            }
+        }
+        if (newEvents.isNotEmpty()) {
+            recentEventDao.insertEvents(newEvents)
         }
     }
 
@@ -452,6 +467,11 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override fun getNeedsAttentionEventsByType(eventType: String): Flow<List<NeedsAttentionEntity>> {
         return needsAttentionDao.getEventsByType(eventType)
+    }
+
+    override fun getTodayNotificationCount(): Flow<Int> {
+        val today = java.time.LocalDate.now().toString()
+        return appNotificationDao.getTotalCountByDate(today).map { it ?: 0 }
     }
 
         override fun getTodayTotalUnlocks(): Flow<Int> =

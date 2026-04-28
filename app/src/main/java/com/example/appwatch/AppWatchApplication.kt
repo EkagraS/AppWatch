@@ -22,6 +22,7 @@ class AppWatchApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        net.sqlcipher.database.SQLiteDatabase.loadLibs(this)
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
 //            scheduleAppDiscovery()
 //            scheduleUsageSnapshot()

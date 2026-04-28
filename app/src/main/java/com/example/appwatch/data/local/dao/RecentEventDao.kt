@@ -29,6 +29,8 @@ interface RecentEventDao {
     @Query("DELETE FROM recent_events WHERE timestamp < :olderThanTimestamp")
     suspend fun deleteOldEvents(olderThanTimestamp: Long)
 
+    @Query("SELECT COUNT(*) FROM recent_events WHERE packageName = :packageName AND eventType = :eventType AND timestamp >= :since")
+    suspend fun countExistingEvent(packageName: String, eventType: String, since: Long): Int
 //    @Query("DELETE FROM recent_events WHERE eventType IN ('INSTALL', 'UPDATE', 'SIDELOADED_APK', 'DATA_HOG')")
 //    suspend fun clearSyncedEvents()
 }

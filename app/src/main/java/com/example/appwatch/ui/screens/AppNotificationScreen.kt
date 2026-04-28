@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,10 @@ fun AppNotificationScreen(
     val uiState by viewModel.uiState.collectAsState()
     val totalNotifications = if (isPermissionGranted) uiState.notificationList.sumOf { it.count } else 0
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     // ─── Conditional Rendering ────────────────────────────────────────────────
     if (!isPermissionGranted) {
         NotificationLoader(onGrantPermissionClick = {
@@ -76,7 +81,8 @@ fun AppNotificationScreen(
         })
     } else {
         Scaffold(
-            containerColor = BackgroundLight, // 👈 New Theme Color
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            containerColor = BackgroundLight,
             topBar = {
                 TopAppBar(
                     title = { Text("Today's Notifications", fontWeight = FontWeight.Bold, color = TextPrimary) },
@@ -89,7 +95,12 @@ fun AppNotificationScreen(
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
+                    scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = BackgroundLight,
+                        scrolledContainerColor = SurfaceWhite,
+                        titleContentColor = TextPrimary
+                    )
                 )
             }
         ) { padding ->

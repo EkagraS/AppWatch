@@ -26,6 +26,7 @@ import coil.request.ImageRequest
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.appwatch.data.local.entity.NeedsAttentionEntity
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.DividerColor
@@ -70,7 +71,12 @@ fun NeedsAttentionScreen(
         }
     }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
@@ -96,7 +102,13 @@ fun NeedsAttentionScreen(
                             Icon(Icons.Default.Info, contentDescription = "Help", tint = Indigo500)
                         }
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = SurfaceWhite,
+                    titleContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->

@@ -20,6 +20,9 @@ interface AppNotificationDao {
     @Query("SELECT * FROM app_notification_stats WHERE date = :todayDate ORDER BY count DESC")
     fun getNotificationsByDate(todayDate: String): Flow<List<AppNotificationEntity>>
 
+    @Query("SELECT SUM(count) FROM app_notification_stats WHERE date = :date")
+    fun getTotalCountByDate(date: String): Flow<Int?>
+
     // 🔴 UPSERT LOGIC USING TRANSACTION
     // Ye function check karega: Agar data hai toh count++ karega, warna naya daalega.
     @Transaction

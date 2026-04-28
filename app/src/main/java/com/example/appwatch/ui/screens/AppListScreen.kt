@@ -29,8 +29,12 @@ import com.example.appwatch.domain.model.AppInfo
 import com.example.appwatch.presentation.viewmodel.AppListViewModel
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.appwatch.system.PackageManagerHelper
 import androidx.compose.ui.platform.LocalContext
+import com.example.appwatch.ui.theme.BackgroundLight
+import com.example.appwatch.ui.theme.Teal50
+import com.example.appwatch.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +45,13 @@ fun AppListScreen(navController: NavController) {
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = { Text("Installed Apps", fontWeight = FontWeight.Bold) },
@@ -49,7 +59,15 @@ fun AppListScreen(navController: NavController) {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = Teal50,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextPrimary
+                )
             )
         }
     ) { padding ->
