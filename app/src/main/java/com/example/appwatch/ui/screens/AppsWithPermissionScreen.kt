@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.appwatch.R
 import com.example.appwatch.presentation.viewmodel.AppsWithPermissionViewModel
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.SurfaceWhite
@@ -41,14 +43,11 @@ fun AppsWithPermissionScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
-//    LaunchedEffect(permissionType) {
-//        if (permissionType != null) {
-//            viewModel.loadAppsWithPermission(permissionType)
-//        }
-//    }
-//
     val permissionColor = getPermissionTypeColor(permissionType ?: "")
     val permissionIcon = getPermissionTypeIcon(permissionType ?: "")
+
+    // Get Localized Name
+    val friendlyName = stringResource(getPermissionNameRes(permissionType ?: ""))
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -61,7 +60,7 @@ fun AppsWithPermissionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "${getPermissionFriendlyName(permissionType ?: "")} Access",
+                        text = stringResource(R.string.perm_screen_title, friendlyName),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -69,7 +68,7 @@ fun AppsWithPermissionScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -117,12 +116,12 @@ fun AppsWithPermissionScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            getPermissionFriendlyName(permissionType ?: ""),
+                            friendlyName,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            "${apps.size} apps have this permission",
+                            stringResource(R.string.perm_count_desc, apps.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,7 +152,7 @@ fun AppsWithPermissionScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                "No apps have this permission",
+                                stringResource(R.string.perm_empty_state),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -219,7 +218,7 @@ fun AppsWithPermissionScreen(
                                             shape = RoundedCornerShape(4.dp)
                                         ) {
                                             Text(
-                                                "System",
+                                                stringResource(R.string.label_system),
                                                 modifier = Modifier.padding(
                                                     horizontal = 6.dp,
                                                     vertical = 2.dp
@@ -246,14 +245,14 @@ fun AppsWithPermissionScreen(
     }
 }
 
-private fun getPermissionFriendlyName(permissionType: String): String = when (permissionType) {
-    "LOCATION" -> "Location"
-    "CAMERA" -> "Camera"
-    "RECORD_AUDIO" -> "Microphone"
-    "CONTACTS" -> "Contacts"
-    "CALL_LOG" -> "Phone & Calls"
-    "SMS" -> "SMS"
-    else -> permissionType
+private fun getPermissionNameRes(permissionType: String): Int = when (permissionType) {
+    "LOCATION" -> R.string.perm_name_location
+    "CAMERA" -> R.string.perm_name_camera
+    "RECORD_AUDIO" -> R.string.perm_name_mic
+    "CONTACTS" -> R.string.perm_name_contacts
+    "CALL_LOG" -> R.string.perm_name_phone
+    "SMS" -> R.string.perm_name_sms
+    else -> R.string.perm_name_unknown
 }
 
 private fun getPermissionTypeColor(permissionType: String): Color = when (permissionType) {

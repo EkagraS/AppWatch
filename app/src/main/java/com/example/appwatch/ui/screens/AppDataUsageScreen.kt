@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,12 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.AppDataUsageEntity
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
@@ -28,12 +30,11 @@ import com.example.appwatch.ui.viewmodels.AppDataUsageViewmodel
 @Composable
 fun AppDataUsageScreen(
     navController: NavController,
-    viewModel: AppDataUsageViewmodel=hiltViewModel()
+    viewModel: AppDataUsageViewmodel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // 1. Logic: Filter apps with > 1MB total usage
     val filteredList = remember(uiState.dataUsage) {
         uiState.dataUsage.filter {
             (it.mobileUsageBytes + it.wifiUsageBytes) > 1024 * 1024
@@ -49,10 +50,13 @@ fun AppDataUsageScreen(
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text("Today's Data Usage") },
+                title = { Text(stringResource(R.string.data_usage_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -71,7 +75,7 @@ fun AppDataUsageScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (filteredList.isEmpty()) {
                 Text(
-                    text = "No apps used more than 1MB today.",
+                    text = stringResource(R.string.data_usage_empty_state),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -93,7 +97,6 @@ fun AppDataUsageScreen(
 fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
     val pm = context.packageManager
 
-    // App details fetch karna
     val appInfo = try {
         pm.getApplicationInfo(usage.packageName, 0)
     } catch (e: Exception) {
@@ -101,7 +104,7 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
     }
 
     val appName = appInfo?.loadLabel(pm)?.toString() ?: usage.packageName
-    val appIcon = appInfo?.loadIcon(pm) // Asali Icon yahan se aayega
+    val appIcon = appInfo?.loadIcon(pm)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -112,7 +115,6 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 1. App Icon (Coil use karke Drawable load kar rahe hain)
             AsyncImage(
                 model = appIcon,
                 contentDescription = null,
@@ -121,7 +123,6 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // 2. Center Column: Name and Package Name
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = appName,
@@ -129,7 +130,6 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                     fontSize = 15.sp,
                     maxLines = 1
                 )
-                // App Name ke niche Package Name
                 Text(
                     text = usage.packageName,
                     style = MaterialTheme.typography.bodySmall,
@@ -138,26 +138,24 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                 )
             }
 
-            // 3. Right Side: Data Breakdown (Mobile/WiFi)
             Column(horizontalAlignment = Alignment.End) {
                 if (usage.mobileUsageBytes > 0) {
                     Text(
-                        text = "Mobile: ${formatBytes(usage.mobileUsageBytes)}",
+                        text = stringResource(R.string.label_mobile, formatBytes(usage.mobileUsageBytes)),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFE91E63), // Pinkish for Mobile
+                        color = Color(0xFFE91E63),
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 if (usage.wifiUsageBytes > 0) {
                     Text(
-                        text = "WiFi: ${formatBytes(usage.wifiUsageBytes)}",
+                        text = stringResource(R.string.label_wifi, formatBytes(usage.wifiUsageBytes)),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF2196F3), // Blue for WiFi
+                        color = Color(0xFF2196F3),
                         fontWeight = FontWeight.SemiBold
                     )
                 }
 
-                // Total ki line (Optional, par breakdown ke niche choti si achi lagti hai)
                 HorizontalDivider(
                     modifier = Modifier.width(40.dp).padding(vertical = 2.dp),
                     thickness = 0.5.dp,
@@ -175,23 +173,6 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
     }
 }
 
-@Composable
-fun UsageChip(label: String, color: Color) {
-    Surface(
-        color = color.copy(alpha = 0.1f),
-        shape = MaterialTheme.shapes.small,
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f))
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.bodySmall,
-            color = color
-        )
-    }
-}
-
-// Helper function to format bytes
 fun formatBytes(bytes: Long): String {
     val kb = bytes / 1024.0
     val mb = kb / 1024.0

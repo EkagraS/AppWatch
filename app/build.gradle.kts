@@ -45,6 +45,11 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
@@ -84,9 +89,10 @@ dependencies {
     testImplementation (libs.kotlinx.coroutines.test)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-    implementation("androidx.sqlite:sqlite-ktx:2.6.2")
+    implementation("net.zetetic:sqlcipher-android:4.6.1")
+    implementation("androidx.sqlite:sqlite:2.4.0")
     implementation("androidx.security:security-crypto:1.1.0")
+    implementation("androidx.graphics:graphics-path:1.0.1")
 }
 //configurations.all {
 //    exclude(group = "com.intellij", module = "annotations")

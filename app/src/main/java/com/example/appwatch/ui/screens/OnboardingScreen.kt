@@ -24,10 +24,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -39,7 +41,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 4 })
 
     var showTimerWarningDialog by remember { mutableStateOf<TimerWarningType?>(null) }
-    var showSkippedDialog by remember { mutableStateOf<String?>(null) }
+    var showSkippedDialog by remember { mutableStateOf<Int?>(null) } // Changed to Int for string resource ID
 
     val mediaPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -72,7 +74,10 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 )
             )
     ) {
-        Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()) {
 
             // Skip button
             Row(
@@ -84,7 +89,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 if (pagerState.currentPage < 3) {
                     TextButton(onClick = onFinish) {
                         Text(
-                            "Skip",
+                            stringResource(R.string.btn_skip),
                             color = TextSecondary,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -174,18 +179,18 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    "Grant Access",
+                                    stringResource(R.string.btn_grant_access),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
                             }
                             OutlinedButton(
                                 onClick = {
-                                    val name = if (pagerState.currentPage == 1)
-                                        "Usage Access"
+                                    val stringResId = if (pagerState.currentPage == 1)
+                                        R.string.perm_usage_access
                                     else
-                                        "Notification Access"
-                                    showSkippedDialog = name
+                                        R.string.perm_notification_access
+                                    showSkippedDialog = stringResId
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -196,7 +201,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                                 )
                             ) {
                                 Text(
-                                    "Skip for now",
+                                    stringResource(R.string.btn_skip_for_now),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 16.sp
                                 )
@@ -219,7 +224,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text(
-                                    "Next",
+                                    stringResource(R.string.btn_next),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
@@ -244,13 +249,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 )
             },
             title = {
-                Text("One thing before you go", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dialog_timer_title), fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(
-                    "Android will show a security screen with a 10-second countdown. " +
-                            "This is completely normal — Android does this for all privacy apps.\n\n" +
-                            "Just wait 10 seconds, find AppWatch in the list and toggle it ON.",
+                    stringResource(R.string.dialog_timer_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     lineHeight = 20.sp
                 )
@@ -274,12 +277,12 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                         containerColor = if (isUsage) OnboardingPage2 else OnboardingPage3
                     )
                 ) {
-                    Text("Got it, take me there", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_got_it), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimerWarningDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -293,12 +296,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 Icon(Icons.Default.CheckCircle, null, tint = Green500)
             },
             title = {
-                Text("No problem!", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dialog_skip_title), fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(
-                    "You can grant ${showSkippedDialog} later from the Settings page " +
-                            "inside AppWatch.",
+                    stringResource(R.string.dialog_skip_desc, stringResource(showSkippedDialog!!)),
                     style = MaterialTheme.typography.bodyMedium,
                     lineHeight = 20.sp
                 )
@@ -313,7 +315,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Green500)
                 ) {
-                    Text("Okay", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_okay), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -350,7 +352,7 @@ fun WelcomePage(accentColor: Color) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "AppWatch",
+            stringResource(R.string.app_name),
             fontSize = 36.sp,
             fontWeight = FontWeight.Black,
             color = TextPrimary
@@ -359,7 +361,7 @@ fun WelcomePage(accentColor: Color) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            "Watch the Watchers.\nAudit your Privacy.",
+            stringResource(R.string.app_punch_line),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = accentColor,
@@ -370,9 +372,7 @@ fun WelcomePage(accentColor: Color) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            "AppWatch shows you what every app on your phone is actually doing that includes " +
-                    "screen time, storage, permissions and more. " +
-                    "Everything stays on your device locally and we neither store nor use it.",
+            stringResource(R.string.onboarding_page1),
             style = MaterialTheme.typography.bodyLarge,
             color = TextSecondary,
             textAlign = TextAlign.Center,
@@ -384,9 +384,9 @@ fun WelcomePage(accentColor: Color) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            OnboardingFeatureChip(Icons.Default.Lock, "100% Local", accentColor)
-            OnboardingFeatureChip(Icons.Default.WifiOff, "No Internet", accentColor)
-            OnboardingFeatureChip(Icons.Default.Visibility, "Transparent", accentColor)
+            OnboardingFeatureChip(Icons.Default.Lock, stringResource(R.string.feature_local), accentColor)
+            OnboardingFeatureChip(Icons.Default.WifiOff, stringResource(R.string.feature_no_internet), accentColor)
+            OnboardingFeatureChip(Icons.Default.Visibility, stringResource(R.string.feature_transparent), accentColor)
         }
     }
 }
@@ -398,15 +398,15 @@ fun UsageAccessPage(accentColor: Color) {
     OnboardingPermissionPage(
         accentColor = accentColor,
         icon = Icons.Default.QueryStats,
-        title = "Screen Time & App Activity",
-        description = "We show to you your screen time, weekly usage history, app launch counts and which apps you haven't used in months. For that AppWatch needs Usage Access. This permission can be granted from the settings page as well.",
+        title = stringResource(R.string.onboarding2_title),
+        description = stringResource(R.string.onboarding2_description),
         whatWeUseItFor = listOf(
-            "Your daily and weekly screen time" to Icons.Default.BarChart,
-            "Apps unused for 30, 60 or 90 days" to Icons.Default.History,
-            "How many times you open each app" to Icons.Default.TrendingUp,
-            "Storage size of each installed app" to Icons.Default.Storage
+            stringResource(R.string.usage_feature_screen_time) to Icons.Default.BarChart,
+            stringResource(R.string.usage_feature_unused) to Icons.Default.History,
+            stringResource(R.string.usage_feature_launch_count) to Icons.Default.TrendingUp,
+            stringResource(R.string.usage_feature_storage) to Icons.Default.Storage
         ),
-        warningNote = "On some devices while granting this permission android might show you a 10-second security countdown, this is for security purposes and you can safely grant them."
+        warningNote = stringResource(R.string.onboarding_error)
     )
 }
 
@@ -417,14 +417,13 @@ fun NotificationAccessPage(accentColor: Color) {
     OnboardingPermissionPage(
         accentColor = accentColor,
         icon = Icons.Default.Notifications,
-        title = "Notification Tracking",
-        description = "We show to you how many notifications each app sends you on daily basis and for that AppWatch needs Notification Access. We never read the content of any notification nor use them and this data gets deleted on daily basis. This permission can be granted from the settings page as well.",
+        title = stringResource(R.string.onboarding3_title),
+        description = stringResource(R.string.onboarding3_description),
         whatWeUseItFor = listOf(
-            "Total notifications per app today" to Icons.Default.NotificationsActive,
-            "Which apps notify you the most" to Icons.Default.BarChart
-//            "Notification count history" to Icons.Default.History
+            stringResource(R.string.notif_feature_total) to Icons.Default.NotificationsActive,
+            stringResource(R.string.notif_feature_most) to Icons.Default.BarChart
         ),
-        warningNote = "On some devices while granting this permission android might show you a 10-second security countdown, this is for security purposes and you can safely grant them."
+        warningNote = stringResource(R.string.onboarding_error)
     )
 }
 
@@ -464,7 +463,7 @@ fun MediaStoragePage(
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                "Optional",
+                stringResource(R.string.label_optional),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 color = accentColor,
                 fontWeight = FontWeight.Bold,
@@ -475,7 +474,7 @@ fun MediaStoragePage(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            "Media Storage",
+            stringResource(R.string.onboarding4_title),
             fontSize = 28.sp,
             fontWeight = FontWeight.Black,
             color = TextPrimary,
@@ -485,9 +484,7 @@ fun MediaStoragePage(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            "We show to you how much space your Photos, Videos and Music are using, " +
-                    "and AppWatch needs storage access for that. This is completely optional and " +
-                    "all other features work perfectly without it.",
+            stringResource(R.string.onboarding4_description),
             style = MaterialTheme.typography.bodyLarge,
             color = TextSecondary,
             textAlign = TextAlign.Center,
@@ -497,9 +494,9 @@ fun MediaStoragePage(
         Spacer(modifier = Modifier.height(28.dp))
 
         listOf(
-            Triple(Icons.Default.Photo, "Photos & Videos", ColorCamera),
-            Triple(Icons.Default.MusicNote, "Music Files", ColorMic),
-            Triple(Icons.Default.Download, "Downloads Folder", ColorLocation)
+            Triple(Icons.Default.Photo, stringResource(R.string.onboarding_media_photos_videos), ColorCamera),
+            Triple(Icons.Default.MusicNote, stringResource(R.string.onboarding_media_music), ColorMic),
+            Triple(Icons.Default.Download, stringResource(R.string.onboarding_media_downloads), ColorLocation)
         ).forEach { (icon, label, color) ->
             Row(
                 modifier = Modifier
@@ -535,7 +532,7 @@ fun MediaStoragePage(
             colors = ButtonDefaults.buttonColors(containerColor = accentColor),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Text("Grant Storage Access", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(stringResource(R.string.btn_grant_storage), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -545,7 +542,7 @@ fun MediaStoragePage(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                "Skip — I'll enable this later",
+                stringResource(R.string.btn_skip_storage),
                 color = TextSecondary,
                 fontWeight = FontWeight.SemiBold
             )
@@ -618,7 +615,7 @@ fun OnboardingPermissionPage(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "What we use it for",
+                    stringResource(R.string.label_usage_purpose),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
                     color = accentColor

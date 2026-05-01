@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.example.appwatch.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
+import com.example.appwatch.R
 
 @Composable
 fun SplashScreen(onNavigateNext: (String) -> Unit) {
@@ -99,7 +101,7 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "AppWatch",
+                text = stringResource(R.string.app_name),
                 modifier = Modifier.alpha(alpha.value),
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Black,
@@ -111,7 +113,7 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Know what your apps\nare doing to you.",
+                text = stringResource(R.string.app_punch_line),
                 modifier = Modifier
                     .padding(horizontal = 48.dp)
                     .alpha(alpha.value * 0.85f),
@@ -126,7 +128,7 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
 
         // Version — minimal, bottom right only
         Text(
-            text = "v1.0.0",
+            text = stringResource(R.string.app_version),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 36.dp)

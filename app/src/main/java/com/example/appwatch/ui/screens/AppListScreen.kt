@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -25,13 +26,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppInfo
 import com.example.appwatch.presentation.viewmodel.AppListViewModel
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import com.example.appwatch.system.PackageManagerHelper
-import androidx.compose.ui.platform.LocalContext
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
 import com.example.appwatch.ui.theme.TextPrimary
@@ -54,10 +54,10 @@ fun AppListScreen(navController: NavController) {
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text("Installed Apps", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.app_list_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -82,12 +82,12 @@ fun AppListScreen(navController: NavController) {
                 value = searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search apps...") },
+                placeholder = { Text(stringResource(R.string.search_hint)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search))
                         }
                     }
                 },
@@ -108,12 +108,19 @@ fun AppListScreen(navController: NavController) {
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("All", "User Apps", "System Apps").forEach { filter ->
-                    val isSelected = selectedFilter == filter
+                // Mapping UI Labels to Logic Strings to avoid breaking ViewModel
+                val filterOptions = listOf(
+                    stringResource(R.string.filter_all) to "All",
+                    stringResource(R.string.filter_user) to "User Apps",
+                    stringResource(R.string.filter_system) to "System Apps"
+                )
+
+                filterOptions.forEach { (label, filterKey) ->
+                    val isSelected = selectedFilter == filterKey
                     FilterChip(
                         selected = isSelected,
-                        onClick = { viewModel.onFilterChange(filter) },
-                        label = { Text(filter) },
+                        onClick = { viewModel.onFilterChange(filterKey) },
+                        label = { Text(label) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF6366F1).copy(alpha = 0.15f),
                             selectedLabelColor = Color(0xFF6366F1)
@@ -126,7 +133,7 @@ fun AppListScreen(navController: NavController) {
 
             // App count
             Text(
-                "${apps.size} apps",
+                stringResource(R.string.app_count_template, apps.size),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -142,7 +149,7 @@ fun AppListScreen(navController: NavController) {
                             CircularProgressIndicator(color = Color(0xFF6366F1))
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                "Loading apps...",
+                                stringResource(R.string.loading_apps),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -155,7 +162,7 @@ fun AppListScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No apps found",
+                            stringResource(R.string.no_apps_found),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -239,7 +246,7 @@ fun AppListItem(app: AppInfo, onClick: () -> Unit) {
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        "${app.totalPermissions} Perms",
+                        stringResource(R.string.app_perms_badge, app.totalPermissions),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,

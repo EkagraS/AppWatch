@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.example.appwatch.R
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
 import com.example.appwatch.ui.theme.TextPrimary
@@ -59,9 +61,12 @@ enum class SheetType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val toastMsg = stringResource(R.string.settings_toast_unavailable) // Is line ko top par define karo Composable ke start mein
+
+
     val context = LocalContext.current
     var activeSheet by remember { mutableStateOf<SheetType?>(null) }
-    var showRevokeDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var showRevokeDialog by remember { mutableStateOf<Pair<String, Int>?>(null) } // Changed string msg to Int resource ID
 
     val hasUsageAccess = remember {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -98,7 +103,7 @@ fun SettingsScreen(navController: NavController) {
         containerColor = BackgroundLight,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -153,17 +158,14 @@ fun SettingsScreen(navController: NavController) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                "AppWatch",
+                                stringResource(R.string.app_name),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color(0xFF6366F1)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "AppWatch helps you understand what's happening on your phone. " +
-                                        "See which apps use your camera, drain your storage, or sit unused " +
-                                        "with sensitive permissions. Everything runs on your device and " +
-                                        "nothing is ever shared.",
+                                stringResource(R.string.settings_about_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 lineHeight = 18.sp
@@ -196,8 +198,7 @@ fun SettingsScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            "AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. " +
-                                    "If you restart your phone today's live data resets but if you reinstall the app, everything stored is lost.",
+                            stringResource(R.string.settings_data_info_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 18.sp
@@ -208,13 +209,13 @@ fun SettingsScreen(navController: NavController) {
 
             // ── 3. Permissions ────────────────────────────────────────────────
             item {
-                SettingsSectionHeader("Permissions", Color(0xFFD97706))
+                SettingsSectionHeader(stringResource(R.string.settings_header_permissions), Color(0xFFD97706))
             }
 
             item {
                 PermissionSettingsRow(
-                    title = "App Usage Access",
-                    description = "Needed to show screen time, app launches and weekly activity.",
+                    title = stringResource(R.string.settings_perm_usage_title),
+                    description = stringResource(R.string.settings_perm_usage_desc),
                     icon = Icons.Default.QueryStats,
                     iconColor = Color(0xFF6366F1),
                     isGranted = hasUsageAccess,
@@ -222,7 +223,7 @@ fun SettingsScreen(navController: NavController) {
                         if (hasUsageAccess) {
                             showRevokeDialog = Pair(
                                 Settings.ACTION_USAGE_ACCESS_SETTINGS,
-                                "Turning this off will stop screen time tracking and most app analysis features."
+                                R.string.revoke_msg_usage
                             )
                         } else {
                             context.startActivity(
@@ -237,8 +238,8 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 PermissionSettingsRow(
-                    title = "Media Storage Access",
-                    description = "Optional. Lets AppWatch show how much space your Photos, Videos and Music are using.",
+                    title = stringResource(R.string.settings_perm_storage_title),
+                    description = stringResource(R.string.settings_perm_storage_desc),
                     icon = Icons.Default.PermMedia,
                     iconColor = Color(0xFF10B981),
                     isGranted = hasStoragePermission,
@@ -247,7 +248,7 @@ fun SettingsScreen(navController: NavController) {
                         if (hasStoragePermission) {
                             showRevokeDialog = Pair(
                                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                "Turning this off will hide the Photos, Videos and Music storage breakdown."
+                                R.string.revoke_msg_storage
                             )
                         } else {
                             context.startActivity(
@@ -263,8 +264,8 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 PermissionSettingsRow(
-                    title = "Notification Count",
-                    description = "Counted using Android's usage system. No notification content is ever read.",
+                    title = stringResource(R.string.settings_perm_notif_title),
+                    description = stringResource(R.string.settings_perm_notif_desc),
                     icon = Icons.Default.Notifications,
                     iconColor = Color(0xFFEF4444),
                     isGranted = hasNotificationPermission,
@@ -273,7 +274,7 @@ fun SettingsScreen(navController: NavController) {
                         if (hasNotificationPermission) {
                             showRevokeDialog = Pair(
                                 Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS,
-                                "Turning this off will stop tracking how many notifications apps send you."
+                                R.string.revoke_msg_notif
                             )
                         } else {
                             try {
@@ -290,8 +291,8 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 InfoSettingsRow(
-                    title = "Installed Apps Visibility",
-                    description = "Granted automatically. Lets AppWatch see all apps on your device.",
+                    title = stringResource(R.string.settings_perm_apps_title),
+                    description = stringResource(R.string.settings_perm_apps_desc),
                     icon = Icons.Default.Apps,
                     iconColor = Color(0xFF8B5CF6)
                 )
@@ -299,8 +300,8 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 InfoSettingsRow(
-                    title = "App Permission Reading",
-                    description = "Granted automatically. Used to check what permissions each app has.",
+                    title = stringResource(R.string.settings_perm_reading_title),
+                    description = stringResource(R.string.settings_perm_reading_desc),
                     icon = Icons.Default.Security,
                     iconColor = Color(0xFFF59E0B)
                 )
@@ -308,8 +309,8 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 InfoSettingsRow(
-                    title = "Data Usage",
-                    description = "Reads mobile and Wi-Fi data used by each app. No network traffic is monitored.",
+                    title = stringResource(R.string.settings_perm_data_title),
+                    description = stringResource(R.string.settings_perm_data_desc),
                     icon = Icons.Default.NetworkCheck,
                     iconColor = Color(0xFF06B6D4)
                 )
@@ -317,13 +318,13 @@ fun SettingsScreen(navController: NavController) {
 
             // ── 4. How AppWatch Works ─────────────────────────────────────────
             item {
-                SettingsSectionHeader("How AppWatch Works", Color(0xFF059669))
+                SettingsSectionHeader(stringResource(R.string.settings_header_how_it_works), Color(0xFF059669))
             }
 
             item {
                 AnalysisSettingsRow(
-                    title = "App Usage Tracking",
-                    subtitle = "How we measure your screen time and app activity",
+                    title = stringResource(R.string.settings_how_usage_title),
+                    subtitle = stringResource(R.string.settings_how_usage_subtitle),
                     icon = Icons.Default.BarChart,
                     iconColor = Color(0xFF6366F1),
                     onClick = { activeSheet = SheetType.USAGE_INFO }
@@ -331,8 +332,8 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = "Permission Monitoring",
-                    subtitle = "How we find which apps have sensitive access",
+                    title = stringResource(R.string.settings_how_perm_title),
+                    subtitle = stringResource(R.string.settings_how_perm_subtitle),
                     icon = Icons.Default.Policy,
                     iconColor = Color(0xFFEF4444),
                     onClick = { activeSheet = SheetType.PERMISSION_INFO }
@@ -340,8 +341,8 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = "Storage Analysis",
-                    subtitle = "How we calculate how much space each app is using",
+                    title = stringResource(R.string.settings_how_storage_title),
+                    subtitle = stringResource(R.string.settings_how_storage_subtitle),
                     icon = Icons.Default.PieChart,
                     iconColor = Color(0xFF10B981),
                     onClick = { activeSheet = SheetType.STORAGE_INFO }
@@ -349,8 +350,8 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = "Notifications & Unlocks",
-                    subtitle = "How we count your daily phone unlocks and notifications",
+                    title = stringResource(R.string.settings_how_notif_title),
+                    subtitle = stringResource(R.string.settings_how_notif_subtitle),
                     icon = Icons.Default.Notifications,
                     iconColor = Color(0xFFF59E0B),
                     onClick = { activeSheet = SheetType.NOTIFICATION_INFO }
@@ -358,8 +359,8 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = "Privacy Insights",
-                    subtitle = "How we identify apps that may be a risk to your privacy",
+                    title = stringResource(R.string.settings_how_privacy_title),
+                    subtitle = stringResource(R.string.settings_how_privacy_subtitle),
                     icon = Icons.Default.Shield,
                     iconColor = Color(0xFF8B5CF6),
                     onClick = { activeSheet = SheetType.PRIVACY_INSIGHTS_INFO }
@@ -367,8 +368,8 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = "Background Updates",
-                    subtitle = "How AppWatch keeps your data fresh without draining battery",
+                    title = stringResource(R.string.settings_how_background_title),
+                    subtitle = stringResource(R.string.settings_how_background_subtitle),
                     icon = Icons.Default.Sync,
                     iconColor = Color(0xFF06B6D4),
                     onClick = { activeSheet = SheetType.BACKGROUND_INFO }
@@ -383,32 +384,32 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
 
-            item { SettingsSectionHeader("Legal", Color(0xFF6366F1)) }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_legal), Color(0xFF6366F1)) }
 
             item {
                 FooterRow(
-                    title = "Privacy Policy",
+                    title = stringResource(R.string.legal_privacy),
                     icon = Icons.Default.PrivacyTip,
                     onClick = { activeSheet = SheetType.PRIVACY }
                 )
             }
             item {
                 FooterRow(
-                    title = "Terms of Use",
+                    title = stringResource(R.string.legal_terms),
                     icon = Icons.Default.Description,
                     onClick = { activeSheet = SheetType.TERMS }
                 )
             }
             item {
                 FooterRow(
-                    title = "Open Source Licenses",
+                    title = stringResource(R.string.legal_licenses),
                     icon = Icons.Default.Code,
                     onClick = { activeSheet = SheetType.LICENSES }
                 )
             }
 
             // ── 6. Developer ──────────────────────────────────────────────────
-            item { SettingsSectionHeader("Developer", Color(0xFF6B7280)) }
+            item { SettingsSectionHeader(stringResource(R.string.settings_header_developer), Color(0xFF6B7280)) }
 
             item {
                 Row(
@@ -438,7 +439,7 @@ fun SettingsScreen(navController: NavController) {
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "Android Developer",
+                            stringResource(R.string.settings_dev_role),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -449,26 +450,19 @@ fun SettingsScreen(navController: NavController) {
             item {
                 ContactLinkRow(
                     icon = Icons.Default.Code,
-                    label = "GitHub — AppWatch",
-                    value = "View source code",
+                    label = stringResource(R.string.settings_dev_github_label),
+                    value = stringResource(R.string.settings_dev_github_value),
                     color = Color(0xFF333333),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
                     onClick = {
-                        Toast.makeText(context, "Feature currently unavailable", Toast.LENGTH_LONG).show()
-//                        context.startActivity(
-//                            Intent(
-//                                Intent.ACTION_VIEW,
-//                                Uri.parse("https://github.com/shandilya-ekagra/AppWatch")
-//                            ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-//                        )
-                    }
+                        Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show()                    }
                 )
             }
 
             // ── 7. Version ────────────────────────────────────────────────────
             item {
                 Text(
-                    text = "AppWatch v1.0.0",
+                    text = stringResource(R.string.settings_version_text, stringResource(R.string.app_version)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 28.dp),
@@ -487,10 +481,10 @@ fun SettingsScreen(navController: NavController) {
             icon = {
                 Icon(Icons.Default.Warning, null, tint = Color(0xFFEF4444))
             },
-            title = { Text("Turn Off Permission?", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.dialog_revoke_title), fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    showRevokeDialog!!.second,
+                    stringResource(showRevokeDialog!!.second),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -505,12 +499,12 @@ fun SettingsScreen(navController: NavController) {
                         }
                     )
                 }) {
-                    Text("Go to Settings", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.btn_go_to_settings), color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRevokeDialog = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -590,7 +584,7 @@ fun PermissionSettingsRow(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            "Optional",
+                            stringResource(R.string.label_optional),
                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF10B981),
@@ -614,7 +608,7 @@ fun PermissionSettingsRow(
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                text = if (isGranted) "Revoke" else "Enable",
+                text = if (isGranted) stringResource(R.string.btn_revoke) else stringResource(R.string.btn_enable),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
@@ -796,142 +790,142 @@ fun SheetDetailPoint(icon: ImageVector, color: Color, title: String, desc: Strin
 @Composable
 fun UsageDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("App Usage Tracking", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How we measure your screen time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_usage_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_usage_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.Timer, Color(0xFF6366F1), "Daily Screen Time",
-            "We track how long each app is open on your screen every day. This data gets updated the moment you open the app and shown in your weekly chart.")
-        SheetDetailPoint(Icons.Default.TrendingUp, Color(0xFF8B5CF6), "App Launches",
-            "Every time you open an app, we count it. This helps you see which apps you reach for the most.")
-        SheetDetailPoint(Icons.Default.History, Color(0xFF10B981), "Inactive Apps",
-            "If an app hasn't been opened in 30, 60 or 90 days, we flag it. These apps often have sensitive permissions.")
-        SheetDetailPoint(Icons.Default.DateRange, Color(0xFFF59E0B), "Active and Inactive Sessions",
-            "We find your longest continuous screen-on and screen-off periods to show your phone usage patterns throughout the day.")
+        SheetDetailPoint(Icons.Default.Timer, Color(0xFF6366F1), stringResource(R.string.sheet_usage_point1_title),
+            stringResource(R.string.sheet_usage_point1_desc))
+        SheetDetailPoint(Icons.Default.TrendingUp, Color(0xFF8B5CF6), stringResource(R.string.sheet_usage_point2_title),
+            stringResource(R.string.sheet_usage_point2_desc))
+        SheetDetailPoint(Icons.Default.History, Color(0xFF10B981), stringResource(R.string.sheet_usage_point3_title),
+            stringResource(R.string.sheet_usage_point3_desc))
+        SheetDetailPoint(Icons.Default.DateRange, Color(0xFFF59E0B), stringResource(R.string.sheet_usage_point4_title),
+            stringResource(R.string.sheet_usage_point4_desc))
     }
 }
 
 @Composable
 fun PermissionDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Permission Monitoring", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How we find which apps have sensitive access", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_perm_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_perm_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), "What Each App Can Access",
-            "We read every permission each app has been given that includes Camera, Microphone, Location and Contacts and show you the full list.")
-        SheetDetailPoint(Icons.Default.AdminPanelSettings, Color(0xFF8B5CF6), "High Risk Apps",
-            "Apps with special system access like reading notifications or permission to install other apps or accessibility permissions are highlighted separately as they have more power over your device.")
-        SheetDetailPoint(Icons.Default.NewReleases, Color(0xFF10B981), "New Apps",
-            "Any app installed in the last 7 days is listed separately.")
+        SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), stringResource(R.string.sheet_perm_point1_title),
+            stringResource(R.string.sheet_perm_point1_desc))
+        SheetDetailPoint(Icons.Default.AdminPanelSettings, Color(0xFF8B5CF6), stringResource(R.string.sheet_perm_point2_title),
+            stringResource(R.string.sheet_perm_point2_desc))
+        SheetDetailPoint(Icons.Default.NewReleases, Color(0xFF10B981), stringResource(R.string.sheet_perm_point3_title),
+            stringResource(R.string.sheet_perm_point3_desc))
     }
 }
 
 @Composable
 fun StorageDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Storage Analysis", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How we calculate how much space apps are using", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_storage_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_storage_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.Storage, Color(0xFF10B981), "Device Storage",
-            "We read your phone's total, used and free storage directly.")
-        SheetDetailPoint(Icons.Default.Apps, Color(0xFF6366F1), "Per App Breakdown",
-            "For each app we calculate three things: the app's install size, data accumulated by the app, and its temporary cache files.")
-        SheetDetailPoint(Icons.Default.Cached, Color(0xFFF59E0B), "Cache Files",
-            "Cache is temporary data apps save to load faster. It is safe to clear and does not delete any of your personal files or settings.")
-        SheetDetailPoint(Icons.Default.Photo, Color(0xFFEF4444), "Photos, Videos and Music",
-            "With optional storage permission, we also show how much space your media files are taking up and are broken down by type.")
+        SheetDetailPoint(Icons.Default.Storage, Color(0xFF10B981), stringResource(R.string.sheet_storage_point1_title),
+            stringResource(R.string.sheet_storage_point1_desc))
+        SheetDetailPoint(Icons.Default.Apps, Color(0xFF6366F1), stringResource(R.string.sheet_storage_point2_title),
+            stringResource(R.string.sheet_storage_point2_desc))
+        SheetDetailPoint(Icons.Default.Cached, Color(0xFFF59E0B), stringResource(R.string.sheet_storage_point3_title),
+            stringResource(R.string.sheet_storage_point3_desc))
+        SheetDetailPoint(Icons.Default.Photo, Color(0xFFEF4444), stringResource(R.string.sheet_storage_point4_title),
+            stringResource(R.string.sheet_storage_point4_desc))
     }
 }
 
 @Composable
 fun NotificationDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Notifications & Unlocks", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How we count your daily activity", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_notif_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_notif_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.LockOpen, Color(0xFF6366F1), "Phone Unlocks",
-            "Every time you unlock your screen, we count it. This gives you a simple picture of how often you pick up your phone.")
-        SheetDetailPoint(Icons.Default.Notifications, Color(0xFFF59E0B), "Notification Count",
-            "We count how many notifications each app sends you using Android's usage system. We never read or store the content of any notification.")
-        SheetDetailPoint(Icons.Default.NetworkCheck, Color(0xFF10B981), "Data Usage",
-            "We show how much mobile and Wi-Fi data each app has used today. No actual network traffic is monitored or stored.")
-        SheetDetailPoint(Icons.Default.Info, Color(0xFF8B5CF6), "Today Only",
-            "Unlock and notification counts reset every day. They show your activity for the current day only.")
+        SheetDetailPoint(Icons.Default.LockOpen, Color(0xFF6366F1), stringResource(R.string.sheet_notif_point1_title),
+            stringResource(R.string.sheet_notif_point1_desc))
+        SheetDetailPoint(Icons.Default.Notifications, Color(0xFFF59E0B), stringResource(R.string.sheet_notif_point2_title),
+            stringResource(R.string.sheet_notif_point2_desc))
+        SheetDetailPoint(Icons.Default.NetworkCheck, Color(0xFF10B981), stringResource(R.string.sheet_notif_point3_title),
+            stringResource(R.string.sheet_notif_point3_desc))
+        SheetDetailPoint(Icons.Default.Info, Color(0xFF8B5CF6), stringResource(R.string.sheet_notif_point4_title),
+            stringResource(R.string.sheet_notif_point4_desc))
     }
 }
 
 @Composable
 fun PrivacyInsightsDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Privacy Insights", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How we identify privacy risks on your phone", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_privacy_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_privacy_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.LocationOn, Color(0xFFEF4444), "Location, Camera and Mic",
-            "We show you exactly how many apps have access to your location, camera and microphone. Tapping any of these shows the full list of those apps.")
-        SheetDetailPoint(Icons.Default.Contacts, Color(0xFF10B981), "Contacts, SMS and Calls",
-            "Apps with access to your contacts, messages and call history are listed separately as these are among the most personal types of data.")
-        SheetDetailPoint(Icons.Default.Shield, Color(0xFF8B5CF6), "Needs Attention",
-            "We combine unused app data and permission data to highlight the apps that pose the biggest risk like an old app that still has your camera access.")
-        SheetDetailPoint(Icons.Default.Timeline, Color(0xFFF59E0B), "Recent Activity",
-            "We track which apps were installed, updated or removed this week so you always know what changed on your phone recently.")
+        SheetDetailPoint(Icons.Default.LocationOn, Color(0xFFEF4444), stringResource(R.string.sheet_privacy_point1_title),
+            stringResource(R.string.sheet_privacy_point1_desc))
+        SheetDetailPoint(Icons.Default.Contacts, Color(0xFF10B981), stringResource(R.string.sheet_privacy_point2_title),
+            stringResource(R.string.sheet_privacy_point2_desc))
+        SheetDetailPoint(Icons.Default.Shield, Color(0xFF8B5CF6), stringResource(R.string.label_usage_purpose),
+            stringResource(R.string.sheet_privacy_point3_desc))
+        SheetDetailPoint(Icons.Default.Timeline, Color(0xFFF59E0B), stringResource(R.string.sheet_privacy_point4_title),
+            stringResource(R.string.sheet_privacy_point4_desc))
     }
 }
 
 @Composable
 fun BackgroundDetailSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Background Updates", fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text("How AppWatch keeps your data fresh", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.settings_how_background_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.sheet_bg_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.Sync, Color(0xFF06B6D4), "Daily Refresh",
-            "Once a day, AppWatch quietly updates your app list, storage data and usage history in the background. You don't need to do anything.")
-        SheetDetailPoint(Icons.Default.BatteryFull, Color(0xFF10B981), "Battery Friendly",
-            "We use Android's WorkManager which is designed to run tasks efficiently without draining your battery or slowing your phone.")
-        SheetDetailPoint(Icons.Default.Speed, Color(0xFF6366F1), "Instant Loading",
-            "When you open AppWatch, it shows your last saved data immediately while quietly fetching any updates in the background.")
-        SheetDetailPoint(Icons.Default.WifiOff, Color(0xFFF59E0B), "Works Offline",
-            "AppWatch does not need internet to work. All data is read directly from your device and stored locally.")
+        SheetDetailPoint(Icons.Default.Sync, Color(0xFF06B6D4), stringResource(R.string.sheet_bg_point1_title),
+            stringResource(R.string.sheet_bg_point1_desc))
+        SheetDetailPoint(Icons.Default.BatteryFull, Color(0xFF10B981), stringResource(R.string.sheet_bg_point2_title),
+            stringResource(R.string.sheet_bg_point2_desc))
+        SheetDetailPoint(Icons.Default.Speed, Color(0xFF6366F1), stringResource(R.string.sheet_bg_point3_title),
+            stringResource(R.string.sheet_bg_point3_desc))
+        SheetDetailPoint(Icons.Default.WifiOff, Color(0xFFF59E0B), stringResource(R.string.sheet_bg_point4_title),
+            stringResource(R.string.sheet_bg_point4_desc))
     }
 }
 
 @Composable
 fun PrivacyPolicySheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Privacy Policy", fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.legal_privacy), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(16.dp))
-        SheetDetailPoint(Icons.Default.PhoneAndroid, Color(0xFF6366F1), "Everything Stays on Your Phone",
-            "All analysis including screen time, permissions, storage happens entirely on your device. Nothing is ever sent anywhere.")
-        SheetDetailPoint(Icons.Default.Block, Color(0xFFEF4444), "No Tracking at All",
-            "AppWatch has no third-party SDKs. We have no way to track or store any data.")
-        SheetDetailPoint(Icons.Default.WifiOff, Color(0xFF10B981), "No Internet Permission",
-            "AppWatch does not have internet permission. It is technically impossible for it to send any data anywhere.")
-        SheetDetailPoint(Icons.Default.DeleteForever, Color(0xFFF59E0B), "Delete Anytime",
-            "Uninstalling AppWatch removes everything. No data remains on your phone or anywhere else after uninstall.")
+        SheetDetailPoint(Icons.Default.PhoneAndroid, Color(0xFF6366F1), stringResource(R.string.sheet_policy_point1_title),
+            stringResource(R.string.sheet_policy_point1_desc))
+        SheetDetailPoint(Icons.Default.Block, Color(0xFFEF4444), stringResource(R.string.sheet_policy_point2_title),
+            stringResource(R.string.sheet_policy_point2_desc))
+        SheetDetailPoint(Icons.Default.WifiOff, Color(0xFF10B981), stringResource(R.string.sheet_policy_point3_title),
+            stringResource(R.string.sheet_policy_point3_desc))
+        SheetDetailPoint(Icons.Default.DeleteForever, Color(0xFFF59E0B), stringResource(R.string.sheet_policy_point4_title),
+            stringResource(R.string.sheet_policy_point4_desc))
     }
 }
 
 @Composable
 fun TermsSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Terms of Use", fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.legal_terms), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(16.dp))
-        SheetDetailPoint(Icons.Default.CheckCircle, Color(0xFF6366F1), "Free to Use",
-            "AppWatch is completely free. There are no subscriptions, no in-app purchases and no hidden charges.")
-        SheetDetailPoint(Icons.Default.Info, Color(0xFF10B981), "For Information Only",
-            "AppWatch shows you information about your device. It does not make any changes to your apps, settings or data on your behalf.")
-        SheetDetailPoint(Icons.Default.Warning, Color(0xFFF59E0B), "No Guarantee",
-            "We do our best to keep data accurate but some readings may vary depending on your device model or Android version.")
-        SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), "Your Responsibility",
-            "Any action you take based on AppWatch's information like revoking a permission is your own decision. We are not responsible for any outcome.")
+        SheetDetailPoint(Icons.Default.CheckCircle, Color(0xFF6366F1), stringResource(R.string.sheet_terms_point1_title),
+            stringResource(R.string.sheet_terms_point1_desc))
+        SheetDetailPoint(Icons.Default.Info, Color(0xFF10B981), stringResource(R.string.sheet_terms_point2_title),
+            stringResource(R.string.sheet_terms_point2_desc))
+        SheetDetailPoint(Icons.Default.Warning, Color(0xFFF59E0B), stringResource(R.string.sheet_terms_point3_title),
+            stringResource(R.string.sheet_terms_point3_desc))
+        SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), stringResource(R.string.sheet_terms_point4_title),
+            stringResource(R.string.sheet_terms_point4_desc))
     }
 }
 
 @Composable
 fun LicensesSheet() {
     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
-        Text("Open Source Licenses", fontSize = 20.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.legal_licenses), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "AppWatch is built using the following open source libraries. We are grateful to their developers.",
+            stringResource(R.string.sheet_licenses_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 18.sp
@@ -962,7 +956,7 @@ fun LicensesSheet() {
 
         Spacer(modifier = Modifier.height(16.dp))
         val annotatedString = buildAnnotatedString {
-            append("All libraries above are licensed under Apache License 2.0, to view full license ")
+            append(stringResource(R.string.sheet_licenses_footer, ""))
             withLink(
                 LinkAnnotation.Url(
                     url = "https://www.apache.org/licenses/LICENSE-2.0",
@@ -974,7 +968,7 @@ fun LicensesSheet() {
                     )
                 )
             ) {
-                append("click here")
+                append(stringResource(R.string.click_here))
             }
         }
         Text(

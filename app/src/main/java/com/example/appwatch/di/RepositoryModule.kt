@@ -6,10 +6,12 @@ import com.example.appwatch.data.repository.AppInfoRepositoryImpl
 import com.example.appwatch.data.repository.DashboardRepositoryImpl
 import com.example.appwatch.data.repository.PermissionRepositoryImpl
 import com.example.appwatch.data.repository.UsageRepositoryImpl
+import com.example.appwatch.data.repository.VitalsRepositoryImpl
 import com.example.appwatch.domain.repository.AppInfoRepository
 import com.example.appwatch.domain.repository.DashboardRepository
 import com.example.appwatch.domain.repository.PermissionRepository
 import com.example.appwatch.domain.repository.UsageRepository
+import com.example.appwatch.domain.repository.VitalsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -44,4 +46,10 @@ abstract class RepositoryModule {
     abstract fun bindDashboardRepository(
         dashboardRepositoryImpl: DashboardRepositoryImpl
     ): DashboardRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindVitalsRepository(
+        vitalsRepositoryImpl: VitalsRepositoryImpl
+    ): VitalsRepository
 }

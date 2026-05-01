@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.RecentItem
-import com.example.appwatch.ui.theme.* // Naye colors yahan se uthayega
-
-@OptIn(ExperimentalMaterial3Api::class)
+import com.example.appwatch.ui.theme.* @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentActivitySection(
     recentItems: List<RecentItem>,
@@ -37,7 +37,7 @@ fun RecentActivitySection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Recent Activity",
+                text = stringResource(R.string.recent_header),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -91,7 +91,6 @@ fun RecentActivitySection(
 
 @Composable
 private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -> Unit) {
-    // Semantic Color Mapping based on your file
     val (iconTint, bgColor) = when (item.eventType) {
         "SIDELOADED_APK" -> Red600 to Red50
         "DATA_HOG" -> Amber600 to Amber50
@@ -159,17 +158,18 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
 
 @Composable
 private fun BottomSheetContent(item: RecentItem) {
-    val (sheetTitle, titleColor) = when(item.eventType) {
-        "INSTALL" -> "New Installations" to TextPrimary
-        "UPDATE" -> "Recent Updates" to TextPrimary
-        "SIDELOADED_APK" -> "Unknown Sources" to Red600
-        "UNINSTALL" -> "Removed Apps" to TextPrimary
-        else -> "Details" to TextPrimary
+    val (sheetTitleRes, titleColor) = when(item.eventType) {
+        "INSTALL" -> R.string.sheet_title_install to TextPrimary
+        "UPDATE" -> R.string.sheet_title_update to TextPrimary
+        "SIDELOADED_APK" -> R.string.sheet_title_sideloaded to Red600
+        "UNINSTALL" -> R.string.sheet_title_uninstall to TextPrimary
+        else -> R.string.sheet_title_details to TextPrimary
     }
 
-    val descriptionText = when(item.eventType) {
-        "SIDELOADED_APK" -> "These apps were not installed from an official store. They might pose a security risk and monitor your system behavior."
-        else -> item.description
+    val descriptionText = if (item.eventType == "SIDELOADED_APK") {
+        stringResource(R.string.desc_sideloaded_warning)
+    } else {
+        item.description
     }
 
     Column(
@@ -178,7 +178,7 @@ private fun BottomSheetContent(item: RecentItem) {
             .padding(start = 24.dp, end = 24.dp, bottom = 40.dp, top = 8.dp)
     ) {
         Text(
-            text = sheetTitle,
+            text = stringResource(sheetTitleRes),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = titleColor,
@@ -213,13 +213,13 @@ private fun EmptyActivityState() {
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "All Caught Up",
+            text = stringResource(R.string.recent_empty_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
         )
         Text(
-            text = "No recent events to show",
+            text = stringResource(R.string.recent_empty_desc),
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary
         )

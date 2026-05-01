@@ -1,3 +1,522 @@
 <resources>
+
+<!--     Splash Screen      -->
     <string name="app_name">AppWatch</string>
+    <string name="app_punch_line">Know what your apps\nare doing to you.</string>
+    <string name="app_version">v1.0.0</string>
+
+
+
+    <!--     Onboarding Screen          -->
+    <string name="onboarding_error">On some devices while granting this permission android might show you a 10-second security countdown, this is for security purposes and you can safely grant them.</string>
+
+    <string name="onboarding_page1">AppWatch shows you what your apps are doing that includes screen time, storage, permissions and more. It is 100% private, local, and your data never leaves this phone.</string>
+
+    <string name="onboarding2_title">Screen Time and App Activity</string>
+    <string name="onboarding2_description">We need the "Screen time" permission to show these to you.</string>
+
+    <string name="onboarding3_title">Notification Tracking</string>
+    <string name="onboarding3_description">We need the "Read notification" permission to show these to you.</string>
+
+    <string name="onboarding4_title">Media Storage</string>
+    <string name="onboarding4_description">We need the "Read storage" permission to show these to you."</string>
+
+    <string name="btn_skip">Skip</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_grant_access">Grant Access</string>
+    <string name="btn_skip_for_now">Skip for now</string>
+    <string name="btn_okay">Okay</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_got_it">Got it, take me there</string>
+    <string name="btn_grant_storage">Grant Storage Access</string>
+    <string name="btn_skip_storage">Skip — I\'ll enable this later</string>
+
+    <string name="dialog_timer_title">One thing before you go</string>
+    <string name="dialog_timer_desc">Android will show a security screen with a 10-second countdown. This is completely normal — Android does this for all privacy apps.\n\nJust wait 10 seconds, find AppWatch in the list and toggle it ON.</string>
+    <string name="dialog_skip_title">No problem!</string>
+    <string name="dialog_skip_desc">You can grant %1$s later from the Settings page inside AppWatch.</string>
+
+    <string name="perm_usage_access">Usage Access</string>
+    <string name="perm_notification_access">Notification Access</string>
+
+    <string name="label_optional">Optional</string>
+    <string name="label_usage_purpose">What we use it for</string>
+    <string name="feature_local">100% Local</string>
+    <string name="feature_no_internet">No Internet</string>
+    <string name="feature_transparent">Transparent</string>
+
+    <string name="usage_feature_screen_time">Your daily and weekly screen time</string>
+    <string name="usage_feature_unused">Apps unused for 30, 60 or 90 days</string>
+    <string name="usage_feature_launch_count">How many times you open each app</string>
+    <string name="usage_feature_storage">Storage size of each installed app</string>
+
+    <string name="notif_feature_total">Total notifications per app today</string>
+    <string name="notif_feature_most">Which apps notify you the most</string>
+
+    <string name="onboarding_media_photos_videos">Photos &amp; Videos</string>
+    <string name="onboarding_media_music">Music Files</string>
+    <string name="onboarding_media_downloads">Downloads Folder</string>
+
+
+
+<!--    Settings Screen     -->
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_about_desc">AppWatch helps you understand what\'s happening on your phone. See which apps use your camera, drain your storage, or sit unused with sensitive permissions. Everything runs on your device and nothing is ever shared.</string>
+    <string name="settings_data_info_desc">AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. If you restart your phone today\'s live data resets but if you reinstall the app, everything stored is lost.</string>
+
+    <string name="settings_header_permissions">Permissions</string>
+    <string name="settings_header_how_it_works">How AppWatch Works</string>
+    <string name="settings_header_legal">Legal</string>
+    <string name="settings_header_developer">Developer</string>
+
+    <string name="settings_perm_usage_title">App Usage Access</string>
+    <string name="settings_perm_usage_desc">Needed to show screen time, app launches and weekly activity.</string>
+    <string name="settings_perm_storage_title">Media Storage Access</string>
+    <string name="settings_perm_storage_desc">Optional. Lets AppWatch show how much space your Photos, Videos and Music are using.</string>
+    <string name="settings_perm_notif_title">Notification Count</string>
+    <string name="settings_perm_notif_desc">Counted using Android\'s usage system. No notification content is ever read.</string>
+    <string name="settings_perm_apps_title">Installed Apps Visibility</string>
+    <string name="settings_perm_apps_desc">Granted automatically. Lets AppWatch see all apps on your device.</string>
+    <string name="settings_perm_reading_title">App Permission Reading</string>
+    <string name="settings_perm_reading_desc">Granted automatically. Used to check what permissions each app has.</string>
+    <string name="settings_perm_data_title">Data Usage</string>
+    <string name="settings_perm_data_desc">Reads mobile and Wi-Fi data used by each app. No network traffic is monitored.</string>
+
+    <string name="settings_how_usage_title">App Usage Tracking</string>
+    <string name="settings_how_usage_subtitle">How we measure your screen time and app activity</string>
+    <string name="settings_how_perm_title">Permission Monitoring</string>
+    <string name="settings_how_perm_subtitle">How we find which apps have sensitive access</string>
+    <string name="settings_how_storage_title">Storage Analysis</string>
+    <string name="settings_how_storage_subtitle">How we calculate how much space each app is using</string>
+    <string name="settings_how_notif_title">Notifications &amp; Unlocks</string>
+    <string name="settings_how_notif_subtitle">How we count your daily phone unlocks and notifications</string>
+    <string name="settings_how_privacy_title">Privacy Insights</string>
+    <string name="settings_how_privacy_subtitle">How we identify apps that may be a risk to your privacy</string>
+    <string name="settings_how_background_title">Background Updates</string>
+    <string name="settings_how_background_subtitle">How AppWatch keeps your data fresh without draining battery</string>
+
+    <string name="settings_dev_role">Android Developer</string>
+    <string name="settings_dev_github_label">GitHub — AppWatch</string>
+    <string name="settings_dev_github_value">View source code</string>
+    <string name="settings_toast_unavailable">Feature currently unavailable</string>
+    <string name="settings_version_text">AppWatch %1$s</string>
+
+    <string name="dialog_revoke_title">Turn Off Permission?</string>
+    <string name="btn_revoke">Revoke</string>
+    <string name="btn_enable">Enable</string>
+    <string name="btn_go_to_settings">Go to Settings</string>
+    <string name="revoke_msg_usage">Turning this off will stop screen time tracking and most app analysis features.</string>
+    <string name="revoke_msg_storage">Turning this off will hide the Photos, Videos and Music storage breakdown.</string>
+    <string name="revoke_msg_notif">Turning this off will stop tracking how many notifications apps send you.</string>
+
+    <string name="sheet_usage_subtitle">How we measure your screen time</string>
+    <string name="sheet_usage_point1_title">Daily Screen Time</string>
+    <string name="sheet_usage_point1_desc">We track how long each app is open on your screen every day. This data gets updated the moment you open the app and shown in your weekly chart.</string>
+    <string name="sheet_usage_point2_title">App Launches</string>
+    <string name="sheet_usage_point2_desc">Every time you open an app, we count it. This helps you see which apps you reach for the most.</string>
+    <string name="sheet_usage_point3_title">Inactive Apps</string>
+    <string name="sheet_usage_point3_desc">If an app hasn\'t been opened in 30, 60 or 90 days, we flag it. These apps often have sensitive permissions.</string>
+    <string name="sheet_usage_point4_title">Active and Inactive Sessions</string>
+    <string name="sheet_usage_point4_desc">We find your longest continuous screen-on and screen-off periods to show your phone usage patterns throughout the day.</string>
+
+    <string name="sheet_perm_subtitle">How we find which apps have sensitive access</string>
+    <string name="sheet_perm_point1_title">What Each App Can Access</string>
+    <string name="sheet_perm_point1_desc">We read every permission each app has been given that includes Camera, Microphone, Location and Contacts and show you the full list.</string>
+    <string name="sheet_perm_point2_title">High Risk Apps</string>
+    <string name="sheet_perm_point2_desc">Apps with special system access like reading notifications or permission to install other apps or accessibility permissions are highlighted separately as they have more power over your device.</string>
+    <string name="sheet_perm_point3_title">New Apps</string>
+    <string name="sheet_perm_point3_desc">Any app installed in the last 7 days is listed separately.</string>
+
+    <string name="sheet_storage_subtitle">How we calculate how much space apps are using</string>
+    <string name="sheet_storage_point1_title">Device Storage</string>
+    <string name="sheet_storage_point1_desc">We read your phone\'s total, used and free storage directly.</string>
+    <string name="sheet_storage_point2_title">Per App Breakdown</string>
+    <string name="sheet_storage_point2_desc">For each app we calculate three things: the app\'s install size, data accumulated by the app, and its temporary cache files.</string>
+    <string name="sheet_storage_point3_title">Cache Files</string>
+    <string name="sheet_storage_point3_desc">Cache is temporary data apps save to load faster. It is safe to clear and does not delete any of your personal files or settings.</string>
+    <string name="sheet_storage_point4_title">Photos, Videos and Music</string>
+    <string name="sheet_storage_point4_desc">With optional storage permission, we also show how much space your media files are taking up and are broken down by type.</string>
+
+    <string name="sheet_notif_subtitle">How we count your daily activity</string>
+    <string name="sheet_notif_point1_title">Phone Unlocks</string>
+    <string name="sheet_notif_point1_desc">Every time you unlock your screen, we count it. This gives you a simple picture of how often you pick up your phone.</string>
+    <string name="sheet_notif_point2_title">Notification Count</string>
+    <string name="sheet_notif_point2_desc">We count how many notifications each app sends you using Android\'s usage system. We never read or store the content of any notification.</string>
+    <string name="sheet_notif_point3_title">Data Usage</string>
+    <string name="sheet_notif_point3_desc">We show how much mobile and Wi-Fi data each app has used today. No actual network traffic is monitored or stored.</string>
+    <string name="sheet_notif_point4_title">Today Only</string>
+    <string name="sheet_notif_point4_desc">Unlock and notification counts reset every day. They show your activity for the current day only.</string>
+
+    <string name="sheet_privacy_subtitle">How we identify privacy risks on your phone</string>
+    <string name="sheet_privacy_point1_title">Location, Camera and Mic</string>
+    <string name="sheet_privacy_point1_desc">We show you exactly how many apps have access to your location, camera and microphone. Tapping any of these shows the full list of those apps.</string>
+    <string name="sheet_privacy_point2_title">Contacts, SMS and Calls</string>
+    <string name="sheet_privacy_point2_desc">Apps with access to your contacts, messages and call history are listed separately as these are among the most personal types of data.</string>
+    <string name="sheet_privacy_point3_title">Needs Attention</string>
+    <string name="sheet_privacy_point3_desc">We combine unused app data and permission data to highlight the apps that pose the biggest risk like an old app that still has your camera access.</string>
+    <string name="sheet_privacy_point4_title">Recent Activity</string>
+    <string name="sheet_privacy_point4_desc">We track which apps were installed, updated or removed this week so you always know what changed on your phone recently.</string>
+
+    <string name="sheet_bg_subtitle">How AppWatch keeps your data fresh</string>
+    <string name="sheet_bg_point1_title">Daily Refresh</string>
+    <string name="sheet_bg_point1_desc">Once a day, AppWatch quietly updates your app list, storage data and usage history in the background. You don\'t need to do anything.</string>
+    <string name="sheet_bg_point2_title">Battery Friendly</string>
+    <string name="sheet_bg_point2_desc">We use Android\'s WorkManager which is designed to run tasks efficiently without draining your battery or slowing your phone.</string>
+    <string name="sheet_bg_point3_title">Instant Loading</string>
+    <string name="sheet_bg_point3_desc">When you open AppWatch, it shows your last saved data immediately while quietly fetching any updates in the background.</string>
+    <string name="sheet_bg_point4_title">Works Offline</string>
+    <string name="sheet_bg_point4_desc">AppWatch does not need internet to work. All data is read directly from your device and stored locally.</string>
+
+    <string name="sheet_policy_point1_title">Everything Stays on Your Phone</string>
+    <string name="sheet_policy_point1_desc">All analysis including screen time, permissions, storage happens entirely on your device. Nothing is ever sent anywhere.</string>
+    <string name="sheet_policy_point2_title">No Tracking at All</string>
+    <string name="sheet_policy_point2_desc">AppWatch has no third-party SDKs. We have no way to track or store any data.</string>
+    <string name="sheet_policy_point3_title">No Internet Permission</string>
+    <string name="sheet_policy_point3_desc">AppWatch does not have internet permission. It is technically impossible for it to send any data anywhere.</string>
+    <string name="sheet_policy_point4_title">Delete Anytime</string>
+    <string name="sheet_policy_point4_desc">Uninstalling AppWatch removes everything. No data remains on your phone or anywhere else after uninstall.</string>
+
+    <string name="sheet_terms_point1_title">Free to Use</string>
+    <string name="sheet_terms_point1_desc">AppWatch is completely free. There are no subscriptions, no in-app purchases and no hidden charges.</string>
+    <string name="sheet_terms_point2_title">For Information Only</string>
+    <string name="sheet_terms_point2_desc">AppWatch shows you information about your device. It does not make any changes to your apps, settings or data on your behalf.</string>
+    <string name="sheet_terms_point3_title">No Guarantee</string>
+    <string name="sheet_terms_point3_desc">We do our best to keep data accurate but some readings may vary depending on your device model or Android version.</string>
+    <string name="sheet_terms_point4_title">Your Responsibility</string>
+    <string name="sheet_terms_point4_desc">Any action you take based on AppWatch\'s information like revoking a permission is your own decision. We are not responsible for any outcome.</string>
+
+    <string name="sheet_licenses_desc">AppWatch is built using the following open source libraries. We are grateful to their developers.</string>
+    <string name="sheet_licenses_footer">All libraries above are licensed under Apache License 2.0, to view full license %1$s</string>
+    <string name="click_here">click here</string>
+
+    <string name="legal_privacy">Privacy Policy</string>
+    <string name="legal_terms">Terms of Use</string>
+    <string name="legal_licenses">Open Source Licenses</string>
+
+
+
+<!--    Dashboard Screen        -->
+    <string name="dash_syncing">Syncing system data…</string>
+    <string name="dash_header_overview">Overview</string>
+    <string name="dash_header_today">Today\'s Activity</string>
+    <string name="dash_header_privacy">Privacy Insights</string>
+    <string name="dash_status_updating">Updating</string>
+
+    <string name="dash_stat_apps">Installed Apps</string>
+    <string name="dash_stat_storage">Storage</string>
+    <string name="dash_stat_update">Last device update</string>
+    <string name="dash_stat_unlocks">Phone Unlocks</string>
+    <string name="dash_stat_notifs">Notifications</string>
+    <string name="dash_stat_screen_time">Screen Time</string>
+    <string name="dash_stat_data_usage">Data Usage</string>
+
+    <string name="dash_val_unlocks">Unlocked %1$d times</string>
+    <string name="dash_val_notifs">%1$d received</string>
+    <string name="dash_val_apps_count">%1$d apps</string>
+    <string name="dash_label_of_total">of %1$s</string>
+
+    <string name="dash_insight_location">Background Location</string>
+    <string name="dash_insight_camera">Camera Access</string>
+    <string name="dash_insight_mic">Microphone</string>
+    <string name="dash_insight_phone">Phone &amp; Calls</string>
+    <string name="dash_insight_contacts">Contacts</string>
+    <string name="dash_insight_sms">SMS</string>
+
+
+
+<!--    Recent Activity Section     -->
+    <string name="recent_header">Recent Activity</string>
+    <string name="recent_empty_title">All Caught Up</string>
+    <string name="recent_empty_desc">No recent events to show</string>
+
+    <string name="sheet_title_install">New Installations</string>
+    <string name="sheet_title_update">Recent Updates</string>
+    <string name="sheet_title_sideloaded">Unknown Sources</string>
+    <string name="sheet_title_uninstall">Removed Apps</string>
+    <string name="sheet_title_details">Details</string>
+
+    <string name="desc_sideloaded_warning">These apps were not installed from an official store. They might pose a security risk and monitor your system behavior.</string>
+
+
+
+<!--    Needs Attention Section     -->
+    <string name="attention_header">Needs Attention</string>
+    <string name="attention_empty_state">All systems look secure. No immediate action required.</string>
+
+
+
+<!--    App List Screen     -->
+    <string name="app_list_title">Installed Apps</string>
+    <string name="search_hint">Search apps…</string>
+    <string name="loading_apps">Loading apps…</string>
+    <string name="no_apps_found">No apps found</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_user">User Apps</string>
+    <string name="filter_system">System Apps</string>
+
+    <string name="app_count_template">%1$d apps</string>
+    <string name="app_perms_badge">%1$d Perms</string>
+
+    <string name="cd_back">Back</string>
+    <string name="cd_clear_search">Clear search</string>
+
+
+
+<!--    App detail Screen   -->
+    <string name="detail_title_analysis">App Analysis</string>
+    <string name="detail_header_usage">Usage Statistics</string>
+    <string name="detail_header_perms">Permissions</string>
+    <string name="detail_header_behavior">Behavioral Activity</string>
+
+    <string name="detail_label_today">Today</string>
+    <string name="detail_label_week">This Week</string>
+    <string name="detail_label_avg">Weekly Avg</string>
+    <string name="detail_label_monthly">Monthly Total</string>
+    <string name="detail_label_launches">Launches Today</string>
+    <string name="detail_label_last_activity">Last Activity</string>
+    <string name="detail_label_storage">Storage</string>
+
+    <string name="detail_status_system">System Application</string>
+    <string name="detail_status_user">User Application</string>
+    <string name="detail_status_unknown">Unknown</string>
+    <string name="detail_risk_high">High Risk</string>
+    <string name="detail_risk_sensitive">Sensitive</string>
+    <string name="detail_safe_banner">No high-risk permissions detected. This app is safe.</string>
+
+    <string name="detail_more_perms">+%1$d more permissions</string>
+    <string name="detail_val_launches_count">%1$s times</string>
+
+    <string name="cd_system_settings">System Settings</string>
+
+
+
+<!--    All Apps Storage Screen     -->
+    <string name="storage_all_apps_title">All Apps</string>
+    <string name="storage_analyzing">Analyzing app storage…</string>
+    <string name="storage_total_header">Total App Storage</string>
+
+    <string name="storage_label_app">App</string>
+    <string name="storage_label_data">Data</string>
+    <string name="storage_label_cache">Cache</string>
+    <string name="storage_label_total_small">Total</string>
+
+    <string name="storage_apps_count_template">%1$d downloaded apps</string>
+
+
+
+<!--    Storage Details Screen  -->
+    <string name="storage_analysis_title">Storage Analysis</string>
+    <string name="storage_updating_msg">Updating storage data…</string>
+    <string name="storage_device_header">Device Storage</string>
+    <string name="storage_apps_header">Apps Storage</string>
+    <string name="storage_apps_downloaded">Downloaded Apps</string>
+    <string name="storage_apps_system">System Apps</string>
+    <string name="storage_largest_header">Largest Apps</string>
+    <string name="storage_media_header">Media Storage</string>
+    <string name="storage_media_locked_hint">Enable storage access to see media breakdown</string>
+
+    <string name="storage_media_photos">Photos</string>
+    <string name="storage_media_videos">Videos</string>
+    <string name="storage_media_music">Music</string>
+    <string name="storage_media_downloads">Downloads</string>
+
+    <string name="btn_enable_storage">Enable Storage Access</string>
+    <string name="storage_more_apps_template">+ %1$d more apps</string>
+
+    <string name="storage_label_total">Total</string>
+    <string name="storage_label_used">Used</string>
+    <string name="storage_label_free">Free</string>
+    <string name="storage_status_used">Used: %1$s</string>
+    <string name="storage_status_free">Free: %1$s</string>
+
+
+
+    <!--    All Usage Screen  -->
+    <string name="usage_all_apps_title">All Apps</string>
+    <string name="usage_today">Today</string>
+    <string name="usage_empty_state">No usage data for %1$s</string>
+    <string name="usage_apps_count">%1$d apps used</string>
+
+
+
+    <!--    Usage Stats Screen  -->
+    <string name="usage_stats_title">Usage Statistics</string>
+    <string name="usage_header_weekly">Weekly Activity</string>
+    <string name="usage_header_today">Today\'s Usage</string>
+    <string name="usage_header_focus_suffix">%1$s Focus</string>
+    <string name="usage_header_this_day">This day</string>
+    <string name="usage_empty_recorded">No usage recorded for this day</string>
+
+    <string name="usage_label_peak">Peak Usage</string>
+    <string name="usage_label_unlock_pace">Unlock Pace</string>
+    <string name="usage_label_marathon">Continuous app usage</string>
+    <string name="usage_label_total_apps">Total Apps used</string>
+
+    <string name="usage_hero_today">Screen Time Today</string>
+    <string name="usage_hero_date_prefix">Screen Time — %1$s</string>
+
+    <string name="usage_val_apps_used_count">%1$d apps</string>
+    <string name="usage_val_apps_caps_count">%1$d Apps</string>
+    <string name="usage_val_unlock_pace_desc">%1$.1f device unlocks</string>
+    <string name="usage_val_unlock_pace_time">per hour usage</string>
+    <string name="usage_val_none">None</string>
+    <string name="usage_val_zero_m">0m</string>
+    <string name="btn_view_more_apps">View all %1$d more apps</string>
+
+
+
+    <!--    Know Your Usage Section  -->
+    <string name="usage_insights_header">Usage Insights</string>
+    <string name="usage_summary_today">Today\'s Summary</string>
+    <string name="usage_streak_active">Longest Active usage</string>
+    <string name="usage_streak_inactive">Longest Inactive session</string>
+    <string name="usage_noise_header">Apps with more noise</string>
+    <string name="usage_noise_empty">No apps detected this week.</string>
+    <string name="usage_noise_template">%1$d alerts • %2$d opens</string>
+    <string name="usage_insight_weekly">Most used app this week</string>
+    <string name="usage_insight_monthly">Most used app this month</string>
+    <string name="usage_no_data">No data available yet</string>
+
+    <string name="cd_expand">Expand</string>
+
+
+
+    <!--    Apps With Permission Screen  -->
+    <string name="perm_screen_title">%1$s Access</string>
+    <string name="perm_count_desc">%1$d apps have this permission</string>
+    <string name="perm_empty_state">No apps have this permission</string>
+    <string name="label_system">System</string>
+
+    <string name="perm_name_location">Location</string>
+    <string name="perm_name_camera">Camera</string>
+    <string name="perm_name_mic">Microphone</string>
+    <string name="perm_name_contacts">Contacts</string>
+    <string name="perm_name_phone">Phone &amp; Calls</string>
+    <string name="perm_name_sms">SMS</string>
+    <string name="perm_name_unknown">Unknown</string>
+
+
+
+    <!--    Permission Screen  -->
+    <string name="perm_screen_all_title">All Permissions</string>
+    <string name="perm_filter_all">All</string>
+    <string name="perm_filter_high">High Risk</string>
+    <string name="perm_filter_sensitive">Sensitive</string>
+    <string name="perm_label_total">Total</string>
+    <string name="perm_no_found">No permissions found</string>
+    <string name="tier_high_short">High</string>
+    <string name="tier_sensitive_short">Sensitive</string>
+
+
+
+    <!--    App Data Usage Screen  -->
+    <string name="data_usage_title">Today\'s Data Usage</string>
+    <string name="data_usage_empty_state">No apps used more than 1MB today.</string>
+    <string name="label_mobile">Mobile: %1$s</string>
+    <string name="label_wifi">WiFi: %1$s</string>
+
+
+
+    <!--    App Notification Screen  -->
+    <string name="notif_title_today">Today\'s Notifications</string>
+    <string name="notif_header_breakdown">Notification Breakdown</string>
+    <string name="notif_label_total">Total Notifications</string>
+    <string name="notif_status_loading">Loading…</string>
+    <string name="notif_empty_state">No notifications tracked yet</string>
+
+
+
+    <!--    Needs Attention Screen  -->
+    <string name="audit_title_unused">Apps unused for 3+ months</string>
+    <string name="audit_title_stale">Sensitive permissions in unused apps</string>
+    <string name="audit_title_special">Apps with system level permissions</string>
+    <string name="audit_title_default">Security Audit</string>
+    <string name="cd_help">Help</string>
+
+    <string name="audit_filter_days">%1$s+ Days</string>
+
+    <string name="audit_detail_stale">Unused from %1$d days with %2$s permission/s</string>
+    <string name="audit_detail_special_default">System Access</string>
+    <string name="audit_detail_unused">Unused from %1$d days</string>
+
+    <string name="special_perms_title">Highly Sensitive Permissions</string>
+    <string name="special_perms_intro">At AppWatch, we categorize these as \'Highly Sensitive\' because they allow apps to go beyond normal permissions. While trusted tools use these for advanced features, they require extra caution because they have a \'bird’s-eye view\' of your phone\'s activity.</string>
+
+    <string name="perm_desc_accessibility_title">ACCESSIBILITY</string>
+    <string name="perm_desc_accessibility_body">Acts as a \'Screen Helper\'. Essential for password managers to auto-fill or screen readers for assistance, but it can see everything you type.</string>
+    <string name="perm_desc_notif_title">NOTIFICATION_ACCESS</string>
+    <string name="perm_desc_notif_body">Acts as a \'Message Reader\'. Needed for Smartwatches to show alerts on your wrist, but it can also read private OTPs from your notifications.</string>
+    <string name="perm_desc_overlay_title">OVERLAY (Display Over Apps)</string>
+    <string name="perm_desc_overlay_body">Creates \'Floating Windows\'. Used by apps like \'Where is my train\' or Messenger bubbles to show info over other apps. Be careful as it can show fake screens.</string>
+    <string name="perm_desc_admin_title">DEVICE_ADMIN</string>
+    <string name="perm_desc_admin_body">Gives \'Master Control\'. Useful for \'Find My Device\' to lock your phone if lost, but it\'s powerful enough to wipe your data or change locks.</string>
+    <string name="perm_desc_unknown_apps_title">INSTALL_UNKNOWN_APPS</string>
+    <string name="perm_desc_unknown_apps_body">Acts as an \'External Installer\'. Lets apps like Chrome download and install other apps. Dangerous if a random app installs something without asking.</string>
+    <string name="perm_desc_write_settings_title">WRITE_SETTINGS</string>
+    <string name="perm_desc_write_settings_body">Acts as a \'System Editor\'. Automation apps use this to change your brightness or DND mode automatically, but it can modify core system behaviors.</string>
+    <string name="perm_desc_vpn_title">VPN_SERVICE</string>
+    <string name="perm_desc_vpn_body">Acts as an \'Internet Guard\'. Secures your connection on public Wi-Fi, but it means the app can see and route all your internet traffic.</string>
+
+
+
+    <!--    Recent Event Screen  -->
+    <string name="title_recent_install">Newly Installed Apps</string>
+    <string name="title_recent_update">Recently Updated Apps</string>
+    <string name="title_recent_sideloaded">Unknown Source Installs</string>
+    <string name="title_recent_uninstall">Recently Removed Apps</string>
+    <string name="title_recent_data_hog">High Data Consumption</string>
+    <string name="title_recent_default">Recent App Activity</string>
+    <string name="recent_no_activity">No activity recorded yet</string>
+
+
+
+    <!--    Notification Loader  -->
+    <string name="notif_loader_title">Notification details</string>
+    <string name="notif_loader_label_today">Today\'s Notifications</string>
+    <string name="notif_loader_val_zero">0</string>
+    <string name="notif_loader_header_recent">Recent Alerts</string>
+    <string name="notif_loader_card_title">Audit Notifications</string>
+    <string name="notif_loader_card_desc">See which apps send the most alerts and audit sensitive message access. We never read, store or use any of your private data. You can always change from settings.</string>
+
+    <string name="dialog_notif_privacy_msg">To audit which apps are reading your notifications (like potential spyware), AppWatch needs Notification Access.</string>
+    <string name="dialog_notif_timer_msg">Important: You might see a 10-second safety timer on your device settings. This is standard for security focused tools. We never read your private content and we only use it to count alerts.\n You can always remove this from the settings.</string>
+    <string name="btn_open_settings">Open Settings</string>
+
+
+
+    <!--    Shimmer Components  -->
+    <string name="initial_loader_scanning_cd">Scanning</string>
+    <string name="initial_loader_title">Setting up AppWatch</string>
+    <string name="initial_loader_subtitle">Scanning your apps.</string>
+    <string name="initial_loader_hint">This only happens once.</string>
+    <string name="initial_loader_privacy_badge">PRIVATE &amp; OFFLINE ANALYSIS</string>
+
+
+
+
+    <!--    Usage Stats Loader  -->
+    <string name="loader_usage_title">Screen usage</string>
+    <string name="loader_label_today_time">Today\'s Screen Time</string>
+    <string name="loader_val_zero_time">0h 0m</string>
+    <string name="loader_header_weekly">Weekly Activity</string>
+    <string name="loader_status_no_data">No Activity Data</string>
+    <string name="loader_header_day_summary">Day Summary</string>
+    <string name="loader_label_longest_active">Longest Active</string>
+    <string name="loader_label_longest_break">Longest Break</string>
+    <string name="loader_val_placeholder_time">--:--</string>
+
+    <string name="loader_card_title_locked">Detailed Insights Locked</string>
+    <string name="loader_card_desc_locked">Enable permission to unlock detailed data usage, app Notifications and total Screen unlocks. We only track timestamps and never read, store or use any of your private data. You can always change from settings.</string>
+    <string name="btn_enable_permission">Enable Permission</string>
+
+    <string name="dialog_privacy_title">Privacy Disclosure</string>
+    <string name="dialog_privacy_usage_access_msg">To show your usage habits, AppWatch needs \'Usage Access\'.</string>
+    <string name="dialog_privacy_timer_msg">Important: You might see a 10-second safety timer on your device settings. This is for security purposes and you can safely grant them. We never read your private content.\n You can always remove this from the settings.</string>
+    <string name="btn_proceed">Proceed</string>
+    <string name="btn_later">Later</string>
+
+
+
 </resources>

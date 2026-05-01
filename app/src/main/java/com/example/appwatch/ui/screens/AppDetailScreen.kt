@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,10 +33,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.appwatch.R
 import com.example.appwatch.presentation.viewmodel.AppDetailViewModel
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
 import com.example.appwatch.presentation.viewmodel.RiskTier
-import com.example.appwatch.ui.theme.* @OptIn(ExperimentalMaterial3Api::class)
+import com.example.appwatch.ui.theme.*
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppDetailScreen(
     navController: NavController,
@@ -66,10 +70,10 @@ fun AppDetailScreen(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("App Analysis", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = { Text(stringResource(R.string.detail_title_analysis), fontWeight = FontWeight.Bold, color = TextPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
                         }
                     },
                     scrollBehavior = scrollBehavior,
@@ -85,7 +89,7 @@ fun AppDetailScreen(
                             }
                             context.startActivity(intent)
                         }) {
-                            Icon(Icons.Default.Settings, contentDescription = "System Settings", tint = TextPrimary)
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_system_settings), tint = TextPrimary)
                         }
                     }
                 )
@@ -110,9 +114,9 @@ fun AppDetailScreen(
         ) {
             item {
                 AppDetailHeader(
-                    appName = app?.appName ?: "Unknown",
+                    appName = app?.appName ?: stringResource(R.string.detail_status_unknown),
                     packageName = app?.packageName ?: packageName ?: "",
-                    status = if (app?.isSystemApp == true) "System Application" else "User Application",
+                    status = if (app?.isSystemApp == true) stringResource(R.string.detail_status_system) else stringResource(R.string.detail_status_user),
                     accentColor = Blue600,
                     totalStorageBytes = appStorage?.totalSizeBytes ?: 0L
                 )
@@ -120,27 +124,25 @@ fun AppDetailScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(text = "Usage Statistics", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(text = stringResource(R.string.detail_header_usage), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        DetailMetricCard("Today", uiState.usageToday, Icons.Default.History, Blue600, Modifier.weight(1f))
-                        DetailMetricCard("This Week", uiState.usageWeek, Icons.Default.DateRange, Purple600, Modifier.weight(1f))
+                        DetailMetricCard(stringResource(R.string.detail_label_today), uiState.usageToday, Icons.Default.History, Blue600, Modifier.weight(1f))
+                        DetailMetricCard(stringResource(R.string.detail_label_week), uiState.usageWeek, Icons.Default.DateRange, Purple600, Modifier.weight(1f))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        DetailMetricCard("Weekly Avg", uiState.weeklyAverage, Icons.Default.BarChart, Green600, Modifier.weight(1f))
-                        DetailMetricCard("Monthly Total", uiState.monthlyTotal, Icons.Default.Insights, Cyan600, Modifier.weight(1f))
+                        DetailMetricCard(stringResource(R.string.detail_label_avg), uiState.weeklyAverage, Icons.Default.BarChart, Green600, Modifier.weight(1f))
+                        DetailMetricCard(stringResource(R.string.detail_label_monthly), uiState.monthlyTotal, Icons.Default.Insights, Cyan600, Modifier.weight(1f))
                     }
                 }
             }
 
-            // 3. Permissions Section (Logic Revised)
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(text = "Permissions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(text = stringResource(R.string.detail_header_perms), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
 
                     if (uiState.permissions.isEmpty() && !uiState.isLoading) {
                         SafeStateBanner()
                     } else {
-                        // SIRF TOP 3 PERMISSIONS
                         uiState.permissions.take(3).forEach { perm ->
                             PermissionItemRow(
                                 name = perm.name,
@@ -154,7 +156,11 @@ fun AppDetailScreen(
                                 onClick = { navController.navigate("app_permissions/${packageName}") },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text("+${uiState.permissions.size - 3} more permissions", color = Blue600, fontWeight = FontWeight.Bold)
+                                Text(
+                                    stringResource(R.string.detail_more_perms, uiState.permissions.size - 3),
+                                    color = Blue600,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -163,10 +169,10 @@ fun AppDetailScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(text = "Behavioral Activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(text = stringResource(R.string.detail_header_behavior), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        BehaviorStatCard("Launches Today", "${uiState.launchesToday} times", Icons.Default.TrendingUp, Cyan600, Modifier.weight(1f))
-                        BehaviorStatCard("Last Activity", uiState.lastUsed, Icons.Default.AccessTime, Amber600, Modifier.weight(1f))
+                        BehaviorStatCard(stringResource(R.string.detail_label_launches), stringResource(R.string.detail_val_launches_count, uiState.launchesToday), Icons.Default.TrendingUp, Cyan600, Modifier.weight(1f))
+                        BehaviorStatCard(stringResource(R.string.detail_label_last_activity), uiState.lastUsed, Icons.Default.AccessTime, Amber600, Modifier.weight(1f))
                     }
                 }
             }
@@ -233,7 +239,7 @@ fun PermissionItemRow(name: String, tier: RiskTier, lastAccess: String) {
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = if (tier == RiskTier.HIGH) "High Risk" else "Sensitive",
+                        text = if (tier == RiskTier.HIGH) stringResource(R.string.detail_risk_high) else stringResource(R.string.detail_risk_sensitive),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = iconColor,
@@ -256,7 +262,7 @@ fun SafeStateBanner() {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.CheckCircle, null, tint = Green600, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(12.dp))
-            Text("No high-risk permissions detected. This app is safe.", color = Green600, fontWeight = FontWeight.Medium)
+            Text(stringResource(R.string.detail_safe_banner), color = Green600, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -279,7 +285,6 @@ fun AppDetailHeader(appName: String, packageName: String, status: String, accent
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                // Handle Long Name (Wrap + LineHeight)
                 Text(
                     text = appName,
                     style = MaterialTheme.typography.headlineSmall,
@@ -298,29 +303,9 @@ fun AppDetailHeader(appName: String, packageName: String, status: String, accent
             if (totalStorageBytes > 0L) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(formatDetailedByteSize(totalStorageBytes), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = accentColor)
-                    Text("Storage", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    Text(stringResource(R.string.detail_label_storage), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun SimplePermissionRow(permission: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = SurfaceWhite,
-        border = BorderStroke(1.dp, DividerColor)
-    ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Replace _ with Space for better reading
-            Text(
-                text = permission.replace("android.permission.", "").replace("_", " "),
-                fontWeight = FontWeight.Medium,
-                color = TextPrimary,
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }
@@ -351,7 +336,6 @@ fun BehaviorStatCard(title: String, value: String, icon: ImageVector, color: Col
     }
 }
 
-// Utility logic
 fun formatDetailedByteSize(bytes: Long): String {
     if (bytes <= 0) return "0 B"
     val units = arrayOf("B", "KB", "MB", "GB", "TB")

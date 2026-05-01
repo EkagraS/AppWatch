@@ -26,12 +26,14 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage // 👈 Icon loading ke liye
+import coil.compose.AsyncImage
+import com.example.appwatch.R
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
 import com.example.appwatch.ui.theme.*
 
@@ -42,9 +44,7 @@ fun StorageDetailScreen(
     viewModel: StorageViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
-    // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -77,10 +77,10 @@ fun StorageDetailScreen(
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text("Storage Analysis", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                title = { Text(stringResource(R.string.storage_analysis_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
                     }
                 },
                 actions = {
@@ -112,7 +112,6 @@ fun StorageDetailScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
 
-            // Updating banner
             if (uiState.isRefreshing) {
                 item {
                     Card(
@@ -126,13 +125,12 @@ fun StorageDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Indigo600)
-                            Text("Updating storage data...", style = MaterialTheme.typography.bodySmall, color = Indigo600)
+                            Text(stringResource(R.string.storage_updating_msg), style = MaterialTheme.typography.bodySmall, color = Indigo600)
                         }
                     }
                 }
             }
 
-            // 1. Device Storage
             item {
                 DeviceStorageCard(
                     totalBytes = uiState.deviceStorage?.totalBytes ?: 0L,
@@ -141,9 +139,8 @@ fun StorageDetailScreen(
                 )
             }
 
-            // 2. Apps Storage
             item {
-                Text("Apps Storage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(stringResource(R.string.storage_apps_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -158,8 +155,8 @@ fun StorageDetailScreen(
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Downloaded Apps", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-                                Text("${uiState.userApps.size} apps", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(stringResource(R.string.storage_apps_downloaded), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                                Text(stringResource(R.string.storage_apps_count_template, uiState.userApps.size), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
                             Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Bold, color = Indigo600)
                             Icon(Icons.Default.ChevronRight, null, tint = TextSecondary)
@@ -176,8 +173,8 @@ fun StorageDetailScreen(
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("System Apps", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-                                Text("${uiState.systemApps.size} apps", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(stringResource(R.string.storage_apps_system), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                                Text(stringResource(R.string.storage_apps_count_template, uiState.systemApps.size), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                             }
                             Text(formatStorageSize(uiState.totalSystemAppsBytes), fontWeight = FontWeight.Bold, color = Purple600)
                         }
@@ -185,9 +182,8 @@ fun StorageDetailScreen(
                 }
             }
 
-            // 3. Largest Apps by Size
             item {
-                Text("Largest Apps", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(stringResource(R.string.storage_largest_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
 
             val top3 = uiState.userApps.take(3)
@@ -214,16 +210,15 @@ fun StorageDetailScreen(
                                 onClick = { navController.navigate("all_apps_storage") },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text("+ ${uiState.userApps.size - 3} more apps", color = Indigo600)
+                                Text(stringResource(R.string.storage_more_apps_template, uiState.userApps.size - 3), color = Indigo600)
                             }
                         }
                     }
                 }
             }
 
-            // 4. Media Storage
             item {
-                Text("Media Storage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(stringResource(R.string.storage_media_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
             item {
                 MediaStorageSection(
@@ -247,7 +242,6 @@ fun TopAppStorageRow(
     val fraction = if (maxBytes > 0) app.totalSizeBytes.toFloat() / maxBytes else 0f
     val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(800), label = "prog")
 
-    // Resolving Icon
     val appIcon = remember(app.packageName) {
         try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null }
     }
@@ -260,7 +254,6 @@ fun TopAppStorageRow(
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 🔴 ICONS ADDED HERE
                 AsyncImage(
                     model = appIcon,
                     contentDescription = null,
@@ -293,25 +286,25 @@ fun MediaStorageSection(mediaStorage: com.example.appwatch.presentation.viewmode
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Lock, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Enable storage access to see media breakdown", style = MaterialTheme.typography.bodySmall, color = TextSecondary, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.storage_media_locked_hint), style = MaterialTheme.typography.bodySmall, color = TextSecondary, modifier = Modifier.weight(1f))
                 }
                 listOf(
-                    Triple(Icons.Default.Photo, "Photos", Red500),
-                    Triple(Icons.Default.VideoLibrary, "Videos", Purple500),
-                    Triple(Icons.Default.MusicNote, "Music", Cyan500),
-                    Triple(Icons.Default.Download, "Downloads", Green500)
+                    Triple(Icons.Default.Photo, stringResource(R.string.storage_media_photos), Red500),
+                    Triple(Icons.Default.VideoLibrary, stringResource(R.string.storage_media_videos), Purple500),
+                    Triple(Icons.Default.MusicNote, stringResource(R.string.storage_media_music), Cyan500),
+                    Triple(Icons.Default.Download, stringResource(R.string.storage_media_downloads), Green500)
                 ).forEach { (icon, label, color) ->
                     MediaLockedRow(icon = icon, label = label, color = color)
                 }
                 Button(onClick = onEnablePermission, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Indigo600), shape = RoundedCornerShape(12.dp)) {
-                    Text("Enable Storage Access")
+                    Text(stringResource(R.string.btn_enable_storage))
                 }
             } else {
                 listOf(
-                    Triple(Icons.Default.Photo, "Photos", mediaStorage.photosBytes to Red500),
-                    Triple(Icons.Default.VideoLibrary, "Videos", mediaStorage.videosBytes to Purple500),
-                    Triple(Icons.Default.MusicNote, "Music", mediaStorage.musicBytes to Cyan500),
-                    Triple(Icons.Default.Download, "Downloads", mediaStorage.downloadsBytes to Green500)
+                    Triple(Icons.Default.Photo, stringResource(R.string.storage_media_photos), mediaStorage.photosBytes to Red500),
+                    Triple(Icons.Default.VideoLibrary, stringResource(R.string.storage_media_videos), mediaStorage.videosBytes to Purple500),
+                    Triple(Icons.Default.MusicNote, stringResource(R.string.storage_media_music), mediaStorage.musicBytes to Cyan500),
+                    Triple(Icons.Default.Download, stringResource(R.string.storage_media_downloads), mediaStorage.downloadsBytes to Green500)
                 ).forEach { (icon, label, pair) ->
                     MediaUnlockedRow(icon = icon, label = label, bytes = pair.first, color = pair.second)
                 }
@@ -356,7 +349,7 @@ fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Device Storage", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(stringResource(R.string.storage_device_header), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 LinearProgressIndicator(
                     progress = { animatedProgress },
@@ -366,14 +359,14 @@ fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
                     strokeCap = StrokeCap.Round
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Used: ${formatStorageSize(usedBytes)}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    Text("Free: ${formatStorageSize(freeBytes)}", style = MaterialTheme.typography.bodySmall, color = Green600)
+                    Text(stringResource(R.string.storage_status_used, formatStorageSize(usedBytes)), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text(stringResource(R.string.storage_status_free, formatStorageSize(freeBytes)), style = MaterialTheme.typography.bodySmall, color = Green600)
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StorageStatItem("Total", formatStorageSize(totalBytes), TextPrimary)
-                StorageStatItem("Used", formatStorageSize(usedBytes), Indigo600)
-                StorageStatItem("Free", formatStorageSize(freeBytes), Green600)
+                StorageStatItem(stringResource(R.string.storage_label_total), formatStorageSize(totalBytes), TextPrimary)
+                StorageStatItem(stringResource(R.string.storage_label_used), formatStorageSize(usedBytes), Indigo600)
+                StorageStatItem(stringResource(R.string.storage_label_free), formatStorageSize(freeBytes), Green600)
             }
         }
     }

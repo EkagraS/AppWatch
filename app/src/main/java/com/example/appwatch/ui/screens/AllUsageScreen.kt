@@ -12,10 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
 import com.example.appwatch.ui.theme.BackgroundLight
@@ -47,10 +49,13 @@ fun AllUsageScreen(
     var isLoading by remember { mutableStateOf(true) }
 
     val isToday = dayIndex == 6
-    val dateLabel = remember {
+
+    // Dynamic Date Label
+    val todayLabel = stringResource(R.string.usage_today)
+    val dateLabel = remember(dayIndex, todayLabel) {
         val daysAgo = 6 - dayIndex
         val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -daysAgo) }
-        if (isToday) "Today"
+        if (isToday) todayLabel
         else SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(cal.time)
     }
 
@@ -64,7 +69,7 @@ fun AllUsageScreen(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        // Always from Room — no system calls
+
         val appsFromRoom = viewModel.getUsageForDay(cal.timeInMillis)
         allApps = appsFromRoom.map { app ->
             val realName = try {
@@ -87,7 +92,7 @@ fun AllUsageScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("All Apps", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.usage_all_apps_title), fontWeight = FontWeight.Bold)
                         Text(
                             dateLabel,
                             style = MaterialTheme.typography.bodySmall,
@@ -97,7 +102,10 @@ fun AllUsageScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -119,7 +127,10 @@ fun AllUsageScreen(
             }
             allApps.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No usage data for $dateLabel", color = TextSecondary)
+                    Text(
+                        stringResource(R.string.usage_empty_state, dateLabel),
+                        color = TextSecondary
+                    )
                 }
             }
             else -> {
@@ -133,7 +144,7 @@ fun AllUsageScreen(
                 ) {
                     item {
                         Text(
-                            "${allApps.size} apps used",
+                            stringResource(R.string.usage_apps_count, allApps.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )

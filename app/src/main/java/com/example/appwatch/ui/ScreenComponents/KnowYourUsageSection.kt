@@ -17,11 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
 import com.example.appwatch.ui.screens.AppIconSmall
@@ -35,19 +37,19 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
     val highNoiseApps by viewModel.highNoiseApps.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text("Today's Summary", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(stringResource(R.string.usage_summary_today), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         Spacer(Modifier.height(18.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StreakCard(
-                title = "Longest Active usage",
+                title = stringResource(R.string.usage_streak_active),
                 range = activeRange,
                 color = Orange600,
                 icon = Icons.Default.Timer,
                 modifier = Modifier.weight(1f)
             )
             StreakCard(
-                title = "Longest Inactive session",
+                title = stringResource(R.string.usage_streak_inactive),
                 range = inactiveRange,
                 color = Green600,
                 icon = Icons.Default.PauseCircle,
@@ -57,7 +59,7 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
 
         Spacer(Modifier.height(20.dp))
 
-        Text("Apps with more noise", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(stringResource(R.string.usage_noise_header), fontWeight = FontWeight.Bold, fontSize = 16.sp)
         Spacer(Modifier.height(16.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -68,7 +70,7 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 if (highNoiseApps.isEmpty()) {
                     Text(
-                        "No apps detected this week.",
+                        stringResource(R.string.usage_noise_empty),
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(vertical = 12.dp)
@@ -82,7 +84,11 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
                         ) {
                             Text(app.appName, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             Text(
-                                "${app.notificationCount} alerts • ${app.appUnlocks} opens",
+                                stringResource(
+                                    R.string.usage_noise_template,
+                                    app.notificationCount,
+                                    app.appUnlocks
+                                ),
                                 fontSize = 13.sp,
                                 color = Red600,
                                 fontWeight = FontWeight.Bold
@@ -121,18 +127,17 @@ fun PremiumInsightsSection(viewModel: UsageStatsViewModel) {
     val monthlyTop by viewModel.top3AppsMonthly.collectAsStateWithLifecycle()
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Usage Insights", fontWeight = FontWeight.ExtraBold, color = TextPrimary, fontSize = 18.sp)
+        Text(stringResource(R.string.usage_insights_header), fontWeight = FontWeight.ExtraBold, color = TextPrimary, fontSize = 18.sp)
 
-        // Blue ki jagah Teal use kiya hai
         InsightModernCard(
-            title = "Most used app this week",
+            title = stringResource(R.string.usage_insight_weekly),
             apps = weeklyTop,
             backgroundColor = Teal50,
             accentColor = Teal600
         )
 
         InsightModernCard(
-            title = "Most used app this month",
+            title = stringResource(R.string.usage_insight_monthly),
             apps = monthlyTop,
             backgroundColor = Purple50,
             accentColor = Purple600
@@ -148,14 +153,14 @@ fun InsightModernCard(
     accentColor: Color
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f)
+    val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "rotation")
 
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { isExpanded = !isExpanded } // Toggle on card click
+            .clickable { isExpanded = !isExpanded }
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -166,9 +171,9 @@ fun InsightModernCard(
                 Text(title, fontWeight = FontWeight.Bold, color = accentColor, fontSize = 14.sp)
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Expand",
+                    contentDescription = stringResource(R.string.cd_expand),
                     tint = accentColor,
-                    modifier = Modifier.rotate(rotationState) // Rotation logic
+                    modifier = Modifier.rotate(rotationState)
                 )
             }
 
@@ -176,7 +181,7 @@ fun InsightModernCard(
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
                     if (apps.isEmpty()) {
-                        Text("No data available yet", color = TextSecondary, fontSize = 12.sp)
+                        Text(stringResource(R.string.usage_no_data), color = TextSecondary, fontSize = 12.sp)
                     } else {
                         apps.forEach { app ->
                             Row(
@@ -186,7 +191,6 @@ fun InsightModernCard(
                                 AppIconSmall(app.packageName)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    // FIXED: Ensuring app.appName is used
                                     text = app.appName,
                                     modifier = Modifier.weight(1f),
                                     fontWeight = FontWeight.Medium,

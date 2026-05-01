@@ -17,16 +17,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.ui.theme.*
 
 @Composable
 fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
     var showExplainerDialog by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState() // 👈 1. Fixing the "Kata hua" part
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -37,11 +39,18 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .statusBarsPadding()// 👈 Scrolling enabled
+                .statusBarsPadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Screen usage", color = Color.Black, modifier = Modifier.fillMaxWidth().padding(top=16.dp), fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(
+                text = stringResource(R.string.loader_usage_title),
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth().padding(top=16.dp),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -52,13 +61,12 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Today's Screen Time", color = TextSecondary, style = MaterialTheme.typography.labelLarge)
-                    Text("0h 0m", color = TextDisabled, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.loader_label_today_time), color = TextSecondary, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.loader_val_zero_time), color = TextDisabled, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black)
                 }
             }
 
-            // --- 3. Dummy Graph (With Locked Feel) ---
-            Text("Weekly Activity", fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+            Text(stringResource(R.string.loader_header_weekly), fontWeight = FontWeight.ExtraBold, color = TextPrimary)
             Card(
                 modifier = Modifier.fillMaxWidth().height(180.dp),
                 colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -74,39 +82,34 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                             Box(Modifier.width(22.dp).fillMaxHeight(0.2f).background(SurfaceVariantSoft, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)))
                         }
                     }
-                    // Overlay icon to make it look locked
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Lock, null, tint = TextDisabled.copy(alpha = 0.5f), modifier = Modifier.size(32.dp))
-                        Text("No Activity Data", color = TextDisabled, style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.loader_status_no_data), color = TextDisabled, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
 
-            // --- 4. Active/Inactive Summary Section ---
-            Text("Day Summary", fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+            Text(stringResource(R.string.loader_header_day_summary), fontWeight = FontWeight.ExtraBold, color = TextPrimary)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Active Card
                 SummaryPlaceholderCard(
-                    label = "Longest Active",
-                    value = "--:--",
+                    label = stringResource(R.string.loader_label_longest_active),
+                    value = stringResource(R.string.loader_val_placeholder_time),
                     icon = Icons.Default.Timer,
                     color = Purple500,
                     modifier = Modifier.weight(1f)
                 )
-                // Inactive Card
                 SummaryPlaceholderCard(
-                    label = "Longest Break",
-                    value = "--:--",
+                    label = stringResource(R.string.loader_label_longest_break),
+                    value = stringResource(R.string.loader_val_placeholder_time),
                     icon = Icons.Default.TimerOff,
                     color = Cyan500,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            // --- 5. Explanation and Button ---
             Card(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Indigo50),
@@ -120,13 +123,13 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = Indigo600, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Detailed Insights Locked",
+                        stringResource(R.string.loader_card_title_locked),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                     Text(
-                        "Enable permission to unlock detailed data usage, app Notifications and total Screen unlocks. We only track timestamps and never read, store or use any of your private data. You can always change from settings.",
+                        stringResource(R.string.loader_card_desc_locked),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
@@ -139,26 +142,25 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth().height(35.dp)
                     ) {
-                        Text("Enable Permission", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(R.string.btn_enable_permission), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp)) // Padding at bottom for scroll
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
-        // --- Scary Timer Dialog ---
         if (showExplainerDialog) {
             AlertDialog(
                 onDismissRequest = { showExplainerDialog = false },
                 icon = { Icon(Icons.Default.Security, null, tint = Indigo600) },
-                title = { Text("Privacy Disclosure", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.dialog_privacy_title), fontWeight = FontWeight.Bold) },
                 text = {
                     Column {
-                        Text("To show your usage habits, AppWatch needs 'Usage Access'.", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.dialog_privacy_usage_access_msg), style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Important: You might see a 10-second safety timer on your device settings. This is for security purposes and you can safely grant them. We never read your private content.\n You can always remove this from the settings.",
+                            stringResource(R.string.dialog_privacy_timer_msg),
                             style = MaterialTheme.typography.bodySmall, color = TextSecondary
                         )
                     }
@@ -171,12 +173,12 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Indigo600)
                     ) {
-                        Text("Proceed")
+                        Text(stringResource(R.string.btn_proceed))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showExplainerDialog = false }) {
-                        Text("Later", color = TextSecondary)
+                        Text(stringResource(R.string.btn_later), color = TextSecondary)
                     }
                 },
                 containerColor = SurfaceWhite,

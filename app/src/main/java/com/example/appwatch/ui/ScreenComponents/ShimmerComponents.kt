@@ -13,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.ui.theme.*
 
 @Composable
@@ -72,7 +74,7 @@ fun DashboardInitialLoader() {
                 // Shield icon
                 Icon(
                     imageVector = Icons.Default.Shield,
-                    contentDescription = "Scanning",
+                    contentDescription = stringResource(R.string.initial_loader_scanning_cd),
                     modifier = Modifier.size(56.dp),
                     tint = Indigo500
                 )
@@ -81,7 +83,7 @@ fun DashboardInitialLoader() {
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "Setting up AppWatch",
+                text = stringResource(R.string.initial_loader_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
                 color = TextPrimary
@@ -90,7 +92,7 @@ fun DashboardInitialLoader() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Scanning your apps.",
+                text = stringResource(R.string.initial_loader_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextSecondary
             )
@@ -98,7 +100,7 @@ fun DashboardInitialLoader() {
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "This only happens once.",
+                text = stringResource(R.string.initial_loader_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextDisabled
             )
@@ -130,7 +132,7 @@ fun DashboardInitialLoader() {
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                "PRIVATE & OFFLINE ANALYSIS",
+                text = stringResource(R.string.initial_loader_privacy_badge),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,

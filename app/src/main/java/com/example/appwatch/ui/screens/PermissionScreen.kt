@@ -18,14 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.appwatch.R
 import com.example.appwatch.presentation.viewmodel.AppDetailViewModel
 import com.example.appwatch.presentation.viewmodel.RiskTier
-import com.example.appwatch.ui.theme.* @OptIn(ExperimentalMaterial3Api::class)
+import com.example.appwatch.ui.theme.*
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PermissionScreen(
     navController: NavController,
@@ -33,6 +37,8 @@ fun PermissionScreen(
     viewModel: AppDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Logic keys (All, High Risk, Sensitive) remains English
     var selectedFilter by remember { mutableStateOf("All") }
 
     LaunchedEffect(packageName) {
@@ -51,10 +57,10 @@ fun PermissionScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(text = "All Permissions", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = { Text(text = stringResource(R.string.perm_screen_all_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
                         }
                     },
                     scrollBehavior = scrollBehavior,
@@ -103,44 +109,48 @@ fun PermissionScreen(
                 )
             }
 
-            // 1. Summary Chips with LIGHT COLORS (Updated)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     SummaryChip(
-                        label = "Total",
+                        label = stringResource(R.string.perm_label_total),
                         value = "${permissions.size}",
                         color = Blue600,
-                        bgColor = Blue50, // Halka blue background
+                        bgColor = Blue50,
                         modifier = Modifier.weight(1f)
                     )
                     SummaryChip(
-                        label = "High Risk",
+                        label = stringResource(R.string.perm_filter_high),
                         value = "$highRiskCount",
                         color = Red600,
-                        bgColor = Red50, // Halka red background
+                        bgColor = Red50,
                         modifier = Modifier.weight(1f)
                     )
                     SummaryChip(
-                        label = "Sensitive",
+                        label = stringResource(R.string.perm_filter_sensitive),
                         value = "$sensitiveCount",
                         color = Amber600,
-                        bgColor = Amber50, // Halka amber background
+                        bgColor = Amber50,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // 2. Filter Chips
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("All", "High Risk", "Sensitive").forEach { filter ->
+                    val filterOptions = listOf(
+                        stringResource(R.string.perm_filter_all) to "All",
+                        stringResource(R.string.perm_filter_high) to "High Risk",
+                        stringResource(R.string.perm_filter_sensitive) to "Sensitive"
+                    )
+
+                    filterOptions.forEach { (label, filterKey) ->
                         FilterChip(
-                            selected = selectedFilter == filter,
-                            onClick = { selectedFilter = filter },
-                            label = { Text(filter) },
+                            selected = selectedFilter == filterKey,
+                            onClick = { selectedFilter = filterKey },
+                            label = { Text(label) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Blue600.copy(alpha = 0.1f),
                                 selectedLabelColor = Blue600,
@@ -148,7 +158,7 @@ fun PermissionScreen(
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled = true,
-                                selected = selectedFilter == filter,
+                                selected = selectedFilter == filterKey,
                                 borderColor = DividerColor,
                                 selectedBorderColor = Blue600.copy(alpha = 0.5f)
                             )
@@ -160,7 +170,7 @@ fun PermissionScreen(
             if (filteredPermissions.isEmpty() && !uiState.isLoading) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
-                        Text("No permissions found", color = TextSecondary)
+                        Text(stringResource(R.string.perm_no_found), color = TextSecondary)
                     }
                 }
             } else {
@@ -180,9 +190,9 @@ fun PermissionScreen(
 fun SummaryChip(label: String, value: String, color: Color, bgColor: Color, modifier: Modifier) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = bgColor), // LIGHT BACKGROUND
+        colors = CardDefaults.cardColors(containerColor = bgColor),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.2f)) // Subtl matching border
+        border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -197,7 +207,7 @@ fun SummaryChip(label: String, value: String, color: Color, bgColor: Color, modi
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,
-                color = color.copy(alpha = 0.8f), // Text bhi color se match karega
+                color = color.copy(alpha = 0.8f),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -267,7 +277,7 @@ fun PermissionDetailRow(name: String, tier: RiskTier, lastAccess: String) {
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (tier == RiskTier.HIGH) "High" else "Sensitive",
+                        text = if (tier == RiskTier.HIGH) stringResource(R.string.tier_high_short) else stringResource(R.string.tier_sensitive_short),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = iconColor,

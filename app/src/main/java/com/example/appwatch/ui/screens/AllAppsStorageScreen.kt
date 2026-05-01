@@ -23,15 +23,17 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage // 👈 Icons ke liye
+import coil.compose.AsyncImage
+import com.example.appwatch.R
 import com.example.appwatch.presentation.viewmodel.StorageViewModel
 import com.example.appwatch.system.AppStorageInfo
-import com.example.appwatch.ui.theme.* // 👈 Naye colors
+import com.example.appwatch.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +45,6 @@ fun AllAppsStorageScreen(
     val apps = uiState.userApps
     val maxSize = apps.firstOrNull()?.totalSizeBytes ?: 1L
 
-    // Storage Specific Colors (Teal Variety)
     val StoragePrimary = Teal600
 
     var localExpandedIndex by remember { mutableStateOf<Int?>(null) }
@@ -60,9 +61,9 @@ fun AllAppsStorageScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Column {
-                        Text("All Apps", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(stringResource(R.string.storage_all_apps_title), fontWeight = FontWeight.Bold, color = TextPrimary)
                         Text(
-                            "${apps.size} downloaded apps",
+                            stringResource(R.string.storage_apps_count_template, apps.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -70,7 +71,7 @@ fun AllAppsStorageScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
                     }
                 },
                 scrollBehavior = scrollBehavior,
@@ -89,7 +90,7 @@ fun AllAppsStorageScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = StoragePrimary)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Analyzing app storage...", color = TextSecondary)
+                    Text(stringResource(R.string.storage_analyzing), color = TextSecondary)
                 }
             }
         } else {
@@ -112,7 +113,7 @@ fun AllAppsStorageScreen(
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.PieChart, null, tint = StoragePrimary, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
-                            Text("Total App Storage", style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.storage_total_header), style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f))
                             Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Black, color = StoragePrimary)
                         }
                     }
@@ -153,7 +154,6 @@ fun ExpandableAppStorageCard(
     val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(600), label = "bar")
     val arrowRotation by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, animationSpec = tween(300), label = "arrow")
 
-    // Fetching Icon
     val appIcon = remember(app.packageName) {
         try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null }
     }
@@ -166,9 +166,7 @@ fun ExpandableAppStorageCard(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Main App Row
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 🔴 APP ICON ADDED
                 AsyncImage(
                     model = appIcon,
                     contentDescription = null,
@@ -194,7 +192,6 @@ fun ExpandableAppStorageCard(
                 }
             }
 
-            // Always visible progress bar
             LinearProgressIndicator(
                 progress = { animatedFraction },
                 modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
@@ -202,20 +199,19 @@ fun ExpandableAppStorageCard(
                 trackColor = SurfaceVariantSoft
             )
 
-            // Expanded Breakdown
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    Divider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
+                    HorizontalDivider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
                     Spacer(Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        StorageBreakdownItem(label = "App", bytes = app.appSizeBytes, color = StorageApp)
-                        StorageBreakdownItem(label = "Data", bytes = app.dataSizeBytes, color = StorageData)
-                        StorageBreakdownItem(label = "Cache", bytes = app.cacheSizeBytes, color = StorageCache)
-                        StorageBreakdownItem(label = "Total", bytes = app.totalSizeBytes, color = StorageTotal)
+                        StorageBreakdownItem(label = stringResource(R.string.storage_label_app), bytes = app.appSizeBytes, color = StorageApp)
+                        StorageBreakdownItem(label = stringResource(R.string.storage_label_data), bytes = app.dataSizeBytes, color = StorageData)
+                        StorageBreakdownItem(label = stringResource(R.string.storage_label_cache), bytes = app.cacheSizeBytes, color = StorageCache)
+                        StorageBreakdownItem(label = stringResource(R.string.storage_label_total_small), bytes = app.totalSizeBytes, color = StorageTotal)
                     }
                 }
             }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,21 +24,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.appwatch.data.local.entity.NeedsAttentionEntity
-import com.example.appwatch.ui.theme.BackgroundLight
-import com.example.appwatch.ui.theme.DividerColor
-import com.example.appwatch.ui.theme.Indigo100
-import com.example.appwatch.ui.theme.Indigo500
-import com.example.appwatch.ui.theme.Indigo600
-import com.example.appwatch.ui.theme.Red600
-import com.example.appwatch.ui.theme.SurfaceWhite
-import com.example.appwatch.ui.theme.TextDisabled
-import com.example.appwatch.ui.theme.TextPrimary
-import com.example.appwatch.ui.theme.TextSecondary
+import com.example.appwatch.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +57,6 @@ fun NeedsAttentionScreen(
 
     var selectedDayFilter by remember { mutableStateOf("30") }
 
-    // Initial sync for default 90
     LaunchedEffect(Unit) {
         if (auditType == "UNUSED") {
             viewModel.updateUnusedFilter("90")
@@ -83,23 +75,29 @@ fun NeedsAttentionScreen(
                 title = {
                     Text(
                         text = when(auditType) {
-                            "UNUSED" -> "Apps unused for 3+ months"
-                            "STALE" -> "Sensitive permissions in unused apps"
-                            "SPECIAL" -> "Apps with system level permissions"
-                            else -> "Security Audit"
-                        },
-//                        fontWeight = FontWeight.Bold
+                            "UNUSED" -> stringResource(R.string.audit_title_unused)
+                            "STALE" -> stringResource(R.string.audit_title_stale)
+                            "SPECIAL" -> stringResource(R.string.audit_title_special)
+                            else -> stringResource(R.string.audit_title_default)
+                        }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 actions = {
                     if (auditType == "SPECIAL") {
                         IconButton(onClick = { showBottomSheet = true }) {
-                            Icon(Icons.Default.Info, contentDescription = "Help", tint = Indigo500)
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = stringResource(R.string.cd_help),
+                                tint = Indigo500
+                            )
                         }
                     }
                 },
@@ -114,7 +112,6 @@ fun NeedsAttentionScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
 
-            // --- Chips are BACK ---
             if (auditType == "UNUSED") {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -127,7 +124,7 @@ fun NeedsAttentionScreen(
                                 selectedDayFilter = day
                                 viewModel.updateUnusedFilter(day)
                             },
-                            label = { Text("$day+ Days") },
+                            label = { Text(stringResource(R.string.audit_filter_days, day)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Indigo100,
                                 selectedLabelColor = Indigo600
@@ -158,15 +155,15 @@ fun NeedsAttentionScreen(
         }
     }
     if (showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showBottomSheet = false },
-                sheetState = sheetState,
-                containerColor = SurfaceWhite
-            ) {
-                SpecialPermissionsExplanations()
-            }
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState,
+            containerColor = SurfaceWhite
+        ) {
+            SpecialPermissionsExplanations()
         }
     }
+}
 
 @Composable
 fun AuditAppItem(event: NeedsAttentionEntity, auditType: String, onAppClick: () -> Unit) {
@@ -192,9 +189,9 @@ fun AuditAppItem(event: NeedsAttentionEntity, auditType: String, onAppClick: () 
                     fontWeight = FontWeight.Bold, color = TextPrimary
                 )
                 val detail = when(auditType) {
-                    "STALE" -> "Unused from ${event.daysUnused} days with ${event.permissionName} permission/s"
-                    "SPECIAL" -> event.permissionName ?: "System Access"
-                    else -> "Unused from ${event.daysUnused} days"
+                    "STALE" -> stringResource(R.string.audit_detail_stale, event.daysUnused ?: 0, event.permissionName ?: "")
+                    "SPECIAL" -> event.permissionName ?: stringResource(R.string.audit_detail_special_default)
+                    else -> stringResource(R.string.audit_detail_unused, event.daysUnused ?: 0)
                 }
                 Text(text = detail, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
             }
@@ -207,27 +204,34 @@ fun SpecialPermissionsExplanations() {
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp).padding(bottom = 32.dp)
     ) {
-        Text("Highly Sensitive Permissions", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(
+            stringResource(R.string.special_perms_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        Text("At AppWatch, we categorize these as 'Highly Sensitive' because they allow apps to go beyond normal permissions."+
-                "While trusted tools use these for advanced features, they require extra caution because they have a 'bird’s-eye view' of your phone's activity.",
-            style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+        Text(
+            stringResource(R.string.special_perms_intro),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         val perms = listOf(
-            "ACCESSIBILITY" to "Acts as a 'Screen Helper'. Essential for password managers to auto-fill or screen readers for assistance, but it can see everything you type.",
-            "NOTIFICATION_ACCESS" to "Acts as a 'Message Reader'. Needed for Smartwatches to show alerts on your wrist, but it can also read private OTPs from your notifications.",
-            "OVERLAY (Display Over Apps)" to "Creates 'Floating Windows'. Used by apps like 'Where is my train' or Messenger bubbles to show info over other apps. Be careful as it can show fake screens.",
-            "DEVICE_ADMIN" to "Gives 'Master Control'. Useful for 'Find My Device' to lock your phone if lost, but it's powerful enough to wipe your data or change locks.",
-            "INSTALL_UNKNOWN_APPS" to "Acts as an 'External Installer'. Lets apps like Chrome download and install other apps. Dangerous if a random app installs something without asking.",
-            "WRITE_SETTINGS" to "Acts as a 'System Editor'. Automation apps use this to change your brightness or DND mode automatically, but it can modify core system behaviors.",
-            "VPN_SERVICE" to "Acts as an 'Internet Guard'. Secures your connection on public Wi-Fi, but it means the app can see and route all your internet traffic."
+            R.string.perm_desc_accessibility_title to R.string.perm_desc_accessibility_body,
+            R.string.perm_desc_notif_title to R.string.perm_desc_notif_body,
+            R.string.perm_desc_overlay_title to R.string.perm_desc_overlay_body,
+            R.string.perm_desc_admin_title to R.string.perm_desc_admin_body,
+            R.string.perm_desc_unknown_apps_title to R.string.perm_desc_unknown_apps_body,
+            R.string.perm_desc_write_settings_title to R.string.perm_desc_write_settings_body,
+            R.string.perm_desc_vpn_title to R.string.perm_desc_vpn_body
         )
 
-        perms.forEach { (title, desc) ->
+        perms.forEach { (titleRes, descRes) ->
             Column(modifier = Modifier.padding(vertical = 10.dp)) {
-                Text(title, fontWeight = FontWeight.ExtraBold, color = Red600, fontSize = 13.sp)
-                Text(desc, style = MaterialTheme.typography.bodySmall, color = TextPrimary, lineHeight = 18.sp)
+                Text(stringResource(titleRes), fontWeight = FontWeight.ExtraBold, color = Red600, fontSize = 13.sp)
+                Text(stringResource(descRes), style = MaterialTheme.typography.bodySmall, color = TextPrimary, lineHeight = 18.sp)
             }
         }
     }

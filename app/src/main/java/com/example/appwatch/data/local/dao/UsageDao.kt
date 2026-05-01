@@ -7,10 +7,18 @@ import androidx.room.Query
 import com.example.appwatch.data.local.entity.UsageEntity
 import kotlinx.coroutines.flow.Flow
 
+data class DayUsageTuple(val total: Long, val usageDate: Long)
+
+data class DayTotal(val total: Long, val usageDate: Long)
+
+
 @Dao
 interface UsageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsage(usage: UsageEntity)
+
+    @Query("DELETE FROM app_usage WHERE usageDate < :threshold")
+    suspend fun deleteOldUsageData(threshold: Long)
 
     @Query("SELECT * FROM app_usage WHERE usageDate = :date ORDER BY totalTimeInForeground DESC")
     fun getUsageByDate(date: Long): Flow<List<UsageEntity>>
@@ -85,6 +93,4 @@ interface UsageDao {
     @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate")
     fun getUsageStatsForNoiseAnalysis(startDate: Long): Flow<List<UsageEntity>>
 
-    data class DayUsageTuple(val total: Long, val usageDate: Long)
-    data class DayTotal(val total: Long, val usageDate: Long)
 }

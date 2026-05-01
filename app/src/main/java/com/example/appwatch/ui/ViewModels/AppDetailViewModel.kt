@@ -136,7 +136,7 @@ class AppDetailViewModel @Inject constructor(
                         riskTier = mapToRiskTier(perm.name),
                         lastAccess = when {
                             lastAccessEvent != null -> formatLastAccess(lastAccessEvent.accessTimestamp)
-                            else -> "No Activity Logged"
+                            else -> ""
                         }
                     )
                 }.sortedBy { it.riskTier } // HIGH sabse upar aayenge

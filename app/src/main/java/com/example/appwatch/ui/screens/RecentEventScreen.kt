@@ -19,16 +19,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 import com.example.appwatch.ui.ScreenComponents.getIconForEventType
-import com.example.appwatch.ui.theme.* // Sabhi naye colors yahan se aayenge
+import com.example.appwatch.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -41,14 +43,14 @@ fun RecentEventScreen(
 ) {
     val eventList by viewModel.getEventsByType(eventType).collectAsState(initial = emptyList())
 
-    // Balanced & Understandable Titles
-    val screenTitle = when (eventType) {
-        "INSTALL" -> "Newly Installed Apps"
-        "UPDATE" -> "Recently Updated Apps"
-        "SIDELOADED_APK" -> "Unknown Source Installs"
-        "UNINSTALL" -> "Recently Removed Apps"
-        "DATA_HOG" -> "High Data Consumption"
-        else -> "Recent App Activity"
+    // Balanced & Understandable Titles mapping to Resources
+    val screenTitleRes = when (eventType) {
+        "INSTALL" -> R.string.title_recent_install
+        "UPDATE" -> R.string.title_recent_update
+        "SIDELOADED_APK" -> R.string.title_recent_sideloaded
+        "UNINSTALL" -> R.string.title_recent_uninstall
+        "DATA_HOG" -> R.string.title_recent_data_hog
+        else -> R.string.title_recent_default
     }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
@@ -57,22 +59,22 @@ fun RecentEventScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = BackgroundLight, // Naya light background
+        containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = screenTitle,
+                        text = stringResource(screenTitleRes),
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
                         fontSize = 20.sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {navController.popBackStack()}) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_back),
                             tint = TextPrimary
                         )
                     }
@@ -91,7 +93,7 @@ fun RecentEventScreen(
 
         if (eventList.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No activity recorded yet", color = TextSecondary)
+                Text(stringResource(R.string.recent_no_activity), color = TextSecondary)
             }
         } else {
             LazyColumn(
@@ -99,7 +101,7 @@ fun RecentEventScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp), // Thoda better spacing
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
             ) {
                 items(eventList) { event ->
@@ -135,10 +137,10 @@ fun EventListItemCard(event: RecentEventEntity, onAppClick: () -> Unit) {
         onClick = onAppClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceWhite // Clean white cards
+            containerColor = SurfaceWhite
         ),
-        shape = RoundedCornerShape(16.dp), // Premium rounded corners
-        border = BorderStroke(1.dp, DividerColor) // Subtle border as per new system
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, DividerColor)
     ) {
         Row(
             modifier = Modifier
@@ -158,7 +160,7 @@ fun EventListItemCard(event: RecentEventEntity, onAppClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Default.Android,
                     contentDescription = null,
-                    tint = Indigo500, // Primary brand color fallback
+                    tint = Indigo500,
                     modifier = Modifier.size(44.dp)
                 )
             }
@@ -180,7 +182,6 @@ fun EventListItemCard(event: RecentEventEntity, onAppClick: () -> Unit) {
                 )
             }
 
-            // Semantic Icon Tinting based on event type
             val iconTint = when(event.eventType) {
                 "INSTALL" -> ActivityInstall
                 "UNINSTALL" -> ActivityUninstall

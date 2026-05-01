@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
 import com.example.appwatch.ui.ScreenComponents.KnowYourUsageSection
@@ -47,7 +49,6 @@ import com.example.appwatch.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Permission Check Helper
 private fun hasUsageStatsPermission(context: Context): Boolean {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     val mode = appOps.noteOpNoThrow(
@@ -69,12 +70,11 @@ fun UsageStatsScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
         rememberTopAppBarState()
     )
-    // ─── Colors (Indigo Replaced with Blue/Purple) ──────────────────────────
-    val AppThemePrimary = Blue600 // Tunhe Indigo mana kiya tha, toh Blue600 as Primary
+
+    val AppThemePrimary = Blue600
     val AppBackground = BackgroundLight
     val AppColors = listOf(ChartBar1, ChartBar2, ChartBar3, ChartBar4, ChartBar5)
 
-    // ─── Permission State ─────────────────────────────────────────────────────
     var isPermissionGranted by remember { mutableStateOf(hasUsageStatsPermission(context)) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -89,7 +89,6 @@ fun UsageStatsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // ─── Data States from ViewModel ───────────────────────────────────────────
     var selectedDayIndex by remember { mutableStateOf(6) }
     val allDaysUsage by viewModel.allDaysUsage.collectAsStateWithLifecycle()
     val weeklyChartData by viewModel.weeklyChartData.collectAsStateWithLifecycle()
@@ -121,17 +120,16 @@ fun UsageStatsScreen(
         if (h > 0) "${h}h ${m}m" else "${m}m"
     }
 
-    // ─── UI ───────────────────────────────────────────────────────────────────
     if (!isPermissionGranted) {
         UsageStatsLoader(onGrantPermissionClick = {
             context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         })
-    } else{
+    } else {
         if (viewModel.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AppThemePrimary) // Sirf ek hi loader!
+                CircularProgressIndicator(color = AppThemePrimary)
             }
-        }else {
+        } else {
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 containerColor = AppBackground,
@@ -139,7 +137,7 @@ fun UsageStatsScreen(
                     CenterAlignedTopAppBar(
                         title = {
                             Text(
-                                "Usage Statistics",
+                                stringResource(R.string.usage_stats_title),
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
                             )
@@ -148,7 +146,7 @@ fun UsageStatsScreen(
                             IconButton(onClick = { navController.navigateUp() }) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = stringResource(R.string.cd_back),
                                     tint = TextPrimary
                                 )
                             }
@@ -172,20 +170,18 @@ fun UsageStatsScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
                 ) {
-                    // 1. Hero Card
                     item {
                         UsageHeroCard(
                             totalTime = selectedTotalTime,
-                            dateLabel = if (isToday) "Today" else selectedDayLabel?.second ?: "",
+                            dateLabel = if (isToday) stringResource(R.string.usage_today) else selectedDayLabel?.second ?: "",
                             accentColor = AppThemePrimary,
                             isToday = isToday
                         )
                     }
 
-                    // 2. Weekly Chart
                     item {
                         Text(
-                            "Weekly Activity",
+                            stringResource(R.string.usage_header_weekly),
                             fontWeight = FontWeight.ExtraBold,
                             color = TextPrimary,
                             fontSize = 18.sp
@@ -200,11 +196,15 @@ fun UsageStatsScreen(
                         )
                     }
 
-                    // 3. Top Apps Section
                     item {
+                        val headerTitle = if (isToday) {
+                            stringResource(R.string.usage_header_today)
+                        } else {
+                            stringResource(R.string.usage_header_focus_suffix, selectedDayLabel?.second ?: "")
+                        }
                         SectionHeader(
-                            title = if (isToday) "Today's Usage" else "${selectedDayLabel?.second ?: ""} Focus",
-                            subtitle = "${selectedDayUsage.size} apps"
+                            title = headerTitle,
+                            subtitle = stringResource(R.string.usage_val_apps_used_count, selectedDayUsage.size)
                         )
                     }
 
@@ -227,10 +227,9 @@ fun UsageStatsScreen(
                         }
                     }
 
-                    // 4. Analytics Section (Marathon & Unlock Pace)
                     item {
                         Text(
-                            "This day",
+                            stringResource(R.string.usage_header_this_day),
                             fontWeight = FontWeight.ExtraBold,
                             color = TextPrimary,
                             fontSize = 18.sp
@@ -239,17 +238,17 @@ fun UsageStatsScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             val mostUsed = selectedDayUsage.firstOrNull()
                             AnalyticsCard(
-                                label = "Peak Usage",
-                                appName = mostUsed?.appName ?: "None",
-                                time = mostUsed?.usageTimeString ?: "0m",
+                                label = stringResource(R.string.usage_label_peak),
+                                appName = mostUsed?.appName ?: stringResource(R.string.usage_val_none),
+                                time = mostUsed?.usageTimeString ?: stringResource(R.string.usage_val_zero_m),
                                 icon = Icons.Default.TrendingUp,
                                 color = StatScreen,
                                 modifier = Modifier.weight(1f)
                             )
                             AnalyticsCard(
-                                label = "Unlock Pace",
-                                appName = "${String.format("%.1f", viewModel.unlockPace)} device unlocks",
-                                time = " per hour usage",
+                                label = stringResource(R.string.usage_label_unlock_pace),
+                                appName = stringResource(R.string.usage_val_unlock_pace_desc, viewModel.unlockPace),
+                                time = stringResource(R.string.usage_val_unlock_pace_time),
                                 icon = Icons.Default.LockOpen,
                                 color = StatUnlocks,
                                 modifier = Modifier.weight(1f)
@@ -258,7 +257,7 @@ fun UsageStatsScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             AnalyticsCard(
-                                label = "Continuous app usage",
+                                label = stringResource(R.string.usage_label_marathon),
                                 appName = viewModel.marathonAppName,
                                 time = viewModel.marathonTime,
                                 icon = Icons.Default.Timer,
@@ -266,8 +265,8 @@ fun UsageStatsScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             AnalyticsCard(
-                                label = "Total Apps used",
-                                appName = "${selectedDayUsage.size} Apps",
+                                label = stringResource(R.string.usage_label_total_apps),
+                                appName = stringResource(R.string.usage_val_apps_caps_count, selectedDayUsage.size),
                                 time = "",
                                 icon = Icons.Default.Apps,
                                 color = StatApps,
@@ -276,7 +275,6 @@ fun UsageStatsScreen(
                         }
                     }
 
-                    // 5. Usage Insights (Weekly/Monthly Modern Cards)
                     item {
                         KnowYourUsageSection(viewModel)
                     }
@@ -285,8 +283,6 @@ fun UsageStatsScreen(
         }
     }
 }
-
-// ─── Sub-Components (Clean & Modern) ──────────────────────────────────────────
 
 @Composable
 fun SectionHeader(title: String, subtitle: String) {
@@ -301,27 +297,9 @@ fun SectionHeader(title: String, subtitle: String) {
 }
 
 @Composable
-fun AppIconSmall(packageName: String) {
-    val context = LocalContext.current
-    val icon = remember(packageName) {
-        try { context.packageManager.getApplicationIcon(packageName) }
-        catch (e: Exception) { null }
-    }
-    if (icon != null) {
-        AsyncImage(
-            model = icon,
-            contentDescription = null,
-            modifier = Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
-        )
-    } else {
-        Box(modifier = Modifier.size(28.dp).background(DividerColor, CircleShape))
-    }
-}
-
-@Composable
 fun EmptyStateMessage() {
     Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-        Text("No usage recorded for this day", color = TextSecondary)
+        Text(stringResource(R.string.usage_empty_recorded), color = TextSecondary)
     }
 }
 
@@ -333,11 +311,9 @@ fun ViewMoreButton(count: Int, onClick: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, BorderSoft)
     ) {
-        Text("View all $count more apps", color = TextPrimary, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.btn_view_more_apps, count), color = TextPrimary, fontWeight = FontWeight.Bold)
     }
 }
-
-// ─── Rest of the existing components (Updated Colors) ───────────────────────
 
 @Composable
 fun AnalyticsCard(label: String, appName: String, time: String, icon: ImageVector, color: Color, modifier: Modifier) {
@@ -356,7 +332,8 @@ fun AnalyticsCard(label: String, appName: String, time: String, icon: ImageVecto
 fun UsageHeroCard(totalTime: String, dateLabel: String, accentColor: Color, isToday: Boolean) {
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = accentColor)) {
         Column(modifier = Modifier.padding(24.dp)) {
-            Text(if (isToday) "Screen Time Today" else "Screen Time — $dateLabel", color = TextOnDark.copy(0.75f), style = MaterialTheme.typography.labelLarge)
+            val label = if (isToday) stringResource(R.string.usage_hero_today) else stringResource(R.string.usage_hero_date_prefix, dateLabel)
+            Text(label, color = TextOnDark.copy(0.75f), style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(4.dp))
             Text(totalTime, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black, color = TextOnDark)
         }
@@ -406,5 +383,23 @@ fun InteractiveWeeklyChart(data: List<Float>, dayLabels: List<String>, selectedI
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AppIconSmall(packageName: String) {
+    val context = LocalContext.current
+    val icon = remember(packageName) {
+        try { context.packageManager.getApplicationIcon(packageName) }
+        catch (e: Exception) { null }
+    }
+    if (icon != null) {
+        AsyncImage(
+            model = icon,
+            contentDescription = null,
+            modifier = Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
+        )
+    } else {
+        Box(modifier = Modifier.size(28.dp).background(DividerColor, CircleShape))
     }
 }

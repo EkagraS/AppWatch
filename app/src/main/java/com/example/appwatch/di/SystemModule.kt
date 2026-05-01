@@ -14,8 +14,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import kotlin.jvm.java
 import com.example.appwatch.SecurityManager
-import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SQLiteDatabase
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -47,10 +47,10 @@ object SystemModule {
     ): AppWatchDatabase {
 
         // SQLCipher ki native libraries load karo
-        SQLiteDatabase.loadLibs(context)
+//        SQLiteDatabase.loadLibs(context)
 
         val passphrase = securityManager.getDatabasePassphrase()
-        val factory = SupportFactory(passphrase)
+        val factory = SupportOpenHelperFactory(passphrase)
 
         return Room.databaseBuilder(
             context,

@@ -1,16 +1,16 @@
 package com.example.appwatch.data.repository
 
-import android.app.admin.SystemUpdateInfo
 import android.os.Build
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.data.local.dao.AppNotificationDao
 import com.example.appwatch.data.local.dao.NeedsAttentionDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
-import com.example.appwatch.data.local.datastore.VitalsDataStore
+import com.example.appwatch.data.local.dao.VitalsDao
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.data.local.entity.NeedsAttentionEntity
 import com.example.appwatch.data.local.entity.RecentEventEntity
+import com.example.appwatch.data.local.entity.VitalsEntity
 import com.example.appwatch.domain.model.ActivityItem
 import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.domain.model.RecentItem
@@ -36,7 +36,8 @@ class DashboardRepositoryImpl @Inject constructor(
     private val packageManagerHelper: PackageManagerHelper,
     private val storageStatsHelper: StorageStatsHelper,
     private val usageStatsHelper: UsageStatsHelper,
-    private val vitalsDataStore: VitalsDataStore,
+    private val usageDao: UsageDao,
+    private val vitalsDao: VitalsDao,
     private val appNotificationDao: AppNotificationDao,
 
     ) : DashboardRepository {
@@ -46,13 +47,20 @@ class DashboardRepositoryImpl @Inject constructor(
     private var cachedUsedStorage: String = "0 B"
     private var cachedTotalStorage: String = "0 B"
 
+    private fun getTodayMidnight(): Long = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
     override fun getDashboardSummaryFlow(): Flow<DashboardSummary> {
         val sevenDaysAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000)
         return combine(
             appInfoDao.getAllAppsAlphabetical().onStart { emit(emptyList()) },
             recentEventDao.getRecentEventsFlow(sevenDaysAgo).onStart { emit(emptyList()) },
             needsAttentionDao.getNeedsAttentionFlow().onStart { emit(emptyList()) },
-        ) { apps, recentEvents, needsAttention -> // 🔴 FIX: Ab dono list aage bhej rahe hain
+        ) { apps, recentEvents, needsAttention ->
             if (apps.isEmpty()) {
                 emptyDashboard()
             } else {
@@ -103,6 +111,7 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshAllData() {
+        val todayMidnight = getTodayMidnight()
         withContext(Dispatchers.IO) {
             try {
                 // 1. Fetch Heavy System Data (Slow, runs in background)
@@ -113,31 +122,37 @@ class DashboardRepositoryImpl @Inject constructor(
                 cachedUsedStorage = storageStatsHelper.formatSize(deviceStorage.usedBytes)
                 cachedTotalStorage = storageStatsHelper.formatSize(deviceStorage.totalBytes)
 
-                var formattedPatch = "Unknown"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val rawDate = Build.VERSION.SECURITY_PATCH
-                    if (rawDate.isNotEmpty()) {
-                        try {
-                            val parser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
-                            val date = parser.parse(rawDate)
-                            if (date != null) formattedPatch = formatter.format(date)
-                        } catch (e: Exception) {
-                            formattedPatch = rawDate
-                        }
-                    }
-                }
                 val vitals = usageStatsHelper.getTodayDeviceVitals()
                 val currentUnlocks = vitals.first
                 val currentNotifications = vitals.second
                 val currentDataUsageBytes = usageStatsHelper.getTodayTotalDataUsage()
 
-                vitalsDataStore.saveVitals(
-                    currentUnlocks,
-                    currentNotifications,
-                    currentDataUsageBytes,
-                    formattedPatch
+                var formattedPatch = "Unknown"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val rawDate = Build.VERSION.SECURITY_PATCH
+                    formattedPatch = formatSecurityPatch(rawDate) // Tera purana logic function mein daal dena
+                }
+
+                // B. Save Daily Vitals to Room (For Main Graph)
+                val dailyVitals = VitalsEntity(
+                    date = todayMidnight,
+                    totalScreenTime = screenTimeMillis,
+                    totalUnlocks = currentUnlocks,
+                    totalNotifications = currentNotifications,
+                    totalDataUsage = currentDataUsageBytes,
+                    securityPatch = formattedPatch
                 )
+                vitalsDao.insertVitals(dailyVitals)
+
+                val usageList = usageStatsHelper.getDailyAppUsage()
+                usageList.forEach { entity ->
+                    usageDao.insertUsage(entity.copy(usageDate = todayMidnight))
+                }
+
+                // C. Cleanup (14-Day Window)
+                val threshold = todayMidnight - (14L * 24 * 60 * 60 * 1000)
+                usageDao.deleteOldUsageData(threshold)
+                vitalsDao.deleteOldVitals(threshold)
 
                 // 2. Refresh App Metadata
                 val liveApps = packageManagerHelper.getInstalledAppsMetadata()
@@ -474,19 +489,31 @@ class DashboardRepositoryImpl @Inject constructor(
         return appNotificationDao.getTotalCountByDate(today).map { it ?: 0 }
     }
 
-        override fun getTodayTotalUnlocks(): Flow<Int> =
-            vitalsDataStore.vitalsFlow.map { it.unlocks }
+    override fun getTodayTotalUnlocks(): Flow<Int> =
+        vitalsDao.getVitalsByDate(getTodayMidnight()).map { it?.totalUnlocks ?: 0 }
 
-        override fun getTodayTotalNotifications(): Flow<Int> =
-            vitalsDataStore.vitalsFlow.map { it.notifications }
+    override fun getTodayTotalNotifications(): Flow<Int> =
+        vitalsDao.getVitalsByDate(getTodayMidnight()).map { it?.totalNotifications ?: 0 }
 
-        override fun getTodayDataUsage(): Flow<Long> =
-            vitalsDataStore.vitalsFlow.map { it.dataUsage }
+    override fun getTodayDataUsage(): Flow<Long> =
+        vitalsDao.getVitalsByDate(getTodayMidnight()).map { it?.totalDataUsage ?: 0L }
 
-        override fun getSystemUpdateInfo(): Flow<String> =
-            vitalsDataStore.vitalsFlow.map { it.patchDate }
+    override fun getSystemUpdateInfo(): Flow<String> =
+        vitalsDao.getVitalsByDate(getTodayMidnight()).map { it?.securityPatch ?: "Unknown" }
 
 
+    private fun formatSecurityPatch(rawDate: String): String {
+        if (rawDate.isEmpty()) return "Unknown"
+
+        return try {
+            val parser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
+            val date = parser.parse(rawDate)
+            if (date != null) formatter.format(date) else rawDate
+        } catch (e: Exception) {
+            rawDate
+        }
+    }
         private fun emptyDashboard() = DashboardSummary(
             totalApps = 0,
             highRiskApps = 0,

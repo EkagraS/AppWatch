@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.ui.theme.*
 
 @Composable
@@ -37,7 +39,14 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
                 .statusBarsPadding()
                 .padding(16.dp)
         ) {
-            Text("Notification details", color = Color.Black, modifier = Modifier.fillMaxWidth().padding(top=16.dp), fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(
+                text = stringResource(R.string.notif_loader_title),
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth().padding(top=16.dp),
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
             Spacer(modifier = Modifier.height(20.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -49,15 +58,19 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Today's Notifications", color = TextSecondary, style = MaterialTheme.typography.labelLarge)
-                    Text("0", color = TextDisabled, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.notif_loader_label_today), color = TextSecondary, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.notif_loader_val_zero), color = TextDisabled, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Placeholder List (Ghost Items) ---
-            Text("Recent Alerts", style = MaterialTheme.typography.titleSmall, color = TextPrimary, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+            Text(
+                text = stringResource(R.string.notif_loader_header_recent),
+                style = MaterialTheme.typography.titleSmall,
+                color = TextPrimary,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            )
 
             repeat(3) {
                 Surface(
@@ -79,7 +92,6 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- CTA Card (Orange Theme for Notifications) ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Orange50),
@@ -93,13 +105,13 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
                     Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = Orange600, modifier = Modifier.size(32.dp))
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "Audit Notifications",
+                        stringResource(R.string.notif_loader_card_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                     Text(
-                        "See which apps send the most alerts and audit sensitive message access. We never read, store or use any of your private data. You can always change from settings.",
+                        stringResource(R.string.notif_loader_card_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
@@ -112,27 +124,26 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Grant Access", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.btn_grant_access), fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
 
-        // --- Notification Access Explainer ---
         if (showExplainerDialog) {
             AlertDialog(
                 onDismissRequest = { showExplainerDialog = false },
                 icon = { Icon(Icons.Default.Security, contentDescription = null, tint = Orange600) },
-                title = { Text("Privacy Disclosure", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.dialog_privacy_title), fontWeight = FontWeight.Bold) },
                 text = {
                     Column {
                         Text(
-                            "To audit which apps are reading your notifications (like potential spyware), AppWatch needs Notification Access.",
+                            stringResource(R.string.dialog_notif_privacy_msg),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Important: You might see a 10-second safety timer on your device settings. This is standard for security focused tools. We never read your private content and we only use it to count alerts.\n You can always remove this from the settings.",
+                            stringResource(R.string.dialog_notif_timer_msg),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
@@ -146,12 +157,12 @@ fun NotificationLoader(onGrantPermissionClick: () -> Unit) {
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Orange600)
                     ) {
-                        Text("Open Settings")
+                        Text(stringResource(R.string.btn_open_settings))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showExplainerDialog = false }) {
-                        Text("Cancel", color = TextSecondary)
+                        Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                     }
                 },
                 containerColor = SurfaceWhite,

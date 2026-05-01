@@ -16,25 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.appwatch.R
 import com.example.appwatch.domain.model.ActivityItem
-import com.example.appwatch.ui.theme.Amber50
-import com.example.appwatch.ui.theme.Amber600
-import com.example.appwatch.ui.theme.DividerColor
-import com.example.appwatch.ui.theme.Green100
-import com.example.appwatch.ui.theme.Green50
-import com.example.appwatch.ui.theme.Green600
-import com.example.appwatch.ui.theme.Indigo50
-import com.example.appwatch.ui.theme.Indigo500
-import com.example.appwatch.ui.theme.Red50
-import com.example.appwatch.ui.theme.Red600
-import com.example.appwatch.ui.theme.SurfaceWhite
-import com.example.appwatch.ui.theme.TextDisabled
-import com.example.appwatch.ui.theme.TextPrimary
-import com.example.appwatch.ui.theme.TextSecondary
+import com.example.appwatch.ui.theme.*
 
 @Composable
 fun NeedsAttentionSection(
@@ -49,7 +38,7 @@ fun NeedsAttentionSection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Needs Attention",
+                text = stringResource(R.string.attention_header),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -73,7 +62,7 @@ fun NeedsAttentionSection(
                 border = BorderStroke(1.dp, Green100)
             ) {
                 Text(
-                    "All systems look secure. No immediate action required.",
+                    text = stringResource(R.string.attention_empty_state),
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Green600,

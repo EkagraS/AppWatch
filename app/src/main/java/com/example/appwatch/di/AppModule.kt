@@ -9,10 +9,13 @@ import com.example.appwatch.data.local.dao.NeedsAttentionDao
 import com.example.appwatch.data.local.dao.PermissionAccessDao
 import com.example.appwatch.data.local.dao.RecentEventDao
 import com.example.appwatch.data.local.dao.UsageDao
+import com.example.appwatch.data.local.dao.VitalsDao
 import com.example.appwatch.data.repository.AppDataUsageRepositoryImpl
 import com.example.appwatch.data.repository.AppNotificationRepositoryImpl
+import com.example.appwatch.data.repository.VitalsRepositoryImpl
 import com.example.appwatch.domain.repository.AppDataUsageRepository
 import com.example.appwatch.domain.repository.AppNotificationRepository
+import com.example.appwatch.domain.repository.VitalsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,5 +72,17 @@ object AppModule {
     @Singleton
     fun provideDataUsageRepository(dao: AppDataUsageDao): AppDataUsageRepository {
         return AppDataUsageRepositoryImpl(dao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVitalsDao(db: AppWatchDatabase): VitalsDao {
+        return db.vitalsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVitalsRepository(dao: VitalsDao): VitalsRepository {
+        return VitalsRepositoryImpl(dao)
     }
 }

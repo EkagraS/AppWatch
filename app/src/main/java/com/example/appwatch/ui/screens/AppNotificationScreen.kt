@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
@@ -31,14 +32,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.AppNotificationEntity
-import com.example.appwatch.ui.ScreenComponents.NotificationLoader // 👈 Tera component
-import com.example.appwatch.ui.theme.* // 👈 Naye colors
+import com.example.appwatch.ui.ScreenComponents.NotificationLoader
+import com.example.appwatch.ui.theme.*
 import com.example.appwatch.ui.viewmodel.AppNotificationViewmodel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// Permission Check Helper for Notification Listener
 private fun isNotificationServiceEnabled(context: Context): Boolean {
     val packageNames = NotificationManagerCompat.getEnabledListenerPackages(context)
     return packageNames.contains(context.packageName)
@@ -52,7 +53,6 @@ fun AppNotificationScreen(
 ) {
     val context = LocalContext.current
 
-    // ─── Permission State & Observer ──────────────────────────────────────────
     var isPermissionGranted by remember { mutableStateOf(isNotificationServiceEnabled(context)) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -66,7 +66,6 @@ fun AppNotificationScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // ─── Data Flow ────────────────────────────────────────────────────────────
     val uiState by viewModel.uiState.collectAsState()
     val totalNotifications = if (isPermissionGranted) uiState.notificationList.sumOf { it.count } else 0
 
@@ -74,7 +73,6 @@ fun AppNotificationScreen(
         rememberTopAppBarState()
     )
 
-    // ─── Conditional Rendering ────────────────────────────────────────────────
     if (!isPermissionGranted) {
         NotificationLoader(onGrantPermissionClick = {
             context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -85,12 +83,12 @@ fun AppNotificationScreen(
             containerColor = BackgroundLight,
             topBar = {
                 TopAppBar(
-                    title = { Text("Today's Notifications", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = { Text(stringResource(R.string.notif_title_today), fontWeight = FontWeight.Bold, color = TextPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(R.string.cd_back),
                                 tint = TextPrimary
                             )
                         }
@@ -115,7 +113,7 @@ fun AppNotificationScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Notification Breakdown",
+                    text = stringResource(R.string.notif_header_breakdown),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -147,7 +145,7 @@ fun AppNotificationScreen(
 fun NotificationSummaryCard(total: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = StatNotifs), // 👈 Orange500 from theme
+        colors = CardDefaults.cardColors(containerColor = StatNotifs),
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(
@@ -155,7 +153,7 @@ fun NotificationSummaryCard(total: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Total Notifications", color = TextOnDark.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.notif_label_total), color = TextOnDark.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     text = "$total",
                     style = MaterialTheme.typography.displayMedium,
@@ -176,7 +174,8 @@ fun NotificationSummaryCard(total: Int) {
 @Composable
 fun NotificationAppItem(item: AppNotificationEntity) {
     val context = LocalContext.current
-    var appName by remember { mutableStateOf("Loading...") }
+    val loadingText = stringResource(R.string.notif_status_loading)
+    var appName by remember { mutableStateOf(loadingText) }
     var appIcon by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
 
     LaunchedEffect(item.packageName) {
@@ -194,7 +193,7 @@ fun NotificationAppItem(item: AppNotificationEntity) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite), // 👈 Clean look
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -235,7 +234,7 @@ fun NotificationAppItem(item: AppNotificationEntity) {
                 text = "${item.count}",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
-                color = StatNotifs // 👈 Orange accent for count
+                color = StatNotifs
             )
         }
     }
@@ -250,6 +249,6 @@ fun EmptyNotificationsState() {
     ) {
         Icon(Icons.Default.NotificationsActive, null, tint = TextDisabled, modifier = Modifier.size(48.dp))
         Spacer(Modifier.height(12.dp))
-        Text("No notifications tracked yet", color = TextSecondary)
+        Text(stringResource(R.string.notif_empty_state), color = TextSecondary)
     }
 }
