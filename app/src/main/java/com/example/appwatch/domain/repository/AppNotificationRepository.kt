@@ -9,4 +9,6 @@ interface AppNotificationRepository {
     suspend fun incrementNotificationCount(packageName: String, date: String)
 
     suspend fun cleanOldNotifications(expiryDate: String)
+
+    suspend fun updateNotificationStats(packageName: String, date: String, type: String)
 }

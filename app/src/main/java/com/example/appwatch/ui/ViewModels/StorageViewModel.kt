@@ -55,6 +55,7 @@ class StorageViewModel @Inject constructor(
 
     init {
         loadFromRoom()
+        refreshInBackground()
         checkMediaPermission()
     }
 
@@ -103,17 +104,12 @@ class StorageViewModel @Inject constructor(
                         lastUpdated = apps.firstOrNull()?.storageLastUpdated ?: 0L
                     )
                 }
-                if (!uiState.value.isRefreshing && apps.isNotEmpty()) {
-                    refreshInBackground()
-                } else if (apps.isEmpty()) {
-                    // Agar DB ekdum khali hai (First run), toh turant refresh karo
-                    refreshInBackground()
-                }
             }
         }
     }
 
     fun refreshInBackground() {
+        if (_uiState.value.isRefreshing) return
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isRefreshing = true) }
 

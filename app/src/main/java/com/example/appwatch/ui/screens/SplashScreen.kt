@@ -32,6 +32,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import com.example.appwatch.R
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun SplashScreen(onNavigateNext: (String) -> Unit) {
@@ -77,6 +79,10 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .padding(vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

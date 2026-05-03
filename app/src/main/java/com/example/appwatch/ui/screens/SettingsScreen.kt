@@ -12,8 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState // Added for sheets
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll // Added for sheets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -39,6 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.appwatch.R
 import com.example.appwatch.ui.theme.BackgroundLight
@@ -61,12 +66,11 @@ enum class SheetType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
-    val toastMsg = stringResource(R.string.settings_toast_unavailable) // Is line ko top par define karo Composable ke start mein
-
+    val toastMsg = stringResource(R.string.settings_toast_unavailable)
 
     val context = LocalContext.current
     var activeSheet by remember { mutableStateOf<SheetType?>(null) }
-    var showRevokeDialog by remember { mutableStateOf<Pair<String, Int>?>(null) } // Changed string msg to Int resource ID
+    var showRevokeDialog by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
     val hasUsageAccess = remember {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -90,8 +94,21 @@ fun SettingsScreen(navController: NavController) {
         }
     }
 
-    val hasNotificationPermission = remember {
+    var hasNotificationPermission = remember {
         NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasNotificationPermission =
+                    NotificationManagerCompat.getEnabledListenerPackages(context)
+                        .contains(context.packageName)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
@@ -120,6 +137,7 @@ fun SettingsScreen(navController: NavController) {
             )
         }
     ) { padding ->
+        // LazyColumn already provides scrolling, so no changes made here
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -492,12 +510,18 @@ fun SettingsScreen(navController: NavController) {
                 TextButton(onClick = {
                     val action = showRevokeDialog!!.first
                     showRevokeDialog = null
-                    context.startActivity(
-                        Intent(action).apply {
+
+                    val intent = Intent(action).apply {
+                        if (action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS) {
                             data = Uri.fromParts("package", context.packageName, null)
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         }
-                    )
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        context.startActivity(Intent(Settings.ACTION_SETTINGS))
+                    }
                 }) {
                     Text(stringResource(R.string.btn_go_to_settings), color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                 }
@@ -785,11 +809,16 @@ fun SheetDetailPoint(icon: ImageVector, color: Color, title: String, desc: Strin
     }
 }
 
-// ─── Bottom Sheets ────────────────────────────────────────────────────────────
+// ─── Bottom Sheets (Added verticalScroll to handle overflow) ──────────────────
 
 @Composable
 fun UsageDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_usage_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_usage_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -806,7 +835,12 @@ fun UsageDetailSheet() {
 
 @Composable
 fun PermissionDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_perm_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_perm_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -821,7 +855,12 @@ fun PermissionDetailSheet() {
 
 @Composable
 fun StorageDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_storage_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_storage_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -838,7 +877,12 @@ fun StorageDetailSheet() {
 
 @Composable
 fun NotificationDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_notif_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_notif_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -855,7 +899,12 @@ fun NotificationDetailSheet() {
 
 @Composable
 fun PrivacyInsightsDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_privacy_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_privacy_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -872,7 +921,12 @@ fun PrivacyInsightsDetailSheet() {
 
 @Composable
 fun BackgroundDetailSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.settings_how_background_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Text(stringResource(R.string.sheet_bg_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(20.dp))
@@ -889,7 +943,12 @@ fun BackgroundDetailSheet() {
 
 @Composable
 fun PrivacyPolicySheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.legal_privacy), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(16.dp))
         SheetDetailPoint(Icons.Default.PhoneAndroid, Color(0xFF6366F1), stringResource(R.string.sheet_policy_point1_title),
@@ -905,7 +964,12 @@ fun PrivacyPolicySheet() {
 
 @Composable
 fun TermsSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.legal_terms), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(16.dp))
         SheetDetailPoint(Icons.Default.CheckCircle, Color(0xFF6366F1), stringResource(R.string.sheet_terms_point1_title),
@@ -921,7 +985,12 @@ fun TermsSheet() {
 
 @Composable
 fun LicensesSheet() {
-    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp)) {
+    val scrollState = rememberScrollState()
+    Column(modifier = Modifier
+        .padding(horizontal = 24.dp)
+        .padding(bottom = 40.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(stringResource(R.string.legal_licenses), fontSize = 20.sp, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -962,8 +1031,8 @@ fun LicensesSheet() {
                     url = "https://www.apache.org/licenses/LICENSE-2.0",
                     styles = TextLinkStyles(
                         style = SpanStyle(
-                            color = MaterialTheme.colorScheme.primary, // Link color
-                            textDecoration = TextDecoration.Underline // Underline for clarity
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
                         )
                     )
                 )

@@ -31,6 +31,13 @@ class UsageStatsHelper @Inject constructor(
      * Maps raw system data into our UsageEntity for the database.
      */
 
+    val blockedPackages = setOf(
+        "com.miui.home",                // MIUI launcher
+        "com.android.systemui",         // System UI
+        "com.google.android.apps.nexuslauncher", // Pixel launcher
+        "com.android.launcher3"         // AOSP launcher
+    )
+
     fun getAppLastUsedTime(packageName: String): Long {
         val now = System.currentTimeMillis()
         val startTime = now - (90L * 24 * 60 * 60 * 1000)
@@ -88,6 +95,8 @@ class UsageStatsHelper @Inject constructor(
 
                     if (time < currentStart) { }
 
+                    if (pkg in blockedPackages) { }
+
                     if (currentPackage != null && currentStart > 0 && time > currentStart && currentStart >= startTime) {
                         val duration = time - currentStart
                         usageMap[currentPackage] = (usageMap[currentPackage] ?: 0L) + duration
@@ -105,7 +114,7 @@ class UsageStatsHelper @Inject constructor(
         }
 
         // 🚩 FINAL SANITY CHECK: Kisi bhi app ko 12:00 AM se zyada time mat do
-        return usageMap.filter { it.value > 1000 }.map { (pkg, duration) ->
+        return usageMap.filter { (pkg, duration) ->duration > 1000 && pkg !in blockedPackages}.map { (pkg, duration) ->
             val finalDuration = Math.min(duration, elapsedSinceMidnight)
             UsageEntity(
                 packageName = pkg,

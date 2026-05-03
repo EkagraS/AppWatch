@@ -319,7 +319,7 @@ class DashboardRepositoryImpl @Inject constructor(
     private suspend fun syncRecentEventsFromOS(entities: List<AppInfoEntity>) {
         val now = System.currentTimeMillis()
         val dayMillis = 24L * 60 * 60 * 1000
-        val sevenDaysAgo = now - (7L * 24 * 60 * 60 * 1000)
+        val sevenDaysAgo = now - dayMillis
         val newEvents = mutableListOf<RecentEventEntity>()
 
         // 1. Heavy Data consumers nikal lo (Map of PackageName to Bytes)

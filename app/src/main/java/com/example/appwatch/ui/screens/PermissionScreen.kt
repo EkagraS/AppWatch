@@ -37,7 +37,7 @@ fun PermissionScreen(
     viewModel: AppDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
+    var showInfoSheet by remember { mutableStateOf(false) }
     // Logic keys (All, High Risk, Sensitive) remains English
     var selectedFilter by remember { mutableStateOf("All") }
 
@@ -83,6 +83,7 @@ fun PermissionScreen(
         }
     ) { padding ->
         val permissions = uiState.permissions
+        // Local counting as per your original code
         val highRiskCount = permissions.count { it.riskTier == RiskTier.HIGH }
         val sensitiveCount = permissions.count { it.riskTier == RiskTier.SENSITIVE }
 
@@ -91,6 +92,9 @@ fun PermissionScreen(
             "Sensitive" -> permissions.filter { it.riskTier == RiskTier.SENSITIVE }
             else -> permissions
         }
+
+        // 🟢 Risk-based sorting: HIGH -> SENSITIVE -> STANDARD
+        val sortedPermissions = filteredPermissions.sortedBy { it.riskTier }
 
         LazyColumn(
             modifier = Modifier
@@ -101,12 +105,26 @@ fun PermissionScreen(
             contentPadding = PaddingValues(vertical = 20.dp)
         ) {
             item {
-                Text(
-                    text = uiState.appInfo?.appName ?: packageName ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextSecondary,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = uiState.appInfo?.appName ?: packageName ?: "",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(onClick = { showInfoSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Classification Info",
+                            tint = Blue600
+                        )
+                    }
+                }
             }
 
             item {
@@ -167,14 +185,14 @@ fun PermissionScreen(
                 }
             }
 
-            if (filteredPermissions.isEmpty() && !uiState.isLoading) {
+            if (sortedPermissions.isEmpty() && !uiState.isLoading) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
                         Text(stringResource(R.string.perm_no_found), color = TextSecondary)
                     }
                 }
             } else {
-                items(filteredPermissions) { perm ->
+                items(sortedPermissions) { perm ->
                     PermissionDetailRow(
                         name = perm.name,
                         tier = perm.riskTier,
@@ -183,6 +201,81 @@ fun PermissionScreen(
                 }
             }
         }
+    }
+    if (showInfoSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showInfoSheet = false },
+            containerColor = SurfaceWhite
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .padding(bottom = 24.dp)
+            ) {
+                Text(
+                    text = "Permission Categories",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 🔴 Highly Sensitive Section
+                val highRiskList = uiState.permissions
+                    .filter { it.riskTier == RiskTier.HIGH }
+                    .map { it.name.replace("android.permission.", "").replace("_", " ") }
+
+                CategoryInfoRow(
+                    title = "Highly Sensitive",
+                    content = if (highRiskList.isNotEmpty()) highRiskList.joinToString(", ") else "None",
+                    color = Red600
+                )
+
+                // 🟠 Sensitive Section (with Location grouping)
+                val sensitiveRaw = uiState.permissions.filter { it.riskTier == RiskTier.SENSITIVE }
+                val hasLocation = sensitiveRaw.any { it.name.contains("LOCATION") }
+
+                val sensitiveList = mutableListOf<String>()
+                if (hasLocation) sensitiveList.add("Location")
+
+                sensitiveList.addAll(
+                    sensitiveRaw
+                        .filter { !it.name.contains("LOCATION") }
+                        .map { it.name.replace("android.permission.", "").replace("_", " ") }
+                )
+
+                CategoryInfoRow(
+                    title = "Sensitive",
+                    content = if (sensitiveList.isNotEmpty()) sensitiveList.joinToString(", ") else "None",
+                    color = Amber600
+                )
+
+                // ⚪ Normal Section
+                CategoryInfoRow(
+                    title = "Normal",
+                    content = "Rest other permissions",
+                    color = Blue600
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryInfoRow(title: String, content: String, color: Color) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(
+            text = "$title:",
+            style = MaterialTheme.typography.labelLarge,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodySmall, // 🟢 Small size as requested
+            color = TextSecondary,
+            lineHeight = 18.sp
+        )
     }
 }
 

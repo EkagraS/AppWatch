@@ -107,7 +107,21 @@ class PackageManagerHelper @Inject constructor(
 
         return packages.mapIndexedNotNull { index, packageInfo ->
             val appInfo = packageInfo.applicationInfo ?: return@mapIndexedNotNull null
-            val permissions = packageInfo.requestedPermissions ?: emptyArray()
+
+            val requestedPermissions = packageInfo.requestedPermissions ?: emptyArray()
+            val flags = packageInfo.requestedPermissionsFlags ?: intArrayOf()
+
+            val grantedPermissions = requestedPermissions.filterIndexed { i, _ ->
+                (flags.getOrNull(i) ?: 0) and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0
+            }
+
+            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+
+            val sensitiveCount = grantedPermissions.count { perm ->
+                val p = perm.uppercase()
+                p.contains("CAMERA") || p.contains("RECORD_AUDIO") ||
+                        p.contains("LOCATION") || p.contains("SMS") || p.contains("CONTACTS")
+            } ?: 0
 
             // Skip auditing ourselves
 //            if (packageInfo.packageName == context.packageName) return@mapNotNull null
@@ -127,15 +141,6 @@ class PackageManagerHelper @Inject constructor(
                 // Fallback to 0 if permission is missing
             }
 
-            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-
-            // Count sensitive permissions
-            val sensitiveCount = packageInfo.requestedPermissions?.count { perm ->
-                val p = perm.uppercase()
-                p.contains("CAMERA") || p.contains("RECORD_AUDIO") ||
-                        p.contains("LOCATION") || p.contains("SMS") || p.contains("CONTACTS")
-            } ?: 0
-
             AppInfoEntity(
                 id=index+1,
                 packageName = packageInfo.packageName,
@@ -144,12 +149,12 @@ class PackageManagerHelper @Inject constructor(
                 sensitivePermissionsCount = sensitiveCount,
                 isSystemApp = isSystem,
                 installedAt = packageInfo.firstInstallTime,
-                hasLocation = permissions.contains("android.permission.ACCESS_FINE_LOCATION"),
-                hasCamera = permissions.contains("android.permission.CAMERA"),
-                hasMic = permissions.contains("android.permission.RECORD_AUDIO"),
-                hasContacts = permissions.contains("android.permission.READ_CONTACTS"),
-                hasPhone = permissions.contains("android.permission.READ_PHONE_STATE"),
-                hasSms = permissions.contains("android.permission.READ_SMS"),
+                hasLocation = grantedPermissions.any { it in locationGroup },
+                hasCamera = grantedPermissions.any { it in cameraGroup },
+                hasMic = grantedPermissions.any { it in micGroup },
+                hasContacts = grantedPermissions.any { it in contactsGroup },
+                hasPhone = grantedPermissions.any { it in phoneGroup },
+                hasSms = grantedPermissions.any { it in smsGroup },
                 totalSizeBytes = totalSize,
                 cacheSizeBytes = cacheSize
             )
@@ -162,9 +167,18 @@ class PackageManagerHelper @Inject constructor(
                 packageName,
                 PackageManager.GET_PERMISSIONS
             )
-            packageInfo.requestedPermissions?.any { permission ->
-                permission.contains(permissionKeyword, ignoreCase = true)
-            } == true
+
+            val requested = packageInfo.requestedPermissions ?: emptyArray()
+            val flags = packageInfo.requestedPermissionsFlags ?: intArrayOf()
+            val targetGroup = getGroupByType(permissionKeyword)
+
+            requested.indices.any { i ->
+                val isGranted =
+                    (flags.getOrNull(i) ?: 0) and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0
+
+                isGranted && requested[i] in targetGroup
+            }
+
         } catch (e: Exception) {
             false
         }
@@ -277,9 +291,50 @@ class PackageManagerHelper @Inject constructor(
             false
         }
     }
+
+    companion object perms{
+        val locationGroup = listOf(
+            "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.ACCESS_COARSE_LOCATION",
+            "android.permission.ACCESS_BACKGROUND_LOCATION"
+        )
+        val smsGroup = listOf(
+            "android.permission.READ_SMS",
+            "android.permission.RECEIVE_SMS",
+            "android.permission.SEND_SMS",
+            "android.permission.RECEIVE_WAP_PUSH",
+            "android.permission.RECEIVE_MMS"
+        )
+        val contactsGroup = listOf(
+            "android.permission.READ_CONTACTS",
+            "android.permission.WRITE_CONTACTS",
+            "android.permission.GET_ACCOUNTS"
+        )
+        val phoneGroup = listOf(
+            "android.permission.READ_PHONE_STATE",
+            "android.permission.CALL_PHONE",
+            "android.permission.READ_CALL_LOG",
+            "android.permission.WRITE_CALL_LOG",
+            "android.permission.ADD_VOICEMAIL",
+            "android.permission.USE_SIP",
+            "android.permission.PROCESS_OUTGOING_CALLS"
+        )
+        val cameraGroup = listOf("android.permission.CAMERA")
+        val micGroup = listOf("android.permission.RECORD_AUDIO")
+
+        fun getGroupByType(type: String): List<String> {
+            val t = type.uppercase()
+            return when {
+                t.contains("LOCATION") -> locationGroup
+                t.contains("SMS") -> smsGroup
+                t.contains("CONTACTS") -> contactsGroup
+                t.contains("CALL_LOG") -> phoneGroup
+                t.contains("CAMERA") -> cameraGroup
+                t.contains("RECORD_AUDIO") || t.contains("MIC") -> micGroup
+                else -> emptyList()
+            }
+        }
+    }
 }
 
-data class PermissionRawData(
-    val name: String,
-    val status: String
-)
+data class PermissionRawData(val name: String, val status: String)

@@ -17,10 +17,10 @@ interface AppNotificationDao {
     @Query("SELECT * FROM app_notification_stats WHERE packageName = :packageName AND date = :date LIMIT 1")
     suspend fun getSpecificStat(packageName: String, date: String): AppNotificationEntity?
 
-    @Query("SELECT * FROM app_notification_stats WHERE date = :todayDate ORDER BY count DESC")
+    @Query("SELECT * FROM app_notification_stats WHERE date = :todayDate ORDER BY postedCount DESC")
     fun getNotificationsByDate(todayDate: String): Flow<List<AppNotificationEntity>>
 
-    @Query("SELECT SUM(count) FROM app_notification_stats WHERE date = :date")
+    @Query("SELECT SUM(postedCount) FROM app_notification_stats WHERE date = :date")
     fun getTotalCountByDate(date: String): Flow<Int?>
 
     // 🔴 UPSERT LOGIC USING TRANSACTION
@@ -31,24 +31,35 @@ interface AppNotificationDao {
         val timestamp = System.currentTimeMillis()
 
         if (existingStat == null) {
-            // Nayi entry
             insertOrUpdate(
                 AppNotificationEntity(
                     packageName = packageName,
                     date = date,
-                    count = 1,
+                    postedCount = 1,
                     lastUpdated = timestamp
                 )
             )
         } else {
-            // Purani entry update (Count + 1)
             insertOrUpdate(
                 existingStat.copy(
-                    count = existingStat.count + 1,
+                    postedCount = existingStat.postedCount + 1,
                     lastUpdated = timestamp
                 )
             )
         }
+    }
+
+    @Transaction
+    suspend fun updateNotificationStats(packageName: String, date: String, type: String) {
+        val existing = getSpecificStat(packageName, date) ?: AppNotificationEntity(packageName = packageName, date = date)
+
+        val updated = when(type) {
+            "POSTED" -> existing.copy(postedCount = existing.postedCount + 1)
+            "OPENED" -> existing.copy(openedCount = existing.openedCount + 1)
+            "DISMISSED" -> existing.copy(dismissedCount = existing.dismissedCount + 1)
+            else -> existing
+        }
+        insertOrUpdate(updated.copy(lastUpdated = System.currentTimeMillis()))
     }
 
     @Query("DELETE FROM app_notification_stats WHERE date < :expiryDate")

@@ -28,6 +28,8 @@ import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.appwatch.data.local.entity.NeedsAttentionEntity
 import com.example.appwatch.ui.theme.*
@@ -201,8 +203,13 @@ fun AuditAppItem(event: NeedsAttentionEntity, auditType: String, onAppClick: () 
 
 @Composable
 fun SpecialPermissionsExplanations() {
+    val scrollState = rememberScrollState() // Scroll state add kiya
     Column(
-        modifier = Modifier.fillMaxWidth().padding(16.dp).padding(bottom = 32.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(scrollState) // Vertical scroll yahan lagaya
     ) {
         Text(
             stringResource(R.string.special_perms_title),

@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -43,10 +44,12 @@ fun AppsWithPermissionScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
+    // Bottom Sheet State
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
     val permissionColor = getPermissionTypeColor(permissionType ?: "")
     val permissionIcon = getPermissionTypeIcon(permissionType ?: "")
-
-    // Get Localized Name
     val friendlyName = stringResource(getPermissionNameRes(permissionType ?: ""))
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -87,75 +90,18 @@ fun AppsWithPermissionScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            // Header info card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = permissionColor.copy(alpha = 0.1f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(permissionColor.copy(alpha = 0.2f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            permissionIcon,
-                            contentDescription = null,
-                            tint = permissionColor,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            friendlyName,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            stringResource(R.string.perm_count_desc, apps.size),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
             when {
                 isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = permissionColor)
                     }
                 }
                 apps.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF10B981),
-                                modifier = Modifier.size(64.dp)
-                            )
+                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF10B981), modifier = Modifier.size(64.dp))
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                stringResource(R.string.perm_empty_state),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Text(stringResource(R.string.perm_empty_state), style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
@@ -164,15 +110,46 @@ fun AppsWithPermissionScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        items(apps, key = { it.id }) { app ->
+                        // 🟢 Header Card shifted inside LazyColumn (Scrollable)
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                colors = CardDefaults.cardColors(containerColor = permissionColor.copy(alpha = 0.1f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(48.dp).background(permissionColor.copy(alpha = 0.2f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(permissionIcon, null, tint = permissionColor, modifier = Modifier.size(26.dp))
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Column {
+                                        Text(friendlyName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Text(
+                                            stringResource(R.string.perm_count_desc, apps.size),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    // 🟢 Right End Info Icon
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    IconButton(onClick = { showBottomSheet = true }) {
+                                        Icon(Icons.Default.Info, contentDescription = "Info", tint = permissionColor)
+                                    }
+                                }
+                            }
+                        }
+
+                        items(apps, key = { it.packageName }) { app ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    navController.navigate("app_detail/${app.packageName}")
-                                },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ),
+                                onClick = { navController.navigate("app_detail/${app.packageName}") },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
                                 Row(
@@ -182,59 +159,24 @@ fun AppsWithPermissionScreen(
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
                                             .data(try { context.packageManager.getApplicationIcon(app.packageName) } catch (e: Exception) { null })
-                                            .crossfade(true)
-                                            .build(),
+                                            .crossfade(true).build(),
                                         contentDescription = app.appName,
-                                        modifier = Modifier
-                                            .size(64.dp)
-                                            .clip(RoundedCornerShape(12.dp)),
+                                        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)),
                                         error = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps),
                                         placeholder = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Apps)
                                     )
-
                                     Spacer(modifier = Modifier.width(14.dp))
-
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            app.appName,
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            app.packageName,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        Text(app.appName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     }
-
-                                    // System badge
                                     if (app.isSystemApp) {
-                                        Surface(
-                                            color = Color(0xFF6366F1).copy(alpha = 0.1f),
-                                            shape = RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.label_system),
-                                                modifier = Modifier.padding(
-                                                    horizontal = 6.dp,
-                                                    vertical = 2.dp
-                                                ),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = Color(0xFF6366F1)
-                                            )
+                                        Surface(color = Color(0xFF6366F1).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                                            Text(stringResource(R.string.label_system), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color(0xFF6366F1))
                                         }
                                     }
-
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(
-                                        Icons.Default.ChevronRight,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -242,7 +184,70 @@ fun AppsWithPermissionScreen(
                 }
             }
         }
+
+        // 🟢 Bottom Sheet for Permission Definitions
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showBottomSheet = false },
+                sheetState = sheetState,
+                containerColor = SurfaceWhite
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp)
+                ) {
+                    Text(friendlyName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.perm_group_info_header),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Specific Permission List
+                    getPermissionGroupDetails(permissionType ?: "").forEach { (name, descRes) ->
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Text(text = "$name ->", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = permissionColor)
+                            Text(text = stringResource(descRes), style = MaterialTheme.typography.bodyMedium, color = TextPrimary, lineHeight = 20.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
+}
+
+// 🟢 Helper to Map Descriptions
+private fun getPermissionGroupDetails(permissionType: String): List<Pair<String, Int>> = when (permissionType) {
+    "LOCATION" -> listOf(
+        "ACCESS_FINE_LOCATION" to R.string.perm_access_fine_location_desc,
+        "ACCESS_COARSE_LOCATION" to R.string.perm_access_coarse_location_desc,
+        "ACCESS_BACKGROUND_LOCATION" to R.string.perm_access_background_location_desc
+    )
+    "SMS" -> listOf(
+        "READ_SMS" to R.string.perm_read_sms_desc,
+        "RECEIVE_SMS" to R.string.perm_receive_sms_desc,
+        "SEND_SMS" to R.string.perm_send_sms_desc,
+        "RECEIVE_WAP_PUSH" to R.string.perm_receive_wap_push_desc,
+        "RECEIVE_MMS" to R.string.perm_receive_mms_desc
+    )
+    "CONTACTS" -> listOf(
+        "READ_CONTACTS" to R.string.perm_read_contacts_desc,
+        "WRITE_CONTACTS" to R.string.perm_write_contacts_desc,
+        "GET_ACCOUNTS" to R.string.perm_get_accounts_desc
+    )
+    "CALL_LOG" -> listOf(
+        "READ_PHONE_STATE" to R.string.perm_read_phone_state_desc,
+        "CALL_PHONE" to R.string.perm_call_phone_desc,
+        "READ_CALL_LOG" to R.string.perm_read_call_log_desc,
+        "WRITE_CALL_LOG" to R.string.perm_write_call_log_desc,
+        "ADD_VOICEMAIL" to R.string.perm_add_voicemail_desc,
+        "USE_SIP" to R.string.perm_use_sip_desc,
+        "PROCESS_OUTGOING_CALLS" to R.string.perm_process_outgoing_calls_desc
+    )
+    "CAMERA" -> listOf("CAMERA" to R.string.perm_camera_desc)
+    "RECORD_AUDIO" -> listOf("RECORD_AUDIO" to R.string.perm_record_audio_desc)
+    else -> emptyList()
 }
 
 private fun getPermissionNameRes(permissionType: String): Int = when (permissionType) {

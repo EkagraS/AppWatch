@@ -34,7 +34,23 @@ class NotificationKeeperService : NotificationListenerService() {
             val packageName = it.packageName
             val notification = it.notification
             val isSummary = (notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
-            if (isSummary) return
+            if (isSummary) {
+                val activeNotifs = activeNotifications
+                val hasChildren = activeNotifs?.any { active ->
+                    active.packageName == packageName &&
+                            active.groupKey == it.groupKey &&
+                            (active.notification.flags and
+                                    android.app.Notification.FLAG_GROUP_SUMMARY) == 0
+                } ?: false
+
+                if (!hasChildren) {
+                    val today = java.time.LocalDate.now().toString()
+                    serviceScope.launch {
+                        repository.incrementNotificationCount(packageName, today)
+                    }
+                }
+                return
+            }
             if (it.isOngoing) return
             if (packageName == "android" || packageName == "com.android.systemui") return
             if (packageName == applicationContext.packageName) return
@@ -48,11 +64,22 @@ class NotificationKeeperService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        android.util.Log.d("AppWatch_Service", "✅ Service Connected! OS ne humein sunna shuru kar diya hai.")
+        android.util.Log.d("AppWatch_Service", "✅ Service Connected! System ne bind kar liya hai.")
     }
+    override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?, reason: Int) {
+        sbn?.let {
+            val pkg = it.packageName
+            val today = java.time.LocalDate.now().toString()
 
-    override fun onListenerDisconnected() {
-        super.onListenerDisconnected()
-        android.util.Log.d("AppWatch_Service", "❌ Service Disconnected!")
+            serviceScope.launch {
+                when (reason) {
+                    REASON_CLICK -> repository.updateNotificationStats(pkg, today, "OPENED")
+
+                    REASON_CANCEL,REASON_CANCEL_ALL -> repository.updateNotificationStats(pkg, today, "DISMISSED")
+
+                    else -> { /* Optional: Track system-killed notifications */ }
+                }
+            }
+        }
     }
 }

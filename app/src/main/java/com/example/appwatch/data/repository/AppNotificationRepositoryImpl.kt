@@ -21,4 +21,8 @@ class AppNotificationRepositoryImpl @Inject constructor(
     override suspend fun cleanOldNotifications(expiryDate: String) {
         notificationDao.deleteOldNotifications(expiryDate)
     }
+
+    override suspend fun updateNotificationStats(packageName: String, date: String, type: String) {
+        notificationDao.updateNotificationStats(packageName, date, type)
+    }
 }

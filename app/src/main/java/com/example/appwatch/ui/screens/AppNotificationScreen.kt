@@ -67,7 +67,7 @@ fun AppNotificationScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
-    val totalNotifications = if (isPermissionGranted) uiState.notificationList.sumOf { it.count } else 0
+    val totalNotifications = if (isPermissionGranted) uiState.notificationList.sumOf { it.postedCount } else 0
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -102,38 +102,52 @@ fun AppNotificationScreen(
                 )
             }
         ) { padding ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp)
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp), // Sab items ko side padding mil jayegi
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                NotificationSummaryCard(totalNotifications)
+                item {
+                    NotificationSummaryCard(totalNotifications)
+                }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = stringResource(R.string.notif_header_breakdown),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.notif_header_breakdown),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
 
                 if (uiState.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Indigo600)
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(0.7f) // Screen ke 70% area mein center dikhega
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Indigo600)
+                        }
                     }
                 } else if (uiState.notificationList.isEmpty()) {
-                    EmptyNotificationsState()
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(uiState.notificationList) { item ->
-                            NotificationAppItem(item)
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxHeight(0.7f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyNotificationsState()
                         }
+                    }
+                } else {
+                    items(uiState.notificationList) { item ->
+                        NotificationAppItem(item)
                     }
                 }
             }
@@ -197,46 +211,92 @@ fun NotificationAppItem(item: AppNotificationEntity) {
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (appIcon != null) {
-                Image(
-                    bitmap = appIcon!!,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-            } else {
-                Icon(
-                    Icons.Default.Android,
-                    contentDescription = null,
-                    modifier = Modifier.size(42.dp),
-                    tint = Indigo300
-                )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // App Icon
+                if (appIcon != null) {
+                    Image(
+                        bitmap = appIcon!!,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Android,
+                        contentDescription = null,
+                        modifier = Modifier.size(42.dp),
+                        tint = Indigo300
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // App Name and Package
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = appName, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1)
+                    Text(
+                        text = item.packageName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        maxLines = 1
+                    )
+                }
+
+                // Total Badge (Far Right)
+                Surface(
+                    color = StatNotifs.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "${item.postedCount}",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = StatNotifs
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            Divider(color = BackgroundLight, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = appName, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1)
-                Text(
-                    text = item.packageName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    maxLines = 1
+            // 🔴 Naya Stats Row: Opened aur Swiped dikhane ke liye
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                StatDetailItem(
+                    label = "Opened",
+                    value = item.openedCount,
+                    color = Indigo600 // Useful action color
+                )
+                StatDetailItem(
+                    label = "Swiped",
+                    value = item.dismissedCount,
+                    color = TextSecondary // Ignored action color
                 )
             }
-
-            Text(
-                text = "${item.count}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = StatNotifs
-            )
         }
+    }
+}
+
+@Composable
+fun StatDetailItem(label: String, value: Int, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "$value",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary
+        )
     }
 }
 

@@ -397,6 +397,32 @@
     <string name="perm_name_sms">SMS</string>
     <string name="perm_name_unknown">Unknown</string>
 
+    <string name="perm_group_info_header">These apps have one or more of the following permissions. To see exactly which ones are being used, open the app\'s detailed view.</string>
+
+    <string name="perm_access_fine_location_desc">Allows the app to access your precise location using GPS and network sources (WiFi/Cell towers).</string>
+    <string name="perm_access_coarse_location_desc">Allows the app to access your approximate location using network sources only.</string>
+    <string name="perm_access_background_location_desc">Allows the app to access your location even when you are not actively using the app.</string>
+
+    <string name="perm_read_sms_desc">Allows the app to read all SMS messages stored on your device.</string>
+    <string name="perm_receive_sms_desc">Allows the app to receive and process incoming SMS messages.</string>
+    <string name="perm_send_sms_desc">Allows the app to send SMS messages from your phone without your manual intervention.</string>
+    <string name="perm_receive_wap_push_desc">Allows the app to monitor or receive WAP push messages sent by your service provider.</string>
+    <string name="perm_receive_mms_desc">Allows the app to receive and process incoming multimedia messages (MMS).</string>
+
+    <string name="perm_read_contacts_desc">Allows the app to read data about your contacts, including phone numbers and email addresses.</string>
+    <string name="perm_write_contacts_desc">Allows the app to modify your existing contacts or create new ones.</string>
+    <string name="perm_get_accounts_desc">Allows the app to see the list of accounts (Google, WhatsApp, etc.) currently logged into your device.</string>
+
+    <string name="perm_read_phone_state_desc">Allows the app to access phone features, including your phone number and current cellular network info.</string>
+    <string name="perm_call_phone_desc">Allows the app to initiate a phone call automatically without going through the Dialer screen.</string>
+    <string name="perm_read_call_log_desc">Allows the app to read your entire phone call history.</string>
+    <string name="perm_write_call_log_desc">Allows the app to modify or delete entries in your phone\'s call history.</string>
+    <string name="perm_add_voicemail_desc">Allows the app to add messages to your system voicemail inbox.</string>
+    <string name="perm_use_sip_desc">Allows the app to make or receive internet-based (VoIP) calls.</string>
+    <string name="perm_process_outgoing_calls_desc">Allows the app to see the number you are dialing and potentially redirect or abort the call.</string>
+
+    <string name="perm_camera_desc">Allows the app to take pictures and record videos using your device\'s camera hardware.</string>
+    <string name="perm_record_audio_desc">Allows the app to access the microphone to record audio or listen to voice input at any time.</string>
 
 
     <!--    Permission Screen  -->

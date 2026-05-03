@@ -78,7 +78,7 @@ class DashboardViewModel @Inject constructor(
                 .catch { e -> _uiState.update { it.copy(error = e.message, isLoadingFromRoom = false) } }
                 .collect { summary ->
                     _uiState.update {
-                        it.copy(summary = summary, isLoadingFromRoom = summary.totalApps == 0)
+                        it.copy(summary = summary, isLoadingFromRoom = false)
                     }
                 }
         }

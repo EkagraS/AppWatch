@@ -34,7 +34,7 @@ import com.example.appwatch.data.local.entity.VitalsEntity
         AppDataUsageEntity::class,
         VitalsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 

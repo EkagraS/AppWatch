@@ -12,6 +12,8 @@ data class AppNotificationEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val packageName: String,
     val date: String,
-    val count: Int,
+    val postedCount: Int = 0,
+    val openedCount: Int = 0,
+    val dismissedCount: Int = 0,
     val lastUpdated: Long = System.currentTimeMillis()
 )

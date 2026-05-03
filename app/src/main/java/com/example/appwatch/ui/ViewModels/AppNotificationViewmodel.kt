@@ -10,10 +10,12 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
-// 🔴 UI State ab isi file mein hai
+// 🔴 UI State with new total fields
 data class TodayActivityState(
     val isLoading: Boolean = false,
     val notificationList: List<AppNotificationEntity> = emptyList(),
+    val totalOpened: Int = 0,
+    val totalDismissed: Int = 0,
     val errorMessage: String? = null
 )
 
@@ -35,7 +37,6 @@ class AppNotificationViewmodel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // DB se live flow collect karenge
             notificationRepo.getNotificationsByDate(todayDate)
                 .catch { e ->
                     _uiState.update {
@@ -43,14 +44,18 @@ class AppNotificationViewmodel @Inject constructor(
                     }
                 }
                 .collect { list ->
+                    val opened = list.sumOf { it.openedCount }
+                    val dismissed = list.sumOf { it.dismissedCount }
+
                     _uiState.update {
-                        it.copy(isLoading = false, notificationList = list)
+                        it.copy(
+                            isLoading = false,
+                            notificationList = list,
+                            totalOpened = opened,
+                            totalDismissed = dismissed
+                        )
                     }
                 }
         }
-    }
-
-    fun refreshStats() {
-        loadTodayStats()
     }
 }

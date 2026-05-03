@@ -41,7 +41,31 @@ class AppDetailViewModel @Inject constructor(
     private val usageDao: UsageDao,
     private val permissionAccessDao: PermissionAccessDao
 ) : ViewModel() {
+    private val highlySensitiveNames = listOf(
+        "ACCESSIBILITY", "NOTIFICATION_ACCESS", "OVERLAY",
+        "DEVICE_ADMIN", "INSTALL_UNKNOWN_APPS", "WRITE_SETTINGS", "VPN_SERVICE"
+    )
 
+    // 🟠 SENSITIVE: Direct Manifest Strings from Companion Object + Extras
+    private val sensitivePermissions = listOf(
+        // Location Group
+        "android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_BACKGROUND_LOCATION",
+        // SMS Group
+        "android.permission.READ_SMS", "android.permission.RECEIVE_SMS", "android.permission.SEND_SMS", "android.permission.RECEIVE_WAP_PUSH",
+        "android.permission.RECEIVE_MMS",
+        // Contacts Group
+        "android.permission.READ_CONTACTS", "android.permission.WRITE_CONTACTS", "android.permission.GET_ACCOUNTS", "android.permission.MANAGE_ACCOUNTS",
+        // Phone Group
+        "android.permission.READ_PHONE_STATE", "android.permission.CALL_PHONE", "android.permission.READ_CALL_LOG", "android.permission.WRITE_CALL_LOG",
+        "android.permission.ADD_VOICEMAIL", "android.permission.USE_SIP", "android.permission.PROCESS_OUTGOING_CALLS", "android.permission.MANAGE_OWN_CALLS",
+        // Core
+        "android.permission.CAMERA", "android.permission.RECORD_AUDIO",
+        // Extras & Media
+        "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.MANAGE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES", "android.permission.READ_MEDIA_VIDEO", "android.permission.READ_MEDIA_AUDIO", "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN","android.permission.BLUETOOTH_SCAN", "android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE",
+        "android.permission.ACTIVITY_RECOGNITION", "android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR", "android.permission.NEARBY_WIFI_DEVICES"
+    )
     // Helper to format the timestamp into "Xh ago" etc.
     private fun formatLastAccess(timestamp: Long): String {
         val diff = System.currentTimeMillis() - timestamp
@@ -59,28 +83,9 @@ class AppDetailViewModel @Inject constructor(
     }
 
     private fun mapToRiskTier(permission: String): RiskTier {
-        val p = permission.uppercase() // Case-insensitive matching ke liye safe side
-        return when {
-            p.contains("ACCESSIBILITY") ||
-                    p.contains("NOTIFICATION_LISTENER") ||
-                    p.contains("SYSTEM_ALERT_WINDOW") ||
-                    p.contains("BIND_DEVICE_ADMIN") ||
-                    p.contains("INSTALL_PACKAGES") ||
-                    p.contains("VPN") ||
-                    p.contains("WRITE_SETTINGS") -> RiskTier.HIGH
-
-            p.contains("LOCATION") ||
-                    p.contains("CAMERA") ||
-                    p.contains("RECORD_AUDIO") ||
-                    p.contains("SMS") ||
-                    p.contains("CONTACTS") ||
-                    p.contains("PHONE") ||
-                    p.contains("CALL_LOG") ||
-                    p.contains("STORAGE") ||
-                    p.contains("BLUETOOTH") ||
-                    p.contains("ACTIVITY_RECOGNITION") ||
-                    p.contains("CALENDAR") -> RiskTier.SENSITIVE
-
+        return when (permission) {
+            in highlySensitiveNames -> RiskTier.HIGH
+            in sensitivePermissions -> RiskTier.SENSITIVE
             else -> RiskTier.STANDARD
         }
     }
@@ -125,21 +130,40 @@ class AppDetailViewModel @Inject constructor(
                     weekTotalMs / 7
                 }
 
-                // Logic: Deterministic Tiering
-                val permissions = packageManagerHelper.getPermissionsForApp(pkg).map { perm ->
-                    val lastAccessEvent = permEvents.find {
-                        it.permissionName.contains(perm.name, ignoreCase = true)
-                    }
 
+                val manifestPerms = packageManagerHelper.getPermissionsForApp(pkg)
+
+                val sensitivePerms = manifestPerms.filter { it.name in sensitivePermissions }.map { perm ->
                     PermissionEvidence(
                         name = perm.name,
-                        riskTier = mapToRiskTier(perm.name),
-                        lastAccess = when {
-                            lastAccessEvent != null -> formatLastAccess(lastAccessEvent.accessTimestamp)
-                            else -> ""
-                        }
+                        riskTier = RiskTier.SENSITIVE,
+                        lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
+                            formatLastAccess(it.accessTimestamp)
+                        } ?: ""
                     )
-                }.sortedBy { it.riskTier } // HIGH sabse upar aayenge
+                }
+
+                val normalPerms = manifestPerms.filter { it.name !in sensitivePermissions }.map { perm ->
+                    PermissionEvidence(
+                        name = perm.name,
+                        riskTier = RiskTier.STANDARD,
+                        lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
+                            formatLastAccess(it.accessTimestamp)
+                        } ?: ""
+                    )
+                }
+
+                // 2. Get Special Settings Permissions (Direct Names)
+                val specialPerms = packageManagerHelper.getSpecialPermissions(pkg).map { specName ->
+                    PermissionEvidence(
+                        name = specName,
+                        riskTier = RiskTier.HIGH,
+                        lastAccess = ""
+                    )
+                }
+
+                // 3. Merge and Count
+                val allPermissions = (normalPerms + sensitivePerms + specialPerms)
 
                 AppDetailUiState(
                     isLoading = false,
@@ -150,7 +174,7 @@ class AppDetailViewModel @Inject constructor(
                     monthlyTotal = usageStatsHelper.formatDuration(monthTotalMs),
                     launchesToday = launchesToday,
                     lastUsed = lastUsed,
-                    permissions = permissions
+                    permissions = allPermissions
                 )
             }.flowOn(Dispatchers.IO)
         }
