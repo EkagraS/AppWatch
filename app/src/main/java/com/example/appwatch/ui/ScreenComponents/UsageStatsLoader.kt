@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appwatch.R
@@ -46,11 +47,14 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
             Text(
                 text = stringResource(R.string.loader_usage_title),
                 color = Color.Black,
-                modifier = Modifier.fillMaxWidth().padding(top=16.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -61,12 +65,32 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(stringResource(R.string.loader_label_today_time), color = TextSecondary, style = MaterialTheme.typography.labelLarge)
-                    Text(stringResource(R.string.loader_val_zero_time), color = TextDisabled, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black)
+                    Text(
+                        text = stringResource(R.string.loader_label_today_time),
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
+                    Text(
+                        text = stringResource(R.string.loader_val_zero_time),
+                        color = TextDisabled,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
                 }
             }
 
-            Text(stringResource(R.string.loader_header_weekly), fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+            Text(
+                text = stringResource(R.string.loader_header_weekly),
+                fontWeight = FontWeight.ExtraBold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Card(
                 modifier = Modifier.fillMaxWidth().height(180.dp),
                 colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -79,17 +103,43 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                         verticalAlignment = Alignment.Bottom
                     ) {
                         repeat(7) {
-                            Box(Modifier.width(22.dp).fillMaxHeight(0.2f).background(SurfaceVariantSoft, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)))
+                            Box(
+                                Modifier
+                                    .width(22.dp)
+                                    .fillMaxHeight(0.2f)
+                                    .background(
+                                        SurfaceVariantSoft,
+                                        RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)
+                                    )
+                            )
                         }
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Lock, null, tint = TextDisabled.copy(alpha = 0.5f), modifier = Modifier.size(32.dp))
-                        Text(stringResource(R.string.loader_status_no_data), color = TextDisabled, style = MaterialTheme.typography.labelSmall)
+                        Icon(
+                            Icons.Default.Lock,
+                            null,
+                            tint = TextDisabled.copy(alpha = 0.5f),
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.loader_status_no_data),
+                            color = TextDisabled,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                 }
             }
 
-            Text(stringResource(R.string.loader_header_day_summary), fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+            Text(
+                text = stringResource(R.string.loader_header_day_summary),
+                fontWeight = FontWeight.ExtraBold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -120,29 +170,44 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
                     modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = Indigo600, modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.Security,
+                        contentDescription = null,
+                        tint = Indigo600,
+                        modifier = Modifier.size(32.dp)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        stringResource(R.string.loader_card_title_locked),
+                        text = stringResource(R.string.loader_card_title_locked),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        stringResource(R.string.loader_card_desc_locked),
+                        text = stringResource(R.string.loader_card_desc_locked),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Button(
                         onClick = { showExplainerDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth().height(35.dp)
+                        modifier = Modifier.fillMaxWidth().height(44.dp) // Height standardized
                     ) {
-                        Text(stringResource(R.string.btn_enable_permission), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(
+                            text = stringResource(R.string.btn_enable_permission),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
+                        )
                     }
                 }
             }
@@ -154,14 +219,29 @@ fun UsageStatsLoader(onGrantPermissionClick: () -> Unit) {
             AlertDialog(
                 onDismissRequest = { showExplainerDialog = false },
                 icon = { Icon(Icons.Default.Security, null, tint = Indigo600) },
-                title = { Text(stringResource(R.string.dialog_privacy_title), fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.dialog_privacy_title),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 text = {
                     Column {
-                        Text(stringResource(R.string.dialog_privacy_usage_access_msg), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = stringResource(R.string.dialog_privacy_usage_access_msg),
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            stringResource(R.string.dialog_privacy_timer_msg),
-                            style = MaterialTheme.typography.bodySmall, color = TextSecondary
+                            text = stringResource(R.string.dialog_privacy_timer_msg),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -205,8 +285,20 @@ fun SummaryPlaceholderCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(icon, null, tint = color.copy(alpha = 0.5f), modifier = Modifier.size(24.dp))
             Spacer(Modifier.height(12.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-            Text(value, fontWeight = FontWeight.Bold, color = TextDisabled)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
+            Text(
+                text = value,
+                fontWeight = FontWeight.Bold,
+                color = TextDisabled,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
         }
     }
 }

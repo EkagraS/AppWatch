@@ -3,6 +3,7 @@ package com.example.appwatch.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,7 +29,6 @@ import coil.request.ImageRequest
 import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.presentation.viewmodel.DashboardViewModel
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -126,7 +127,13 @@ fun NeedsAttentionScreen(
                                 selectedDayFilter = day
                                 viewModel.updateUnusedFilter(day)
                             },
-                            label = { Text(stringResource(R.string.audit_filter_days, day)) },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.audit_filter_days, day),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Indigo100,
                                 selectedLabelColor = Indigo600
@@ -139,6 +146,16 @@ fun NeedsAttentionScreen(
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Indigo500)
+                }
+            } else if (events.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "No items need attention right now.",
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             } else {
                 LazyColumn(
@@ -185,17 +202,26 @@ fun AuditAppItem(event: NeedsAttentionEntity, auditType: String, onAppClick: () 
                 modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp))
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = event.packageName.split(".").last().replaceFirstChar { it.uppercase() },
-                    fontWeight = FontWeight.Bold, color = TextPrimary
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 val detail = when(auditType) {
                     "STALE" -> stringResource(R.string.audit_detail_stale, event.daysUnused ?: 0, event.permissionName ?: "")
                     "SPECIAL" -> event.permissionName ?: stringResource(R.string.audit_detail_special_default)
                     else -> stringResource(R.string.audit_detail_unused, event.daysUnused ?: 0)
                 }
-                Text(text = detail, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
             }
         }
     }
@@ -203,25 +229,27 @@ fun AuditAppItem(event: NeedsAttentionEntity, auditType: String, onAppClick: () 
 
 @Composable
 fun SpecialPermissionsExplanations() {
-    val scrollState = rememberScrollState() // Scroll state add kiya
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
             .padding(bottom = 32.dp)
-            .verticalScroll(scrollState) // Vertical scroll yahan lagaya
+            .verticalScroll(scrollState)
     ) {
         Text(
-            stringResource(R.string.special_perms_title),
+            text = stringResource(R.string.special_perms_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = TextPrimary
+            color = TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            stringResource(R.string.special_perms_intro),
+            text = stringResource(R.string.special_perms_intro),
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary
+            color = TextSecondary,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -237,8 +265,22 @@ fun SpecialPermissionsExplanations() {
 
         perms.forEach { (titleRes, descRes) ->
             Column(modifier = Modifier.padding(vertical = 10.dp)) {
-                Text(stringResource(titleRes), fontWeight = FontWeight.ExtraBold, color = Red600, fontSize = 13.sp)
-                Text(stringResource(descRes), style = MaterialTheme.typography.bodySmall, color = TextPrimary, lineHeight = 18.sp)
+                Text(
+                    text = stringResource(titleRes),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Red600,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
+                Text(
+                    text = stringResource(descRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextPrimary,
+                    lineHeight = 18.sp,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

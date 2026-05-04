@@ -63,7 +63,7 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_about_desc">AppWatch helps you understand what\'s happening on your phone. See which apps use your camera, drain your storage, or sit unused with sensitive permissions. Everything runs on your device and nothing is ever shared.</string>
-    <string name="settings_data_info_desc">AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. If you restart your phone today\'s live data resets but if you reinstall the app, everything stored is lost.</string>
+    <string name="settings_data_info_desc">AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. Live usage stats may reset after a restart due to Android system limits, but your historical reports remain safe.</string>
 
     <string name="settings_header_permissions">Permissions</string>
     <string name="settings_header_how_it_works">How AppWatch Works</string>
@@ -73,15 +73,15 @@
     <string name="settings_perm_usage_title">App Usage Access</string>
     <string name="settings_perm_usage_desc">Needed to show screen time, app launches and weekly activity.</string>
     <string name="settings_perm_storage_title">Media Storage Access</string>
-    <string name="settings_perm_storage_desc">Optional. Lets AppWatch show how much space your Photos, Videos and Music are using.</string>
+    <string name="settings_perm_storage_desc">Allows AppWatch to show how much space on your device is being used.</string>
     <string name="settings_perm_notif_title">Notification Count</string>
-    <string name="settings_perm_notif_desc">Counted using Android\'s usage system. No notification content is ever read.</string>
+    <string name="settings_perm_notif_desc">We use it to count notification sent by each app along with notification swiped/opened. No notification content is ever read.</string>
     <string name="settings_perm_apps_title">Installed Apps Visibility</string>
-    <string name="settings_perm_apps_desc">Granted automatically. Lets AppWatch see all apps on your device.</string>
-    <string name="settings_perm_reading_title">App Permission Reading</string>
-    <string name="settings_perm_reading_desc">Granted automatically. Used to check what permissions each app has.</string>
+    <string name="settings_perm_apps_desc">It allows AppWatch to see all apps on your device and is granted after the install.</string>
+    <string name="settings_perm_reading_title">App Permission</string>
+    <string name="settings_perm_reading_desc">Used to check what permissions each app has and is granted after the install.</string>
     <string name="settings_perm_data_title">Data Usage</string>
-    <string name="settings_perm_data_desc">Reads mobile and Wi-Fi data used by each app. No network traffic is monitored.</string>
+    <string name="settings_perm_data_desc">Allows AppWatch to read mobile and Wi-Fi data consumption by each app.</string>
 
     <string name="settings_how_usage_title">App Usage Tracking</string>
     <string name="settings_how_usage_subtitle">How we measure your screen time and app activity</string>
@@ -119,6 +119,10 @@
     <string name="sheet_usage_point3_desc">If an app hasn\'t been opened in 30, 60 or 90 days, we flag it. These apps often have sensitive permissions.</string>
     <string name="sheet_usage_point4_title">Active and Inactive Sessions</string>
     <string name="sheet_usage_point4_desc">We find your longest continuous screen-on and screen-off periods to show your phone usage patterns throughout the day.</string>
+    <string name="sheet_policy_point5_title">Encrypted Database</string>
+    <string name="sheet_policy_point5_desc">All your local data is encrypted using SQLCipher. This means even if someone gets access to your phone\'s internal files, they can\'t read your AppWatch history.</string>
+    <string name="sheet_policy_point6_title">Identity Protection</string>
+    <string name="sheet_policy_point6_desc">We don\'t collect names, emails, or device IDs. To AppWatch, you are completely anonymous and we have no way to link data to you.</string>
 
     <string name="sheet_perm_subtitle">How we find which apps have sensitive access</string>
     <string name="sheet_perm_point1_title">What Each App Can Access</string>
@@ -127,6 +131,12 @@
     <string name="sheet_perm_point2_desc">Apps with special system access like reading notifications or permission to install other apps or accessibility permissions are highlighted separately as they have more power over your device.</string>
     <string name="sheet_perm_point3_title">New Apps</string>
     <string name="sheet_perm_point3_desc">Any app installed in the last 7 days is listed separately.</string>
+    <string name="sheet_terms_point5_title">Respect the Code</string>
+    <string name="sheet_terms_point5_desc">While the source code is on GitHub for transparency, you agree not to reverse engineer or modify the app for malicious use or to create harmful derivatives.</string>
+    <string name="sheet_terms_point6_title">Age Requirements</string>
+    <string name="sheet_terms_point6_desc">By using this app, you confirm you are at least 13 years old or have reached the minimum age of digital consent in your region.</string>
+    <string name="sheet_terms_point7_title">External Links</string>
+    <string name="sheet_terms_point7_desc">The developer is not responsible for the privacy practices or content of third-party websites linked within the app, such as GitHub.</string>
 
     <string name="sheet_storage_subtitle">How we calculate how much space apps are using</string>
     <string name="sheet_storage_point1_title">Device Storage</string>
@@ -230,13 +240,13 @@
     <string name="recent_empty_title">All Caught Up</string>
     <string name="recent_empty_desc">No recent events to show</string>
 
-    <string name="sheet_title_install">New Installations</string>
-    <string name="sheet_title_update">Recent Updates</string>
-    <string name="sheet_title_sideloaded">Unknown Sources</string>
-    <string name="sheet_title_uninstall">Removed Apps</string>
+    <string name="sheet_title_install">New installations this week</string>
+    <string name="sheet_title_update">Recent updates this week</string>
+    <string name="sheet_title_sideloaded">Unknown sources this week</string>
+    <string name="sheet_title_uninstall">Removed apps this week</string>
     <string name="sheet_title_details">Details</string>
 
-    <string name="desc_sideloaded_warning">These apps were not installed from an official store. They might pose a security risk and monitor your system behavior.</string>
+    <string name="desc_sideloaded_warning">These apps were not installed from an official store.</string>
 
 
 
@@ -359,8 +369,8 @@
 
     <string name="usage_val_apps_used_count">%1$d apps</string>
     <string name="usage_val_apps_caps_count">%1$d Apps</string>
-    <string name="usage_val_unlock_pace_desc">%1$.1f device unlocks</string>
-    <string name="usage_val_unlock_pace_time">per hour usage</string>
+    <string name="usage_val_unlock_pace_desc">%1$d mins usage</string>
+    <string name="usage_val_unlock_pace_time">per device unlock</string>
     <string name="usage_val_none">None</string>
     <string name="usage_val_zero_m">0m</string>
     <string name="btn_view_more_apps">View all %1$d more apps</string>
@@ -516,7 +526,7 @@
     <string name="initial_loader_scanning_cd">Scanning</string>
     <string name="initial_loader_title">Setting up AppWatch</string>
     <string name="initial_loader_subtitle">Scanning your apps.</string>
-    <string name="initial_loader_hint">This only happens once.</string>
+    <string name="initial_loader_hint">It only takes minutes to set up.</string>
     <string name="initial_loader_privacy_badge">PRIVATE &amp; OFFLINE ANALYSIS</string>
 
 

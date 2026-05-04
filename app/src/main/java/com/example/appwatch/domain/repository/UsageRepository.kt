@@ -27,7 +27,7 @@ interface UsageRepository {
 
     fun getHighNoiseApps(limit: Int): Flow<List<UsageEntity>>
 
-    suspend fun getUnlockPace(): Double
+    suspend fun getUnlockPace(): Int
 
     suspend fun getMarathonSession(): Pair<String, Long>?
 }

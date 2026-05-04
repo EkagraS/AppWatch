@@ -3,8 +3,10 @@ package com.example.appwatch.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
@@ -12,15 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.appwatch.R
 import com.example.appwatch.ui.theme.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun DashboardInitialLoader() {
@@ -57,8 +58,8 @@ fun DashboardInitialLoader() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()) // Scroll add kiya
-                .padding(vertical = 80.dp), // Bottom badge ke liye space chhodi
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -92,7 +93,10 @@ fun DashboardInitialLoader() {
                 text = stringResource(R.string.initial_loader_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
-                color = TextPrimary
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -100,7 +104,10 @@ fun DashboardInitialLoader() {
             Text(
                 text = stringResource(R.string.initial_loader_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary
+                color = TextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -108,7 +115,10 @@ fun DashboardInitialLoader() {
             Text(
                 text = stringResource(R.string.initial_loader_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextDisabled
+                color = TextDisabled,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -120,29 +130,32 @@ fun DashboardInitialLoader() {
                 trackColor = Indigo100
             )
         }
+    }
+}
 
-        // Bottom privacy badge
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-                .background(SurfaceVariantSoft, RoundedCornerShape(50.dp))
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+@Composable
+fun DashboardLoader() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundLight), // Tera default background color
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                Icons.Default.Shield,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = TextSecondary
+            CircularProgressIndicator(
+                color = Indigo600,
+                strokeWidth = 4.dp,
+                modifier = Modifier.size(48.dp)
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = stringResource(R.string.initial_loader_privacy_badge),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextSecondary,
-                letterSpacing = 0.5.sp
+                text = "Loading",
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

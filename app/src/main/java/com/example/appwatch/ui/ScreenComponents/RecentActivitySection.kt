@@ -1,6 +1,7 @@
 package com.example.appwatch.ui.ScreenComponents
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,18 +14,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appwatch.R
+import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.domain.model.RecentItem
-import com.example.appwatch.ui.theme.* @OptIn(ExperimentalMaterial3Api::class)
+import com.example.appwatch.presentation.viewmodel.DashboardViewModel
+import com.example.appwatch.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentActivitySection(
     recentItems: List<RecentItem>,
     isUpdating: Boolean,
+    viewModel: DashboardViewModel,
     onNavigateToEventScreen: (String) -> Unit
 ) {
     var selectedItem by remember { mutableStateOf<RecentItem?>(null) }
@@ -40,7 +54,10 @@ fun RecentActivitySection(
                 text = stringResource(R.string.recent_header),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
             if (isUpdating) {
                 CircularProgressIndicator(
@@ -65,7 +82,7 @@ fun RecentActivitySection(
                         item = item,
                         isUpdating = isUpdating,
                         onClick = {
-                            val count = item.description.filter { it.isDigit() }.toIntOrNull() ?: 1
+                            val count = item.description.filter { it.isDigit() }.toIntOrNull() ?: 0
                             if (count > 5) {
                                 onNavigateToEventScreen(item.eventType)
                             } else {
@@ -81,9 +98,13 @@ fun RecentActivitySection(
             ModalBottomSheet(
                 onDismissRequest = { selectedItem = null },
                 sheetState = sheetState,
-                containerColor = SurfaceWhite
+                containerColor = SurfaceWhite,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
-                BottomSheetContent(item = selectedItem!!)
+                BottomSheetContent(
+                    item = selectedItem!!,
+                    viewModel = viewModel
+                )
             }
         }
     }
@@ -135,12 +156,16 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (item.eventType == "SIDELOADED_APK") Red600 else TextPrimary
+                    color = if (item.eventType == "SIDELOADED_APK") Red600 else TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
                 )
             }
 
@@ -157,7 +182,9 @@ private fun ActivityRowCard(item: RecentItem, isUpdating: Boolean, onClick: () -
 }
 
 @Composable
-private fun BottomSheetContent(item: RecentItem) {
+private fun BottomSheetContent(item: RecentItem, viewModel: DashboardViewModel) {
+    val eventList by viewModel.getEventsByType(item.eventType).collectAsState(initial = emptyList())
+
     val (sheetTitleRes, titleColor) = when(item.eventType) {
         "INSTALL" -> R.string.sheet_title_install to TextPrimary
         "UPDATE" -> R.string.sheet_title_update to TextPrimary
@@ -166,33 +193,93 @@ private fun BottomSheetContent(item: RecentItem) {
         else -> R.string.sheet_title_details to TextPrimary
     }
 
-    val descriptionText = if (item.eventType == "SIDELOADED_APK") {
-        stringResource(R.string.desc_sideloaded_warning)
-    } else {
-        item.description
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, bottom = 40.dp, top = 8.dp)
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 40.dp, top = 8.dp)
     ) {
         Text(
             text = stringResource(sheetTitleRes),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = titleColor,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
-        Text(
-            text = descriptionText,
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextSecondary,
-            lineHeight = 24.sp
-        )
+        if (item.eventType == "SIDELOADED_APK") {
+            Text(
+                text = stringResource(R.string.desc_sideloaded_warning),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Red600,
+                modifier = Modifier.padding(bottom = 16.dp),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            eventList.forEach { event ->
+                MiniEventItem(event = event)
+            }
+        }
+    }
+}
+
+@Composable
+fun MiniEventItem(event: RecentEventEntity) {
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+    var appName by remember(event.packageName) { mutableStateOf(event.packageName) }
+    var appIconBitmap by remember(event.packageName) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+
+    LaunchedEffect(event.packageName) {
+        withContext(Dispatchers.IO) {
+            try {
+                val appInfo = packageManager.getApplicationInfo(event.packageName, 0)
+                appName = packageManager.getApplicationLabel(appInfo).toString()
+                appIconBitmap = packageManager.getApplicationIcon(appInfo).toBitmap().asImageBitmap()
+            } catch (e: Exception) { /* Fallback handled */ }
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (appIconBitmap != null) {
+            Image(
+                bitmap = appIconBitmap!!,
+                contentDescription = null,
+                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp))
+            )
+        } else {
+            Icon(Icons.Default.Android, null, tint = Indigo500, modifier = Modifier.size(36.dp))
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = appName,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = event.extraInfo ?: event.packageName,
+                fontSize = 11.sp,
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
+        }
     }
 }
 
@@ -216,12 +303,17 @@ private fun EmptyActivityState() {
             text = stringResource(R.string.recent_empty_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = TextPrimary
+            color = TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = stringResource(R.string.recent_empty_desc),
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary
+            color = TextSecondary,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

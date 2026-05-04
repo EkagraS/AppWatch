@@ -21,6 +21,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
@@ -43,7 +44,6 @@ fun RecentEventScreen(
 ) {
     val eventList by viewModel.getEventsByType(eventType).collectAsState(initial = emptyList())
 
-    // Balanced & Understandable Titles mapping to Resources
     val screenTitleRes = when (eventType) {
         "INSTALL" -> R.string.title_recent_install
         "UPDATE" -> R.string.title_recent_update
@@ -67,7 +67,9 @@ fun RecentEventScreen(
                         text = stringResource(screenTitleRes),
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -93,7 +95,12 @@ fun RecentEventScreen(
 
         if (eventList.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.recent_no_activity), color = TextSecondary)
+                Text(
+                    text = stringResource(R.string.recent_no_activity),
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         } else {
             LazyColumn(
@@ -172,13 +179,17 @@ fun EventListItemCard(event: RecentEventEntity, onAppClick: () -> Unit) {
                     text = appName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
                     text = if (!event.extraInfo.isNullOrEmpty()) event.extraInfo else event.packageName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip // Package name aur metadata cut jaye par dots na dikhe (Clip)
                 )
             }
 

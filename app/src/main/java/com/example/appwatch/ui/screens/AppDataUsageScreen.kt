@@ -14,6 +14,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,7 +51,13 @@ fun AppDataUsageScreen(
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.data_usage_title)) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.data_usage_title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -76,8 +83,11 @@ fun AppDataUsageScreen(
             } else if (filteredList.isEmpty()) {
                 Text(
                     text = stringResource(R.string.data_usage_empty_state),
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyLarge
+                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 32.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             } else {
                 LazyColumn(
@@ -128,13 +138,15 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                     text = appName,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis // Name bada ho toh dots dikhayega
                 )
                 Text(
                     text = usage.packageName,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip // Package name bada ho toh dots nahi dikhayega, bas cut jayega
                 )
             }
 
@@ -144,7 +156,9 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                         text = stringResource(R.string.label_mobile, formatBytes(usage.mobileUsageBytes)),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFFE91E63),
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
                 if (usage.wifiUsageBytes > 0) {
@@ -152,7 +166,9 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                         text = stringResource(R.string.label_wifi, formatBytes(usage.wifiUsageBytes)),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF2196F3),
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
 
@@ -166,7 +182,9 @@ fun DataUsageItem(usage: AppDataUsageEntity, context: android.content.Context) {
                     text = formatBytes(usage.mobileUsageBytes + usage.wifiUsageBytes),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
                 )
             }
         }

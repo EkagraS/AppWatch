@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,7 +40,6 @@ fun PermissionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showInfoSheet by remember { mutableStateOf(false) }
-    // Logic keys (All, High Risk, Sensitive) remains English
     var selectedFilter by remember { mutableStateOf("All") }
 
     LaunchedEffect(packageName) {
@@ -57,7 +58,15 @@ fun PermissionScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(text = stringResource(R.string.perm_screen_all_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.perm_screen_all_title),
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
@@ -83,7 +92,6 @@ fun PermissionScreen(
         }
     ) { padding ->
         val permissions = uiState.permissions
-        // Local counting as per your original code
         val highRiskCount = permissions.count { it.riskTier == RiskTier.HIGH }
         val sensitiveCount = permissions.count { it.riskTier == RiskTier.SENSITIVE }
 
@@ -93,7 +101,6 @@ fun PermissionScreen(
             else -> permissions
         }
 
-        // 🟢 Risk-based sorting: HIGH -> SENSITIVE -> STANDARD
         val sortedPermissions = filteredPermissions.sortedBy { it.riskTier }
 
         LazyColumn(
@@ -114,7 +121,9 @@ fun PermissionScreen(
                         style = MaterialTheme.typography.titleLarge,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     IconButton(onClick = { showInfoSheet = true }) {
@@ -168,7 +177,13 @@ fun PermissionScreen(
                         FilterChip(
                             selected = selectedFilter == filterKey,
                             onClick = { selectedFilter = filterKey },
-                            label = { Text(label) },
+                            label = {
+                                Text(
+                                    text = label,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Blue600.copy(alpha = 0.1f),
                                 selectedLabelColor = Blue600,
@@ -188,7 +203,13 @@ fun PermissionScreen(
             if (sortedPermissions.isEmpty() && !uiState.isLoading) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.perm_no_found), color = TextSecondary)
+                        Text(
+                            text = stringResource(R.string.perm_no_found),
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             } else {
@@ -202,6 +223,7 @@ fun PermissionScreen(
             }
         }
     }
+
     if (showInfoSheet) {
         ModalBottomSheet(
             onDismissRequest = { showInfoSheet = false },
@@ -216,11 +238,12 @@ fun PermissionScreen(
                 Text(
                     text = "Permission Categories",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 🔴 Highly Sensitive Section
                 val highRiskList = uiState.permissions
                     .filter { it.riskTier == RiskTier.HIGH }
                     .map { it.name.replace("android.permission.", "").replace("_", " ") }
@@ -231,7 +254,6 @@ fun PermissionScreen(
                     color = Red600
                 )
 
-                // 🟠 Sensitive Section (with Location grouping)
                 val sensitiveRaw = uiState.permissions.filter { it.riskTier == RiskTier.SENSITIVE }
                 val hasLocation = sensitiveRaw.any { it.name.contains("LOCATION") }
 
@@ -250,7 +272,6 @@ fun PermissionScreen(
                     color = Amber600
                 )
 
-                // ⚪ Normal Section
                 CategoryInfoRow(
                     title = "Normal",
                     content = "Rest other permissions",
@@ -268,13 +289,17 @@ fun CategoryInfoRow(title: String, content: String, color: Color) {
             text = "$title:",
             style = MaterialTheme.typography.labelLarge,
             color = color,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
         )
         Text(
             text = content,
-            style = MaterialTheme.typography.bodySmall, // 🟢 Small size as requested
+            style = MaterialTheme.typography.bodySmall,
             color = TextSecondary,
-            lineHeight = 18.sp
+            lineHeight = 18.sp,
+            maxLines = 5,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -292,16 +317,20 @@ fun SummaryChip(label: String, value: String, color: Color, bgColor: Color, modi
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                value,
+                text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
-                color = color
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
             )
             Text(
-                label,
+                text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = color.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
             )
         }
     }
@@ -353,13 +382,17 @@ fun PermissionDetailRow(name: String, tier: RiskTier, lastAccess: String) {
                     text = name.replace("android.permission.", "").replace("_", " ").replace("com.",""),
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (lastAccess.isNotBlank()) {
                     Text(
                         text = lastAccess,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Blue600
+                        color = Blue600,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }
@@ -374,7 +407,9 @@ fun PermissionDetailRow(name: String, tier: RiskTier, lastAccess: String) {
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = iconColor,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }

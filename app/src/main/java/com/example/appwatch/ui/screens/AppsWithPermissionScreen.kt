@@ -20,6 +20,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +45,6 @@ fun AppsWithPermissionScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
-    // Bottom Sheet State
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -64,7 +64,9 @@ fun AppsWithPermissionScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.perm_screen_title, friendlyName),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -98,10 +100,16 @@ fun AppsWithPermissionScreen(
                 }
                 apps.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                             Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF10B981), modifier = Modifier.size(64.dp))
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(stringResource(R.string.perm_empty_state), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                text = stringResource(R.string.perm_empty_state),
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
@@ -110,7 +118,6 @@ fun AppsWithPermissionScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        // 🟢 Header Card shifted inside LazyColumn (Scrollable)
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -127,17 +134,23 @@ fun AppsWithPermissionScreen(
                                         Icon(permissionIcon, null, tint = permissionColor, modifier = Modifier.size(26.dp))
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
-                                    Column {
-                                        Text(friendlyName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            stringResource(R.string.perm_count_desc, apps.size),
+                                            text = friendlyName,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.perm_count_desc, apps.size),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Clip
                                         )
                                     }
 
-                                    // 🟢 Right End Info Icon
-                                    Spacer(modifier = Modifier.weight(1f))
                                     IconButton(onClick = { showBottomSheet = true }) {
                                         Icon(Icons.Default.Info, contentDescription = "Info", tint = permissionColor)
                                     }
@@ -167,12 +180,31 @@ fun AppsWithPermissionScreen(
                                     )
                                     Spacer(modifier = Modifier.width(14.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(app.appName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            text = app.appName,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = app.packageName,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Clip
+                                        )
                                     }
                                     if (app.isSystemApp) {
                                         Surface(color = Color(0xFF6366F1).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
-                                            Text(stringResource(R.string.label_system), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color(0xFF6366F1))
+                                            Text(
+                                                text = stringResource(R.string.label_system),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFF6366F1),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Clip
+                                            )
                                         }
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -185,7 +217,6 @@ fun AppsWithPermissionScreen(
             }
         }
 
-        // 🟢 Bottom Sheet for Permission Definitions
         if (showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
@@ -195,20 +226,41 @@ fun AppsWithPermissionScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp)
                 ) {
-                    Text(friendlyName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        text = friendlyName,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = stringResource(R.string.perm_group_info_header),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Specific Permission List
                     getPermissionGroupDetails(permissionType ?: "").forEach { (name, descRes) ->
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                            Text(text = "$name ->", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = permissionColor)
-                            Text(text = stringResource(descRes), style = MaterialTheme.typography.bodyMedium, color = TextPrimary, lineHeight = 20.sp)
+                            Text(
+                                text = "$name ->",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = permissionColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
+                            Text(
+                                text = stringResource(descRes),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextPrimary,
+                                lineHeight = 20.sp,
+                                maxLines = 10, // Descriptions ko poora dikhna zaroori hai, par safe limit 10 lines ki hai
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

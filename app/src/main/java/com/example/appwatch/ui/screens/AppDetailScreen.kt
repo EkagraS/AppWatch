@@ -70,7 +70,15 @@ fun AppDetailScreen(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.detail_title_analysis), fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.detail_title_analysis),
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
@@ -157,9 +165,11 @@ fun AppDetailScreen(
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
                                 Text(
-                                    stringResource(R.string.detail_more_perms, uiState.permissions.size - 3),
+                                    text = stringResource(R.string.detail_more_perms, uiState.permissions.size - 3),
                                     color = Blue600,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
                                 )
                             }
                         }
@@ -230,7 +240,13 @@ fun PermissionItemRow(name: String, tier: RiskTier, lastAccess: String) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(text = lastAccess, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text(
+                    text = lastAccess,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
             }
 
             if (tier != RiskTier.STANDARD) {
@@ -243,7 +259,9 @@ fun PermissionItemRow(name: String, tier: RiskTier, lastAccess: String) {
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = iconColor,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }
@@ -262,7 +280,13 @@ fun SafeStateBanner() {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.CheckCircle, null, tint = Green600, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.detail_safe_banner), color = Green600, fontWeight = FontWeight.Medium)
+            Text(
+                text = stringResource(R.string.detail_safe_banner),
+                color = Green600,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -294,16 +318,43 @@ fun AppDetailHeader(appName: String, packageName: String, status: String, accent
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 28.sp
                 )
-                Text(text = packageName, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(
+                    text = packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(color = accentColor.copy(alpha = 0.1f), shape = CircleShape) {
-                    Text(text = status, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = accentColor, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = status,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accentColor,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
                 }
             }
             if (totalStorageBytes > 0L) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(formatDetailedByteSize(totalStorageBytes), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = accentColor)
-                    Text(stringResource(R.string.detail_label_storage), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = formatDetailedByteSize(totalStorageBytes),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
+                    Text(
+                        text = stringResource(R.string.detail_label_storage),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
                 }
             }
         }
@@ -317,8 +368,21 @@ fun DetailMetricCard(label: String, value: String, icon: ImageVector, color: Col
             Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
             }
         }
     }
@@ -330,8 +394,21 @@ fun BehaviorStatCard(title: String, value: String, icon: ImageVector, color: Col
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.height(12.dp))
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(title, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
         }
     }
 }

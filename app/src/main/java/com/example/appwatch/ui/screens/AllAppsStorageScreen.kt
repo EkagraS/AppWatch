@@ -25,6 +25,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,12 +61,20 @@ fun AllAppsStorageScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Column {
-                        Text(stringResource(R.string.storage_all_apps_title), fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            stringResource(R.string.storage_apps_count_template, apps.size),
+                            text = stringResource(R.string.storage_all_apps_title),
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = stringResource(R.string.storage_apps_count_template, apps.size),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
                         )
                     }
                 },
@@ -90,7 +99,12 @@ fun AllAppsStorageScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = StoragePrimary)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(stringResource(R.string.storage_analyzing), color = TextSecondary)
+                    Text(
+                        text = stringResource(R.string.storage_analyzing),
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         } else {
@@ -113,8 +127,21 @@ fun AllAppsStorageScreen(
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.PieChart, null, tint = StoragePrimary, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
-                            Text(stringResource(R.string.storage_total_header), style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f))
-                            Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Black, color = StoragePrimary)
+                            Text(
+                                text = stringResource(R.string.storage_total_header),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextPrimary,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = formatStorageSize(uiState.totalUserAppsBytes),
+                                fontWeight = FontWeight.Black,
+                                color = StoragePrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
                         }
                     }
                 }
@@ -176,11 +203,30 @@ fun ExpandableAppStorageCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(app.appName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, maxLines = 1)
-                    Text(app.packageName, style = MaterialTheme.typography.labelSmall, color = TextSecondary, maxLines = 1)
+                    Text(
+                        text = app.appName,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = app.packageName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
                 }
 
-                Text(formatStorageSize(app.totalSizeBytes), fontWeight = FontWeight.Bold, color = accentColor)
+                Text(
+                    text = formatStorageSize(app.totalSizeBytes),
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
 
                 IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
                     Icon(
@@ -221,8 +267,21 @@ fun ExpandableAppStorageCard(
 
 @Composable
 fun StorageBreakdownItem(label: String, bytes: Long, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(formatStorageSize(bytes), fontWeight = FontWeight.Black, fontSize = 13.sp, color = color)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(IntrinsicSize.Min)) {
+        Text(
+            text = formatStorageSize(bytes),
+            fontWeight = FontWeight.Black,
+            fontSize = 13.sp,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
+        )
     }
 }

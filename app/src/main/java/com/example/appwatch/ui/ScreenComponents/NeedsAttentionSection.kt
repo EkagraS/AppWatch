@@ -42,7 +42,11 @@ fun NeedsAttentionSection(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             if (isUpdating && attentionItems.isNotEmpty()) {
@@ -56,7 +60,9 @@ fun NeedsAttentionSection(
 
         if (attentionItems.isEmpty()) {
             Surface(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 shape = RoundedCornerShape(16.dp),
                 color = Green50,
                 border = BorderStroke(1.dp, Green100)
@@ -66,7 +72,9 @@ fun NeedsAttentionSection(
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Green600,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         } else {
@@ -103,14 +111,23 @@ private fun AttentionCard(item: ActivityItem, isUpdating: Boolean, onClick: () -
         border = BorderStroke(1.dp, DividerColor)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(40.dp).background(bgColor, CircleShape),
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(bgColor, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -121,17 +138,25 @@ private fun AttentionCard(item: ActivityItem, isUpdating: Boolean, onClick: () -
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextDisabled, modifier = Modifier.size(20.dp))
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = TextDisabled,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

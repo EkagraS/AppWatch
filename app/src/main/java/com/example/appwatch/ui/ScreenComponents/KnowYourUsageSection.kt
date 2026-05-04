@@ -29,7 +29,6 @@ import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
 import com.example.appwatch.ui.screens.AppIconSmall
 import com.example.appwatch.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
     val activeRange by viewModel.todayActiveStreak.collectAsStateWithLifecycle()
@@ -37,29 +36,66 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
     val highNoiseApps by viewModel.highNoiseApps.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(stringResource(R.string.usage_summary_today), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Spacer(Modifier.height(18.dp))
+        Text(
+            text = "Today's Summary",
+            fontWeight = FontWeight.ExtraBold,
+            color = TextPrimary,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(bottom = 16.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
+        // First Row: Active & Inactive
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StreakCard(
+            SummaryItemCard(
                 title = stringResource(R.string.usage_streak_active),
-                range = activeRange,
-                color = Orange600,
-                icon = Icons.Default.Timer,
+                value = activeRange,
+                color = Color(0xFFFFA000),
+                icon = Icons.Default.Smartphone,
                 modifier = Modifier.weight(1f)
             )
-            StreakCard(
+            SummaryItemCard(
                 title = stringResource(R.string.usage_streak_inactive),
-                range = inactiveRange,
+                value = inactiveRange,
                 color = Green600,
                 icon = Icons.Default.PauseCircle,
                 modifier = Modifier.weight(1f)
             )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text(stringResource(R.string.usage_noise_header), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        // Second Row: Unlock Pace & Marathon
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            SummaryItemCard(
+                title = stringResource(R.string.usage_label_unlock_pace),
+                value = stringResource(R.string.usage_val_unlock_pace_desc, viewModel.unlockPace),
+                subText = stringResource(R.string.usage_val_unlock_pace_time),
+                color = StatUnlocks,
+                icon = Icons.Default.LockOpen,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryItemCard(
+                title = stringResource(R.string.usage_label_marathon),
+                value = viewModel.marathonAppName,
+                subText = viewModel.marathonTime,
+                color = StatData,
+                icon = Icons.Default.Timer,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Noise Analysis Section
+        Text(
+            text = stringResource(R.string.usage_noise_header),
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
         Spacer(Modifier.height(16.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -70,10 +106,12 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 if (highNoiseApps.isEmpty()) {
                     Text(
-                        stringResource(R.string.usage_noise_empty),
+                        text = stringResource(R.string.usage_noise_empty),
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 } else {
                     highNoiseApps.forEach { app ->
@@ -82,16 +120,25 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(app.appName, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             Text(
-                                stringResource(
+                                text = app.appName,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = stringResource(
                                     R.string.usage_noise_template,
                                     app.notificationCount,
                                     app.appUnlocks
                                 ),
                                 fontSize = 13.sp,
                                 color = Red600,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
                             )
                         }
                     }
@@ -105,18 +152,49 @@ fun KnowYourUsageSection(viewModel: UsageStatsViewModel) {
 }
 
 @Composable
-fun StreakCard(title: String, range: String, color: Color, icon: ImageVector, modifier: Modifier) {
+fun SummaryItemCard(
+    title: String,
+    value: String,
+    subText: String? = null,
+    color: Color,
+    icon: ImageVector,
+    modifier: Modifier
+) {
     Surface(
-        modifier = modifier.height(110.dp),
+        modifier = modifier.height(120.dp),
         shape = RoundedCornerShape(16.dp),
         color = color.copy(alpha = 0.08f),
         border = BorderStroke(1.dp, color.copy(alpha = 0.15f))
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.Center) {
-            Icon(icon, null, tint = color, modifier = Modifier.size(28.dp))
+            Icon(icon, null, tint = color, modifier = Modifier.size(26.dp))
             Spacer(Modifier.height(8.dp))
-            Text(title, fontSize = 12.sp, color = Color.Gray)
-            Text(range, fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color.Black)
+            Text(
+                text = title,
+                fontSize = 11.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
+            Text(
+                text = value,
+                fontWeight = FontWeight.Black,
+                fontSize = 15.sp,
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subText != null) {
+                Text(
+                    text = subText,
+                    fontSize = 12.sp,
+                    color = color,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
+            }
         }
     }
 }
@@ -127,7 +205,14 @@ fun PremiumInsightsSection(viewModel: UsageStatsViewModel) {
     val monthlyTop by viewModel.top3AppsMonthly.collectAsStateWithLifecycle()
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(stringResource(R.string.usage_insights_header), fontWeight = FontWeight.ExtraBold, color = TextPrimary, fontSize = 18.sp)
+        Text(
+            text = stringResource(R.string.usage_insights_header),
+            fontWeight = FontWeight.ExtraBold,
+            color = TextPrimary,
+            fontSize = 18.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         InsightModernCard(
             title = stringResource(R.string.usage_insight_weekly),
@@ -168,7 +253,15 @@ fun InsightModernCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(title, fontWeight = FontWeight.Bold, color = accentColor, fontSize = 14.sp)
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = stringResource(R.string.cd_expand),
@@ -181,7 +274,13 @@ fun InsightModernCard(
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
                     if (apps.isEmpty()) {
-                        Text(stringResource(R.string.usage_no_data), color = TextSecondary, fontSize = 12.sp)
+                        Text(
+                            text = stringResource(R.string.usage_no_data),
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     } else {
                         apps.forEach { app ->
                             Row(
@@ -198,7 +297,13 @@ fun InsightModernCard(
                                     overflow = TextOverflow.Ellipsis,
                                     color = TextPrimary
                                 )
-                                Text(app.usageTimeString, fontWeight = FontWeight.Bold, color = accentColor)
+                                Text(
+                                    text = app.usageTimeString,
+                                    fontWeight = FontWeight.Bold,
+                                    color = accentColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
                             }
                         }
                     }

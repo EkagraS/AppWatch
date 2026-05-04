@@ -28,6 +28,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,7 +78,15 @@ fun StorageDetailScreen(
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.storage_analysis_title), fontWeight = FontWeight.Bold, color = TextPrimary) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.storage_analysis_title),
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = TextPrimary)
@@ -125,7 +134,13 @@ fun StorageDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Indigo600)
-                            Text(stringResource(R.string.storage_updating_msg), style = MaterialTheme.typography.bodySmall, color = Indigo600)
+                            Text(
+                                text = stringResource(R.string.storage_updating_msg),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Indigo600,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
                         }
                     }
                 }
@@ -140,7 +155,14 @@ fun StorageDetailScreen(
             }
 
             item {
-                Text(stringResource(R.string.storage_apps_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(
+                    text = stringResource(R.string.storage_apps_header),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -155,10 +177,29 @@ fun StorageDetailScreen(
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.storage_apps_downloaded), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-                                Text(stringResource(R.string.storage_apps_count_template, uiState.userApps.size), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(
+                                    text = stringResource(R.string.storage_apps_downloaded),
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = TextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.storage_apps_count_template, uiState.userApps.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
                             }
-                            Text(formatStorageSize(uiState.totalUserAppsBytes), fontWeight = FontWeight.Bold, color = Indigo600)
+                            Text(
+                                text = formatStorageSize(uiState.totalUserAppsBytes),
+                                fontWeight = FontWeight.Bold,
+                                color = Indigo600,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
                             Icon(Icons.Default.ChevronRight, null, tint = TextSecondary)
                         }
                     }
@@ -173,17 +214,43 @@ fun StorageDetailScreen(
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.storage_apps_system), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
-                                Text(stringResource(R.string.storage_apps_count_template, uiState.systemApps.size), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                Text(
+                                    text = stringResource(R.string.storage_apps_system),
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = TextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.storage_apps_count_template, uiState.systemApps.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
                             }
-                            Text(formatStorageSize(uiState.totalSystemAppsBytes), fontWeight = FontWeight.Bold, color = Purple600)
+                            Text(
+                                text = formatStorageSize(uiState.totalSystemAppsBytes),
+                                fontWeight = FontWeight.Bold,
+                                color = Purple600,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
                         }
                     }
                 }
             }
 
             item {
-                Text(stringResource(R.string.storage_largest_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(
+                    text = stringResource(R.string.storage_largest_header),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             val top3 = uiState.userApps.take(3)
@@ -210,7 +277,12 @@ fun StorageDetailScreen(
                                 onClick = { navController.navigate("all_apps_storage") },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text(stringResource(R.string.storage_more_apps_template, uiState.userApps.size - 3), color = Indigo600)
+                                Text(
+                                    text = stringResource(R.string.storage_more_apps_template, uiState.userApps.size - 3),
+                                    color = Indigo600,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Clip
+                                )
                             }
                         }
                     }
@@ -218,7 +290,14 @@ fun StorageDetailScreen(
             }
 
             item {
-                Text(stringResource(R.string.storage_media_header), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(
+                    text = stringResource(R.string.storage_media_header),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             item {
                 MediaStorageSection(
@@ -261,8 +340,23 @@ fun TopAppStorageRow(
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(app.appName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, modifier = Modifier.weight(1f), maxLines = 1)
-                Text(formatStorageSize(app.totalSizeBytes), fontWeight = FontWeight.Bold, color = Indigo600, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = app.appName,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = formatStorageSize(app.totalSizeBytes),
+                    fontWeight = FontWeight.Bold,
+                    color = Indigo600,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
             }
             LinearProgressIndicator(
                 progress = { animatedFraction },
@@ -275,7 +369,10 @@ fun TopAppStorageRow(
 }
 
 @Composable
-fun MediaStorageSection(mediaStorage: com.example.appwatch.presentation.viewmodel.MediaStorageInfo, onEnablePermission: () -> Unit) {
+fun MediaStorageSection(
+    mediaStorage: com.example.appwatch.presentation.viewmodel.MediaStorageInfo,
+    onEnablePermission: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
@@ -286,7 +383,14 @@ fun MediaStorageSection(mediaStorage: com.example.appwatch.presentation.viewmode
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Lock, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.storage_media_locked_hint), style = MaterialTheme.typography.bodySmall, color = TextSecondary, modifier = Modifier.weight(1f))
+                    Text(
+                        text = stringResource(R.string.storage_media_locked_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 listOf(
                     Triple(Icons.Default.Photo, stringResource(R.string.storage_media_photos), Red500),
@@ -296,7 +400,12 @@ fun MediaStorageSection(mediaStorage: com.example.appwatch.presentation.viewmode
                 ).forEach { (icon, label, color) ->
                     MediaLockedRow(icon = icon, label = label, color = color)
                 }
-                Button(onClick = onEnablePermission, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Indigo600), shape = RoundedCornerShape(12.dp)) {
+                Button(
+                    onClick = onEnablePermission,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Text(stringResource(R.string.btn_enable_storage))
                 }
             } else {
@@ -320,7 +429,15 @@ fun MediaLockedRow(icon: ImageVector, label: String, color: Color) {
             Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
         Icon(Icons.Default.Lock, null, tint = TextDisabled, modifier = Modifier.size(16.dp))
     }
 }
@@ -332,8 +449,22 @@ fun MediaUnlockedRow(icon: ImageVector, label: String, bytes: Long, color: Color
             Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
-        Text(formatStorageSize(bytes), fontWeight = FontWeight.Bold, color = color)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = formatStorageSize(bytes),
+            fontWeight = FontWeight.Bold,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
+        )
     }
 }
 
@@ -349,7 +480,14 @@ fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.storage_device_header), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(
+                text = stringResource(R.string.storage_device_header),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 LinearProgressIndicator(
                     progress = { animatedProgress },
@@ -359,8 +497,20 @@ fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
                     strokeCap = StrokeCap.Round
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(stringResource(R.string.storage_status_used, formatStorageSize(usedBytes)), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    Text(stringResource(R.string.storage_status_free, formatStorageSize(freeBytes)), style = MaterialTheme.typography.bodySmall, color = Green600)
+                    Text(
+                        text = stringResource(R.string.storage_status_used, formatStorageSize(usedBytes)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
+                    Text(
+                        text = stringResource(R.string.storage_status_free, formatStorageSize(freeBytes)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Green600,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -375,8 +525,21 @@ fun DeviceStorageCard(totalBytes: Long, usedBytes: Long, freeBytes: Long) {
 @Composable
 fun StorageStatItem(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = color)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
+        )
     }
 }
 

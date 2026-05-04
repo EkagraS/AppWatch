@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +31,7 @@ import com.example.appwatch.presentation.viewmodel.AppListViewModel
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextAlign
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
 import com.example.appwatch.ui.theme.TextPrimary
@@ -54,7 +54,14 @@ fun AppListScreen(navController: NavController) {
         containerColor = BackgroundLight,
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.app_list_title), fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.app_list_title),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
@@ -82,7 +89,13 @@ fun AppListScreen(navController: NavController) {
                 value = searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.search_hint)) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.search_hint),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -108,7 +121,6 @@ fun AppListScreen(navController: NavController) {
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Mapping UI Labels to Logic Strings to avoid breaking ViewModel
                 val filterOptions = listOf(
                     stringResource(R.string.filter_all) to "All",
                     stringResource(R.string.filter_user) to "User Apps",
@@ -120,7 +132,13 @@ fun AppListScreen(navController: NavController) {
                     FilterChip(
                         selected = isSelected,
                         onClick = { viewModel.onFilterChange(filterKey) },
-                        label = { Text(label) },
+                        label = {
+                            Text(
+                                text = label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Clip
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF6366F1).copy(alpha = 0.15f),
                             selectedLabelColor = Color(0xFF6366F1)
@@ -133,10 +151,12 @@ fun AppListScreen(navController: NavController) {
 
             // App count
             Text(
-                stringResource(R.string.app_count_template, apps.size),
+                text = stringResource(R.string.app_count_template, apps.size),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.padding(vertical = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Clip
             )
 
             when {
@@ -149,9 +169,11 @@ fun AppListScreen(navController: NavController) {
                             CircularProgressIndicator(color = Color(0xFF6366F1))
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                stringResource(R.string.loading_apps),
+                                text = stringResource(R.string.loading_apps),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -162,9 +184,12 @@ fun AppListScreen(navController: NavController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            stringResource(R.string.no_apps_found),
+                            text = stringResource(R.string.no_apps_found),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -219,40 +244,39 @@ fun AppListItem(app: AppInfo, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        app.appName,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                Text(
+                    text = app.appName,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    app.packageName,
+                    text = app.packageName,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Clip
                 )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Permission count badge + warning icon
-            Column(horizontalAlignment = Alignment.End) {
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.app_perms_badge, app.totalPermissions),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            // Permission count badge
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.app_perms_badge, app.totalPermissions),
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
             }
         }
     }

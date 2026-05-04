@@ -34,6 +34,7 @@ import androidx.core.content.edit
 import com.example.appwatch.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun SplashScreen(onNavigateNext: (String) -> Unit) {
@@ -56,12 +57,7 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
         delay(2000L)
         val sharedPref = context.getSharedPreferences("app_watch_prefs", Context.MODE_PRIVATE)
         val isFirstRun = sharedPref.getBoolean("is_first_run", true)
-        if (isFirstRun) {
-            sharedPref.edit { putBoolean("is_first_run", false) }
-            onNavigateNext("onboarding")
-        } else {
-            onNavigateNext("dashboard")
-        }
+        if (isFirstRun) onNavigateNext("onboarding") else onNavigateNext("dashboard")
     }
 
     Box(
@@ -113,6 +109,8 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 color = Color.White
             )
 
@@ -127,6 +125,8 @@ fun SplashScreen(onNavigateNext: (String) -> Unit) {
                     fontWeight = FontWeight.Medium,
                     lineHeight = 26.sp
                 ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )

@@ -10,9 +10,6 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AppInfoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMetadata(metadata: AppInfoEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllMetadata(metadataList: List<AppInfoEntity>)
 
     // All queries now correctly point to "app_info"

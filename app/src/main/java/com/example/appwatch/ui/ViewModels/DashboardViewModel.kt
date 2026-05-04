@@ -15,6 +15,7 @@ data class DashboardUiState(
     val summary: DashboardSummary? = null,
     val isLoadingFromRoom: Boolean = true,
     val isRefreshing: Boolean = false,
+    val isFirstSync: Boolean = true,
     val error: String? = null
 )
 
@@ -27,11 +28,7 @@ class DashboardViewModel @Inject constructor(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     val totalUnlocksToday: StateFlow<Int> = dashboardRepository.getTodayTotalUnlocks()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000), // 5 seconds baad inactive
-            initialValue = 0
-        )
+        .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = 0)
 
     val totalNotificationsToday: StateFlow<Int> = dashboardRepository.getTodayNotificationCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -91,7 +88,11 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true) }
             dashboardRepository.refreshAllData()
-            _uiState.update { it.copy(isRefreshing = false) }
+            _uiState.update { it.copy(
+                isRefreshing = false,
+                isFirstSync = false
+            )}
         }
     }
+
 }

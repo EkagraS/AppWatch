@@ -170,6 +170,7 @@ fun UsageStatsScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
                 ) {
+                    // Section 1: Screen Time Today
                     item {
                         UsageHeroCard(
                             totalTime = selectedTotalTime,
@@ -179,6 +180,7 @@ fun UsageStatsScreen(
                         )
                     }
 
+                    // Section 2: Weekly Activity (Graph)
                     item {
                         Text(
                             stringResource(R.string.usage_header_weekly),
@@ -196,6 +198,7 @@ fun UsageStatsScreen(
                         )
                     }
 
+                    // Section 3: Today/Selected Graph Usage (App List + Peak + Total Apps)
                     item {
                         val headerTitle = if (isToday) {
                             stringResource(R.string.usage_header_today)
@@ -227,14 +230,8 @@ fun UsageStatsScreen(
                         }
                     }
 
+                    // Reactive Analytics (Jo graph ke sath badlenge)
                     item {
-                        Text(
-                            stringResource(R.string.usage_header_this_day),
-                            fontWeight = FontWeight.ExtraBold,
-                            color = TextPrimary,
-                            fontSize = 18.sp
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             val mostUsed = selectedDayUsage.firstOrNull()
                             AnalyticsCard(
@@ -246,36 +243,17 @@ fun UsageStatsScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             AnalyticsCard(
-                                label = stringResource(R.string.usage_label_unlock_pace),
-                                appName = stringResource(R.string.usage_val_unlock_pace_desc, viewModel.unlockPace),
-                                time = stringResource(R.string.usage_val_unlock_pace_time),
-                                icon = Icons.Default.LockOpen,
-                                color = StatUnlocks,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            AnalyticsCard(
-                                label = stringResource(R.string.usage_label_marathon),
-                                appName = viewModel.marathonAppName,
-                                time = viewModel.marathonTime,
-                                icon = Icons.Default.Timer,
-                                color = StatData,
-                                modifier = Modifier.weight(1f)
-                            )
-                            AnalyticsCard(
                                 label = stringResource(R.string.usage_label_total_apps),
                                 appName = stringResource(R.string.usage_val_apps_caps_count, selectedDayUsage.size),
-                                time = "",
+                                time = "", // List size se reactive hai
                                 icon = Icons.Default.Apps,
                                 color = StatApps,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                     }
-
                     item {
+                        // Includes active/inactive sessions
                         KnowYourUsageSection(viewModel)
                     }
                 }

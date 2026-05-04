@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
-import android.os.StatFs
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -51,60 +50,72 @@ class StorageViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StorageUiState())
-    val uiState: StateFlow<StorageUiState> = _uiState
+    val uiState: StateFlow<StorageUiState> = _uiState.asStateFlow()
 
     init {
-        loadFromRoom()
-        refreshInBackground()
-        checkMediaPermission()
+        refreshAllData()
     }
 
-    private fun loadFromRoom() {
+    fun refreshAllData() {
+        // Pattern: Agar data pehle se hai toh loading skip (UsageStats pattern)
+        if (_uiState.value.userApps.isNotEmpty()) {
+            _uiState.update { it.copy(isLoadingFromRoom = false) }
+            return
+        }
+
         viewModelScope.launch {
-            val initialDeviceStorage = withContext(Dispatchers.IO) {
-                storageStatsHelper.getDeviceStorageInfo()
-            }
-            combine(
-                appInfoDao.getAppsByStorageSize(),
-                appInfoDao.getTotalUserAppsSize(),
-                appInfoDao.getTotalSystemAppsSize()
-            ) { apps, userTotal, systemTotal ->
-                Triple(apps, userTotal, systemTotal)
-            }.collect { (apps, userTotal, systemTotal) ->
-                val userApps = apps.filter { !it.isSystemApp }.map { entity ->
-                    AppStorageInfo(
-                        packageName = entity.packageName,
-                        appName = entity.appName,
-                        appSizeBytes = entity.appSizeBytes,
-                        dataSizeBytes = entity.dataSizeBytes,
-                        cacheSizeBytes = entity.cacheSizeBytes,
-                        totalSizeBytes = entity.totalSizeBytes,
-                        isSystemApp = false
-                    )
-                }
-                val systemApps = apps.filter { it.isSystemApp }.map { entity ->
-                    AppStorageInfo(
-                        packageName = entity.packageName,
-                        appName = entity.appName,
-                        appSizeBytes = entity.appSizeBytes,
-                        dataSizeBytes = entity.dataSizeBytes,
-                        cacheSizeBytes = entity.cacheSizeBytes,
-                        totalSizeBytes = entity.totalSizeBytes,
-                        isSystemApp = true
-                    )
-                }
-                _uiState.update { current ->
-                    current.copy(
-                        userApps = userApps,
-                        systemApps = systemApps,
-                        totalUserAppsBytes = initialDeviceStorage.totalUserAppsBytes,
-                        totalSystemAppsBytes = initialDeviceStorage.totalSystemAppsBytes,
-                        deviceStorage = initialDeviceStorage,
-                        isLoadingFromRoom = false,
-                        lastUpdated = apps.firstOrNull()?.storageLastUpdated ?: 0L
-                    )
-                }
-            }
+            _uiState.update { it.copy(isLoadingFromRoom = true) }
+
+            refreshInBackground()
+
+            // 2. Load Stats (Pattern: marathon/pace logic)
+            checkMediaPermission()
+
+            // 3. Fetch from Room (Pattern: fetchAllDaysData)
+            fetchRoomData()
+
+            _uiState.update { it.copy(isLoadingFromRoom = false) }
+        }
+    }
+
+    private suspend fun fetchRoomData() {
+        // Pattern: getUsageForDayInternal logic using firstOrNull
+        val entities = appInfoDao.getAppsByStorageSize().firstOrNull() ?: emptyList()
+        val deviceStorage = withContext(Dispatchers.IO) { storageStatsHelper.getDeviceStorageInfo() }
+
+        val userApps = entities.filter { !it.isSystemApp }.map { entity ->
+            AppStorageInfo(
+                packageName = entity.packageName,
+                appName = entity.appName,
+                appSizeBytes = entity.appSizeBytes,
+                dataSizeBytes = entity.dataSizeBytes,
+                cacheSizeBytes = entity.cacheSizeBytes,
+                totalSizeBytes = entity.totalSizeBytes,
+                isSystemApp = false
+            )
+        }
+
+        val systemApps = entities.filter { it.isSystemApp }.map { entity ->
+            AppStorageInfo(
+                packageName = entity.packageName,
+                appName = entity.appName,
+                appSizeBytes = entity.appSizeBytes,
+                dataSizeBytes = entity.dataSizeBytes,
+                cacheSizeBytes = entity.cacheSizeBytes,
+                totalSizeBytes = entity.totalSizeBytes,
+                isSystemApp = true
+            )
+        }
+
+        _uiState.update { current ->
+            current.copy(
+                userApps = userApps,
+                systemApps = systemApps,
+                deviceStorage = deviceStorage,
+                totalUserAppsBytes = deviceStorage.totalUserAppsBytes,
+                totalSystemAppsBytes = deviceStorage.totalSystemAppsBytes,
+                lastUpdated = entities.firstOrNull()?.storageLastUpdated ?: 0L
+            )
         }
     }
 
@@ -113,11 +124,7 @@ class StorageViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isRefreshing = true) }
 
-            // Get device storage
-            val deviceStorage = storageStatsHelper.getDeviceStorageInfo()
-
-            // Check if Room has apps, if not fetch from PackageManager first
-            val roomApps = appInfoDao.getAllAppsAlphabetical().first()
+            val roomApps = appInfoDao.getAllAppsAlphabetical().firstOrNull() ?: emptyList()
             val allEntities = if (roomApps.isEmpty()) {
                 val liveApps = packageManagerHelper.getInstalledAppsMetadata()
                 appInfoDao.insertAllMetadata(liveApps)
@@ -125,11 +132,9 @@ class StorageViewModel @Inject constructor(
             } else {
                 roomApps
             }
-            val userEntities = allEntities.filter { !it.isSystemApp }
 
-            // Fetch fresh storage for each app
             val now = System.currentTimeMillis()
-            userEntities.forEach { entity ->
+            allEntities.filter { !it.isSystemApp }.forEach { entity ->
                 val storageInfo = storageStatsHelper.getAppStorageInfo(entity.packageName)
                 if (storageInfo != null) {
                     appInfoDao.updateAppStorage(
@@ -143,15 +148,13 @@ class StorageViewModel @Inject constructor(
                 }
             }
 
-            _uiState.update { current ->
-                current.copy(
-                    deviceStorage = deviceStorage,
-                    isRefreshing = false,
-                    lastUpdated = now
-                )
-            }
+            // Sync khatam hone ke baad data refresh
+            fetchRoomData()
+
+            _uiState.update { it.copy(isRefreshing = false) }
         }
     }
+
     fun checkMediaPermission() {
         val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(

@@ -29,7 +29,7 @@ class UsageStatsViewModel @Inject constructor(
 ) : ViewModel() {
     var marathonAppName by mutableStateOf("None")
     var marathonTime by mutableStateOf("0m")
-    var unlockPace by mutableStateOf(0.0)
+    var unlockPace by mutableStateOf(0)
     var isLoading by mutableStateOf(true)
 
     // 2. The "Clean" Seven Day State

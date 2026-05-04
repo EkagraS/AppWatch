@@ -55,7 +55,6 @@ enum class SheetType {
     PERMISSION_INFO,
     STORAGE_INFO,
     NOTIFICATION_INFO,
-    PRIVACY_INSIGHTS_INFO,
     BACKGROUND_INFO,
     PRIVACY,
     TERMS,
@@ -261,7 +260,6 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Default.PermMedia,
                     iconColor = Color(0xFF10B981),
                     isGranted = hasStoragePermission,
-                    isOptional = true,
                     onActionClick = {
                         if (hasStoragePermission) {
                             showRevokeDialog = Pair(
@@ -287,7 +285,6 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Default.Notifications,
                     iconColor = Color(0xFFEF4444),
                     isGranted = hasNotificationPermission,
-                    isOptional = false,
                     onActionClick = {
                         if (hasNotificationPermission) {
                             showRevokeDialog = Pair(
@@ -377,15 +374,6 @@ fun SettingsScreen(navController: NavController) {
             }
             item {
                 AnalysisSettingsRow(
-                    title = stringResource(R.string.settings_how_privacy_title),
-                    subtitle = stringResource(R.string.settings_how_privacy_subtitle),
-                    icon = Icons.Default.Shield,
-                    iconColor = Color(0xFF8B5CF6),
-                    onClick = { activeSheet = SheetType.PRIVACY_INSIGHTS_INFO }
-                )
-            }
-            item {
-                AnalysisSettingsRow(
                     title = stringResource(R.string.settings_how_background_title),
                     subtitle = stringResource(R.string.settings_how_background_subtitle),
                     icon = Icons.Default.Sync,
@@ -451,16 +439,63 @@ fun SettingsScreen(navController: NavController) {
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
-                        Text(
-                            "Ekagra Shandilya",
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            stringResource(R.string.settings_dev_role),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Ekagra Shandilya", //
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_dev_role), //
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconButton(onClick = {
+                                    try {
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://github.com/ekagra-shandilya")
+                                        )
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Cannot open link", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Code, // GitHub ke liye
+                                        contentDescription = "GitHub",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    try {
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://github.com/ekagra-shandilya") // Apna actual GitHub link daal dena
+                                        )
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Cannot open link", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Link,
+                                        contentDescription = "LinkedIn",
+                                        tint = Color(0xFF0077B5),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -473,7 +508,34 @@ fun SettingsScreen(navController: NavController) {
                     color = Color(0xFF333333),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
                     onClick = {
-                        Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show()                    }
+                        try {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://github.com/ekagra-shandilya") // Apna actual GitHub link daal dena
+                            )
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Cannot open link", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+                ContactLinkRow(
+                    icon = Icons.Default.Chat, // Feedback ke liye chat icon
+                    label = "Feedback & Suggestions",
+                    value = "Report a bug or suggest a feature",
+                    color = Color(0xFF10B981), // Solid Green
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                    onClick = {
+                        try {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://forms.gle/your_link") // Tera Google Form link
+                            )
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Cannot open form", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
             }
 
@@ -545,7 +607,6 @@ fun SettingsScreen(navController: NavController) {
                 SheetType.PERMISSION_INFO -> PermissionDetailSheet()
                 SheetType.STORAGE_INFO -> StorageDetailSheet()
                 SheetType.NOTIFICATION_INFO -> NotificationDetailSheet()
-                SheetType.PRIVACY_INSIGHTS_INFO -> PrivacyInsightsDetailSheet()
                 SheetType.BACKGROUND_INFO -> BackgroundDetailSheet()
                 SheetType.PRIVACY -> PrivacyPolicySheet()
                 SheetType.TERMS -> TermsSheet()
@@ -580,7 +641,6 @@ fun PermissionSettingsRow(
     icon: ImageVector,
     iconColor: Color,
     isGranted: Boolean,
-    isOptional: Boolean = false,
     onActionClick: () -> Unit
 ) {
     Row(
@@ -599,24 +659,7 @@ fun PermissionSettingsRow(
         }
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                if (isOptional) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        color = Color(0xFF10B981).copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.label_optional),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF10B981),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+            Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             Text(
                 description,
                 style = MaterialTheme.typography.bodySmall,
@@ -898,28 +941,6 @@ fun NotificationDetailSheet() {
 }
 
 @Composable
-fun PrivacyInsightsDetailSheet() {
-    val scrollState = rememberScrollState()
-    Column(modifier = Modifier
-        .padding(horizontal = 24.dp)
-        .padding(bottom = 40.dp)
-        .verticalScroll(scrollState)
-    ) {
-        Text(stringResource(R.string.settings_how_privacy_title), fontSize = 20.sp, fontWeight = FontWeight.Black)
-        Text(stringResource(R.string.sheet_privacy_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.height(20.dp))
-        SheetDetailPoint(Icons.Default.LocationOn, Color(0xFFEF4444), stringResource(R.string.sheet_privacy_point1_title),
-            stringResource(R.string.sheet_privacy_point1_desc))
-        SheetDetailPoint(Icons.Default.Contacts, Color(0xFF10B981), stringResource(R.string.sheet_privacy_point2_title),
-            stringResource(R.string.sheet_privacy_point2_desc))
-        SheetDetailPoint(Icons.Default.Shield, Color(0xFF8B5CF6), stringResource(R.string.label_usage_purpose),
-            stringResource(R.string.sheet_privacy_point3_desc))
-        SheetDetailPoint(Icons.Default.Timeline, Color(0xFFF59E0B), stringResource(R.string.sheet_privacy_point4_title),
-            stringResource(R.string.sheet_privacy_point4_desc))
-    }
-}
-
-@Composable
 fun BackgroundDetailSheet() {
     val scrollState = rememberScrollState()
     Column(modifier = Modifier
@@ -959,6 +980,10 @@ fun PrivacyPolicySheet() {
             stringResource(R.string.sheet_policy_point3_desc))
         SheetDetailPoint(Icons.Default.DeleteForever, Color(0xFFF59E0B), stringResource(R.string.sheet_policy_point4_title),
             stringResource(R.string.sheet_policy_point4_desc))
+        SheetDetailPoint(Icons.Default.EnhancedEncryption, Color(0xFF06B6D4), stringResource(R.string.sheet_policy_point5_title),
+            stringResource(R.string.sheet_policy_point5_desc))
+        SheetDetailPoint(Icons.Default.Fingerprint, Color(0xFF8B5CF6), stringResource(R.string.sheet_policy_point6_title),
+            stringResource(R.string.sheet_policy_point6_desc))
     }
 }
 
@@ -980,6 +1005,12 @@ fun TermsSheet() {
             stringResource(R.string.sheet_terms_point3_desc))
         SheetDetailPoint(Icons.Default.Security, Color(0xFFEF4444), stringResource(R.string.sheet_terms_point4_title),
             stringResource(R.string.sheet_terms_point4_desc))
+        SheetDetailPoint(Icons.Default.Code, Color(0xFF6B7280), stringResource(R.string.sheet_terms_point5_title),
+            stringResource(R.string.sheet_terms_point5_desc))
+        SheetDetailPoint(Icons.Default.AccountCircle, Color(0xFFF59E0B), stringResource(R.string.sheet_terms_point6_title),
+            stringResource(R.string.sheet_terms_point6_desc))
+        SheetDetailPoint(Icons.Default.Link, Color(0xFF6366F1), stringResource(R.string.sheet_terms_point7_title),
+            stringResource(R.string.sheet_terms_point7_desc))
     }
 }
 
@@ -1008,7 +1039,10 @@ fun LicensesSheet() {
             "WorkManager" to "Apache License 2.0",
             "Coil" to "Apache License 2.0",
             "Kotlin" to "Apache License 2.0",
-            "Kotlin Coroutines" to "Apache License 2.0"
+            "Kotlin Coroutines" to "Apache License 2.0",
+            "SQLCipher" to "BSD 3-Clause License",
+            "DataStore" to "Apache License 2.0",
+            "Material Icons" to "Apache License 2.0"
         ).forEach { (library, license) ->
             Row(
                 modifier = Modifier

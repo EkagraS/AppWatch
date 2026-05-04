@@ -14,7 +14,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.appwatch.R
@@ -92,11 +95,18 @@ fun AllUsageScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.usage_all_apps_title), fontWeight = FontWeight.Bold)
                         Text(
-                            dateLabel,
+                            text = stringResource(R.string.usage_all_apps_title),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = dateLabel,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip // Date fixed format hota hai, Clip clean lagega
                         )
                     }
                 },
@@ -126,10 +136,13 @@ fun AllUsageScreen(
                 }
             }
             allApps.isEmpty() -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        stringResource(R.string.usage_empty_state, dateLabel),
-                        color = TextSecondary
+                        text = stringResource(R.string.usage_empty_state, dateLabel),
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -144,9 +157,11 @@ fun AllUsageScreen(
                 ) {
                     item {
                         Text(
-                            stringResource(R.string.usage_apps_count, allApps.size),
+                            text = stringResource(R.string.usage_apps_count, allApps.size),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip
                         )
                     }
                     itemsIndexed(allApps) { index, app ->

@@ -24,7 +24,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,7 +86,15 @@ fun AppNotificationScreen(
             containerColor = BackgroundLight,
             topBar = {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.notif_title_today), fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.notif_title_today),
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
@@ -106,7 +117,7 @@ fun AppNotificationScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp), // Sab items ko side padding mil jayegi
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
@@ -119,7 +130,9 @@ fun AppNotificationScreen(
                         text = stringResource(R.string.notif_header_breakdown),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -127,7 +140,7 @@ fun AppNotificationScreen(
                     item {
                         Box(
                             modifier = Modifier
-                                .fillParentMaxHeight(0.7f) // Screen ke 70% area mein center dikhega
+                                .fillParentMaxHeight(0.7f)
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
@@ -167,12 +180,20 @@ fun NotificationSummaryCard(total: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.notif_label_total), color = TextOnDark.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = stringResource(R.string.notif_label_total),
+                    color = TextOnDark.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
                 Text(
                     text = "$total",
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Black,
-                    color = TextOnDark
+                    color = TextOnDark,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
                 )
             }
             Icon(
@@ -213,7 +234,6 @@ fun NotificationAppItem(item: AppNotificationEntity) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // App Icon
                 if (appIcon != null) {
                     Image(
                         bitmap = appIcon!!,
@@ -233,18 +253,23 @@ fun NotificationAppItem(item: AppNotificationEntity) {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // App Name and Package
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = appName, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1)
+                    Text(
+                        text = appName,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Text(
                         text = item.packageName,
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
 
-                // Total Badge (Far Right)
                 Surface(
                     color = StatNotifs.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(8.dp)
@@ -254,16 +279,17 @@ fun NotificationAppItem(item: AppNotificationEntity) {
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = StatNotifs
+                        color = StatNotifs,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Divider(color = BackgroundLight, thickness = 1.dp)
+            HorizontalDivider(color = BackgroundLight, thickness = 1.dp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔴 Naya Stats Row: Opened aur Swiped dikhane ke liye
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
@@ -271,12 +297,12 @@ fun NotificationAppItem(item: AppNotificationEntity) {
                 StatDetailItem(
                     label = "Opened",
                     value = item.openedCount,
-                    color = Indigo600 // Useful action color
+                    color = Indigo600
                 )
                 StatDetailItem(
                     label = "Swiped",
                     value = item.dismissedCount,
-                    color = TextSecondary // Ignored action color
+                    color = TextSecondary
                 )
             }
         }
@@ -290,12 +316,16 @@ fun StatDetailItem(label: String, value: Int, color: Color) {
             text = "$value",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = color
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = TextSecondary
+            color = TextSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Clip
         )
     }
 }
@@ -309,6 +339,12 @@ fun EmptyNotificationsState() {
     ) {
         Icon(Icons.Default.NotificationsActive, null, tint = TextDisabled, modifier = Modifier.size(48.dp))
         Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.notif_empty_state), color = TextSecondary)
+        Text(
+            text = stringResource(R.string.notif_empty_state),
+            color = TextSecondary,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

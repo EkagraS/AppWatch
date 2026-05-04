@@ -23,6 +23,7 @@ import java.util.TimeZone
 import javax.inject.Inject
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlin.math.roundToInt
 
 class UsageRepositoryImpl @Inject constructor(
     private val usageDao: UsageDao,
@@ -49,9 +50,11 @@ class UsageRepositoryImpl @Inject constructor(
         }.timeInMillis
     }
 
-    override suspend fun getUnlockPace(): Double {
+    override suspend fun getUnlockPace(): Int {
         val vitals = usageStatsHelper.getTodayDeviceVitals()
         val totalUnlocks = vitals.first // Total unlocks today
+
+        if (totalUnlocks == 0) return 0
 
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -59,11 +62,10 @@ class UsageRepositoryImpl @Inject constructor(
 
         // Time since midnight in hours (e.g., 2:30 AM = 2.5)
         val hoursElapsed = currentHour + (currentMinute / 60.0)
-
-        // Safety: Division by zero se bachne ke liye (Min 6 mins/0.1 hr)
         val safeHours = if (hoursElapsed < 0.1) 0.1 else hoursElapsed
 
-        return totalUnlocks / safeHours
+        val minsPerUnlock = (safeHours / totalUnlocks) * 60
+        return  minsPerUnlock.roundToInt()
     }
 
     override suspend fun getMarathonSession(): Pair<String, Long>? {
