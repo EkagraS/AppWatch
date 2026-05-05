@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,7 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,7 +37,7 @@ import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.AppNotificationEntity
 import com.example.appwatch.ui.ScreenComponents.NotificationLoader
 import com.example.appwatch.ui.theme.*
-import com.example.appwatch.ui.viewmodel.AppNotificationViewmodel
+import com.example.appwatch.ui.viewModels.AppNotificationViewmodel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

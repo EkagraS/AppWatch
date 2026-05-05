@@ -123,16 +123,24 @@ class UsageRepositoryImpl @Inject constructor(
 
     override fun getActiveStreak(): Flow<String> = flow {
         while (true) {
-            val streaks = usageStatsHelper.getTodayStreaks()
-            emit(streaks.first)
+            try {
+                val streaks = usageStatsHelper.getTodayStreaks()
+                emit(streaks.first)
+            } catch (e: Exception) {
+                emit("0m")
+            }
             delay(60000)
         }
     }.flowOn(Dispatchers.IO)
 
     override fun getInActiveStreak(): Flow<String> = flow {
         while (true) {
-            val streaks = usageStatsHelper.getTodayStreaks()
-            emit(streaks.second)
+            try {
+                val streaks = usageStatsHelper.getTodayStreaks()
+                emit(streaks.second)
+            } catch (e: Exception) {
+                emit("0m")
+            }
             delay(60000)
         }
     }.flowOn(Dispatchers.IO)
@@ -156,14 +164,18 @@ class UsageRepositoryImpl @Inject constructor(
 
     override suspend fun syncDailyUsage() {
         withContext(Dispatchers.IO) {
-            val today = getTodayTimestamp() // ← same method as getDailyUsage
+            try {
+                val today = getTodayTimestamp()
 
-            val liveEntities = usageStatsHelper.getDailyAppUsage()
-            val normalizedUsage = liveEntities.map { entity ->
-                entity.copy(usageDate = today, appName = getAppName(entity.packageName))
-            }
-            if (normalizedUsage.isNotEmpty()) {
-                usageDao.insertUsageList(normalizedUsage)
+                val liveEntities = usageStatsHelper.getDailyAppUsage()
+                val normalizedUsage = liveEntities.map { entity ->
+                    entity.copy(usageDate = today, appName = getAppName(entity.packageName))
+                }
+                if (normalizedUsage.isNotEmpty()) {
+                    usageDao.insertUsageList(normalizedUsage)
+                }
+            } catch (e: Exception) {
+                Log.e("USAGE_REPO", "Failed to sync daily usage from OS", e)
             }
         }
     }
@@ -234,13 +246,18 @@ class UsageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveUsageSnapshot(usage: AppUsage) {
-        val entity = UsageEntity(
-            packageName = usage.packageName,
-            appName = usage.appName,
-            usageDate = getTodayTimestamp(),
-            totalTimeInForeground = 0L,
-            lastTimeUsed = System.currentTimeMillis()
-        )
+        try {
+            val entity = UsageEntity(
+                packageName = usage.packageName,
+                appName = usage.appName,
+                usageDate = getTodayTimestamp(),
+                totalTimeInForeground = 0L,
+                lastTimeUsed = System.currentTimeMillis()
+            )
+            usageDao.insertUsage(entity) // <--- YE LINE MISSING THI
+        } catch (e: Exception) {
+            Log.e("USAGE_REPO", "Failed to save usage snapshot", e)
+        }
     }
 }
 private fun formatDuration(millis: Long): String {

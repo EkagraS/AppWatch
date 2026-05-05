@@ -15,7 +15,6 @@ import com.example.appwatch.domain.model.ActivityItem
 import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.domain.model.RecentItem
 import com.example.appwatch.domain.repository.DashboardRepository
-import com.example.appwatch.system.AppOpsHelper
 import com.example.appwatch.system.PackageManagerHelper
 import com.example.appwatch.system.StorageStatsHelper
 import com.example.appwatch.system.UsageStatsHelper
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,47 +67,6 @@ class DashboardRepositoryImpl @Inject constructor(
                 calculateSummaryFull(entities = apps,recentEvents= recentEvents,needsAttention= needsAttention, screenTime = cachedScreenTime)
             }
         }.flowOn(Dispatchers.IO)
-    }
-
-    private fun calculateSummaryFast(entities: List<AppInfoEntity>): DashboardSummary {
-        val userApps = entities.filter { !it.isSystemApp }
-
-        // Fast Attention Items: Sirf permissions aur new apps par base karke (No System Calls)
-        val fastAttention = entities
-            .filter { !it.isSystemApp && it.totalPermissions >= 15 }
-            .take(3)
-            .map {
-                ActivityItem(
-                    it.packageName,
-                    it.appName,
-                    "High Permission Count (${it.totalPermissions})"
-                )
-            }
-
-        return DashboardSummary(
-            totalApps = userApps.size,
-            highRiskApps = entities.count { it.totalPermissions >= 15 },
-            totalScreenTime = cachedScreenTime, // "0m" initially
-            locationAppsCount = entities.count { it.hasLocation },
-            cameraAppsCount = entities.count { it.hasCamera },
-            micAppsCount = entities.count { it.hasMic },
-            contactAppsCount = entities.count { it.hasContacts },
-            phoneAppsCount = entities.count { it.hasPhone },
-            SmsAppsCount = entities.count { it.hasSms },
-            usedStorage = cachedUsedStorage,
-            totalStorage = cachedTotalStorage,
-            attentionItems = fastAttention,
-            recentActivity = listOf(
-                // Naya RecentItem data class use kiya as requested
-                RecentItem("PRIVACY", "Privacy Insights", "Scanning background access...", false),
-                RecentItem(
-                    "INSTALL",
-                    "New Installations",
-                    "${userApps.count { System.currentTimeMillis() - it.installedAt < 7L * 24 * 60 * 60 * 1000 }} this week",
-                    false
-                )
-            )
-        )
     }
 
     override suspend fun refreshAllData() {
@@ -322,12 +281,10 @@ class DashboardRepositoryImpl @Inject constructor(
         val sevenDaysAgo = now - dayMillis
         val newEvents = mutableListOf<RecentEventEntity>()
 
-        // 1. Heavy Data consumers nikal lo (Map of PackageName to Bytes)
         val heavyDataApps = usageStatsHelper.getHeavyDataConsumers(sevenDaysAgo)
         val userAppPackages = entities.filter { !it.isSystemApp }.map { it.packageName }.toSet()
 
         entities.filter { !it.isSystemApp }.forEach { app ->
-
             // --- FEATURE 1: Nayi Installations ---
             if (app.installedAt > sevenDaysAgo) {
                 val existing = recentEventDao.countExistingEvent(
@@ -356,8 +313,6 @@ class DashboardRepositoryImpl @Inject constructor(
             }
 
             // --- FEATURE 3: Sideloaded / Unknown Sources ---
-            // Ise humesha check karenge, kyunki sideloaded app risky hoti hai.
-            // Timestamp mein install time daalenge.
             if (packageManagerHelper.isAppSideloaded(app.packageName) && app.installedAt > sevenDaysAgo) {
                 newEvents.add(
                     RecentEventEntity(
@@ -368,28 +323,24 @@ class DashboardRepositoryImpl @Inject constructor(
                     )
                 )
             }
+        } // <-- Loop yahan khatam hota hai
 
-            // --- FEATURE 4: Heavy Data Hogs ---
-            val topDataConsumer = heavyDataApps
-                .filterKeys { it in userAppPackages } // Sirf user apps mein check karo
-                .maxByOrNull { it.value } // Jiski value sabse badi hai, usko utha lo
+        val topDataConsumer = heavyDataApps
+            .filterKeys { it in userAppPackages }
+            .maxByOrNull { it.value }
 
-            // Minimum 10MB ka limit rakha hai taaki 5-10 KB use karne wali app faltu mein na dikhe
-            if (topDataConsumer != null && topDataConsumer.value > (10L * 1024 * 1024)) {
-                val formattedSize = storageStatsHelper.formatSize(topDataConsumer.value)
-                newEvents.add(
-                    RecentEventEntity(
-                        packageName = topDataConsumer.key,
-                        eventType = "DATA_HOG",
-                        timestamp = System.currentTimeMillis(),
-                        extraInfo = formattedSize // Extra info mein humne size save kar liya (e.g., "1.2 GB")
-                    )
+        if (topDataConsumer != null && topDataConsumer.value > (10L * 1024 * 1024)) {
+            val formattedSize = storageStatsHelper.formatSize(topDataConsumer.value)
+            newEvents.add(
+                RecentEventEntity(
+                    packageName = topDataConsumer.key,
+                    eventType = "DATA_HOG",
+                    timestamp = System.currentTimeMillis(),
+                    extraInfo = formattedSize
                 )
-            }
-
-
-//        recentEventDao.clearSyncedEvents()
+            )
         }
+
         if (newEvents.isNotEmpty()) {
             recentEventDao.insertEvents(newEvents)
         }
@@ -399,6 +350,8 @@ class DashboardRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
         val dayMillis = 24L * 60 * 60 * 1000
         val newEvents = mutableListOf<NeedsAttentionEntity>()
+
+        needsAttentionDao.clearAuditEvents()
 
         entities.filter { !it.isSystemApp }.forEach { app ->
 
@@ -485,7 +438,7 @@ class DashboardRepositoryImpl @Inject constructor(
     }
 
     override fun getTodayNotificationCount(): Flow<Int> {
-        val today = java.time.LocalDate.now().toString()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         return appNotificationDao.getTotalCountByDate(today).map { it ?: 0 }
     }
 

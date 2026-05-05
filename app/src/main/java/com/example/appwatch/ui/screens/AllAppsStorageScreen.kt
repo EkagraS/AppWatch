@@ -1,10 +1,8 @@
 package com.example.appwatch.ui.screens
 
-import android.content.pm.PackageManager
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -32,7 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.appwatch.R
-import com.example.appwatch.presentation.viewmodel.StorageViewModel
+import com.example.appwatch.ui.viewModels.StorageViewModel
 import com.example.appwatch.system.AppStorageInfo
 import com.example.appwatch.ui.theme.*
 

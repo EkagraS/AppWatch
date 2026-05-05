@@ -1,5 +1,6 @@
 package com.example.appwatch.data.repository
 
+import android.util.Log
 import com.example.appwatch.data.local.dao.AppDataUsageDao
 import com.example.appwatch.data.local.entity.AppDataUsageEntity
 import com.example.appwatch.domain.repository.AppDataUsageRepository
@@ -19,10 +20,18 @@ class AppDataUsageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateUsageData(usage: AppDataUsageEntity) {
-        usageDao.insertOrUpdateUsage(usage)
+        try {
+            usageDao.insertOrUpdateUsage(usage)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to update usage data", e)
+        }
     }
 
     override suspend fun clearOldData(expiryDate: String) {
-        usageDao.deleteOldUsageData(expiryDate)
+        try {
+            usageDao.deleteOldUsageData(expiryDate)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to clear old usage data", e)
+        }
     }
 }

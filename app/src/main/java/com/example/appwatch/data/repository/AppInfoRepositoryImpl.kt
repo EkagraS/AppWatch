@@ -1,10 +1,12 @@
 package com.example.appwatch.data.repository
 
+import android.util.Log
 import com.example.appwatch.data.local.dao.AppInfoDao
 import com.example.appwatch.domain.model.AppInfo
 import com.example.appwatch.domain.repository.AppInfoRepository
 import com.example.appwatch.system.PackageManagerHelper
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -39,14 +41,34 @@ class AppInfoRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAppDetails(packageName: String): Flow<AppInfo?> {
-        return getAllApps(false).map { list ->
-            list.find { it.packageName == packageName }
+    override fun getAppDetails(packageName: String): Flow<AppInfo?> = flow {
+        try {
+            val entity = appInfoDao.getAppMetadata(packageName)
+            if (entity != null) {
+                emit(
+                    AppInfo(
+                        id= entity.id,
+                        packageName = entity.packageName,
+                        appName = entity.appName,
+                        isSystemApp = entity.isSystemApp,
+                        totalPermissions = entity.totalPermissions,
+                        installedAt = entity.installedAt
+                    )
+                )
+            } else {
+                emit(null)
+            }
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to fetch app details for $packageName", e)
+            emit(null)
         }
     }
-
     override suspend fun refreshAppCache() {
-        val entities = packageManagerHelper.getInstalledAppsMetadata()
-        appInfoDao.insertAllMetadata(entities)
+        try {
+            val entities = packageManagerHelper.getInstalledAppsMetadata()
+            appInfoDao.insertAllMetadata(entities)
+        } catch (e: Exception) {
+            Log.e("REPO_ERROR", "Failed to refresh app cache. OS might be busy.", e)
+        }
     }
 }

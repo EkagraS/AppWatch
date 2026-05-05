@@ -25,7 +25,7 @@ import com.example.appwatch.data.local.entity.AppDataUsageEntity
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
 import com.example.appwatch.ui.theme.TextPrimary
-import com.example.appwatch.ui.viewmodels.AppDataUsageViewmodel
+import com.example.appwatch.ui.viewModels.AppDataUsageViewmodel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

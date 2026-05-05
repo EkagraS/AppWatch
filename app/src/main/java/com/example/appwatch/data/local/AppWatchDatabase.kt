@@ -71,6 +71,8 @@ abstract class AppWatchDatabase: RoomDatabase() {
                     AppWatchDatabase::class.java,
                     "app_watch_database"
                 )
+                    .setJournalMode(JournalMode.TRUNCATE)
+                    .fallbackToDestructiveMigration()
                     .addMigrations(MIGRATION_1_2)
                     .build()
                 INSTANCE = instance

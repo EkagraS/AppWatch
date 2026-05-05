@@ -4,13 +4,11 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,12 +28,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.appwatch.R
-import com.example.appwatch.presentation.viewmodel.StorageViewModel
+import com.example.appwatch.ui.viewModels.MediaStorageInfo
+import com.example.appwatch.ui.viewModels.StorageViewModel
 import com.example.appwatch.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -370,7 +368,7 @@ fun TopAppStorageRow(
 
 @Composable
 fun MediaStorageSection(
-    mediaStorage: com.example.appwatch.presentation.viewmodel.MediaStorageInfo,
+    mediaStorage: MediaStorageInfo,
     onEnablePermission: () -> Unit
 ) {
     Card(

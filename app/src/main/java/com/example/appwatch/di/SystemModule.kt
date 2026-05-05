@@ -46,9 +46,6 @@ object SystemModule {
         securityManager: SecurityManager
     ): AppWatchDatabase {
 
-        // SQLCipher ki native libraries load karo
-//        SQLiteDatabase.loadLibs(context)
-
         val passphrase = securityManager.getDatabasePassphrase()
         val factory = SupportOpenHelperFactory(passphrase)
 
@@ -59,6 +56,7 @@ object SystemModule {
         )
             .openHelperFactory(factory)
             .fallbackToDestructiveMigration()
+            .setJournalMode(androidx.room.RoomDatabase.JournalMode.TRUNCATE)
             .build()
     }
 }

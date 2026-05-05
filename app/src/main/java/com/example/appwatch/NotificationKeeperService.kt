@@ -7,6 +7,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -31,35 +34,51 @@ class NotificationKeeperService : NotificationListenerService() {
         val packageName = sbn?.packageName ?: "unknown"
         android.util.Log.d("AppWatch_Service", "Raw Notification: $packageName")
         sbn?.let {
-            val packageName = it.packageName
-            val notification = it.notification
-            val isSummary = (notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
-            if (isSummary) {
-                val activeNotifs = activeNotifications
-                val hasChildren = activeNotifs?.any { active ->
-                    active.packageName == packageName &&
-                            active.groupKey == it.groupKey &&
-                            (active.notification.flags and
-                                    android.app.Notification.FLAG_GROUP_SUMMARY) == 0
-                } ?: false
+            try {
+                val packageName = sbn?.packageName ?: "unknown"
+                android.util.Log.d("AppWatch_Service", "Raw Notification: $packageName")
 
-                if (!hasChildren) {
-                    val today = java.time.LocalDate.now().toString()
+                sbn?.let {
+                    val pkg = it.packageName
+                    val notification = it.notification
+                    val isSummary = (notification.flags and android.app.Notification.FLAG_GROUP_SUMMARY) != 0
+
+                    if (isSummary) {
+                        val activeNotifs = activeNotifications
+                        val hasChildren = activeNotifs?.any { active ->
+                            active.packageName == pkg &&
+                                    active.groupKey == it.groupKey &&
+                                    (active.notification.flags and
+                                            android.app.Notification.FLAG_GROUP_SUMMARY) == 0
+                        } ?: false
+
+                        if (!hasChildren) {
+                            val today = getTodayDate() // <-- Naya safe date function
+                            serviceScope.launch {
+                                repository.incrementNotificationCount(pkg, today)
+                            }
+                        }
+                        return
+                    }
+
+                    if (it.isOngoing) return
+                    if (pkg == "android" || pkg == "com.android.systemui") return
+                    if (pkg == applicationContext.packageName) return
+
+                    val today = getTodayDate() // <-- Naya safe date function
                     serviceScope.launch {
-                        repository.incrementNotificationCount(packageName, today)
+                        android.util.Log.d("AppWatch_Service", "Final Count for: $pkg")
+                        repository.incrementNotificationCount(pkg, today)
                     }
                 }
-                return
-            }
-            if (it.isOngoing) return
-            if (packageName == "android" || packageName == "com.android.systemui") return
-            if (packageName == applicationContext.packageName) return
-            val today = java.time.LocalDate.now().toString()
-            serviceScope.launch {
-                android.util.Log.d("AppWatch_Service", "Final Count for: $packageName")
-                repository.incrementNotificationCount(packageName, today)
+            } catch (e: Exception) {
+                android.util.Log.e("AppWatch_Service", "Error processing posted notification", e)
             }
         }
+    }
+
+    private fun getTodayDate(): String {
+        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
     }
 
     override fun onListenerConnected() {

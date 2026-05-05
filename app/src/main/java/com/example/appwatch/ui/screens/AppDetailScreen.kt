@@ -34,9 +34,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appwatch.R
-import com.example.appwatch.presentation.viewmodel.AppDetailViewModel
-import com.example.appwatch.presentation.viewmodel.StorageViewModel
-import com.example.appwatch.presentation.viewmodel.RiskTier
+import com.example.appwatch.ui.viewModels.AppDetailViewModel
+import com.example.appwatch.ui.viewModels.StorageViewModel
+import com.example.appwatch.ui.viewModels.RiskTier
 import com.example.appwatch.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)

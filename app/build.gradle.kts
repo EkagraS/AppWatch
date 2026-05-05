@@ -44,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     packaging {
         jniLibs {
@@ -53,8 +54,14 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.material)
     val work_version = "2.9.0"
     val hilt_ext_version = "1.2.0"
     val room_version = "2.6.1"

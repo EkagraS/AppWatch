@@ -3,10 +3,8 @@ package com.example.appwatch.ui.ScreenComponents
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
-import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
+import com.example.appwatch.ui.viewModels.UsageStatsViewModel
 import com.example.appwatch.ui.screens.AppIconSmall
 import com.example.appwatch.ui.theme.*
 

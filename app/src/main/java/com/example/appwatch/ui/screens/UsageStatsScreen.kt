@@ -5,9 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Process
 import android.provider.Settings
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +40,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
-import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
+import com.example.appwatch.ui.viewModels.UsageStatsViewModel
 import com.example.appwatch.ui.ScreenComponents.KnowYourUsageSection
 import com.example.appwatch.ui.ScreenComponents.UsageStatsLoader
 import com.example.appwatch.ui.theme.*

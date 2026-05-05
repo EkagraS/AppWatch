@@ -1,4 +1,4 @@
-package com.example.appwatch.presentation.viewmodel
+package com.example.appwatch.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -117,66 +117,75 @@ class AppDetailViewModel @Inject constructor(
                 permissionAccessDao.getEventsForApp(pkg).onStart { emit(emptyList()) }
             ) { appUsageHistory, todayEntity, weekTotal, monthTotal, permEvents ->
 
-                val appInfo = packageManagerHelper.getAppInfo(pkg, 0)
-                val usageTodayMs = todayEntity?.totalTimeInForeground ?: 0L
-                val launchesToday = usageStatsHelper.getAppLaunchesToday(pkg)
-                val lastUsed = usageStatsHelper.getLastUsedString(pkg)
+                try {
+                    val appInfo = packageManagerHelper.getAppInfo(pkg, 0)
+                    val usageTodayMs = todayEntity?.totalTimeInForeground ?: 0L
+                    val launchesToday = usageStatsHelper.getAppLaunchesToday(pkg)
+                    val lastUsed = usageStatsHelper.getLastUsedString(pkg)
 
-                val weekTotalMs = weekTotal ?: usageStatsHelper.getAppUsageThisWeek(pkg)
-                val monthTotalMs = monthTotal ?: 0L
-                val weeklyAvgMs = if (appUsageHistory.isNotEmpty()) {
-                    appUsageHistory.take(7).sumOf { it.totalTimeInForeground } / 7
-                } else {
-                    weekTotalMs / 7
-                }
+                    val weekTotalMs = weekTotal ?: usageStatsHelper.getAppUsageThisWeek(pkg)
+                    val monthTotalMs = monthTotal ?: 0L
+                    val weeklyAvgMs = if (appUsageHistory.isNotEmpty()) {
+                        appUsageHistory.take(7).sumOf { it.totalTimeInForeground } / 7
+                    } else {
+                        weekTotalMs / 7
+                    }
 
+                    val manifestPerms = packageManagerHelper.getPermissionsForApp(pkg)
 
-                val manifestPerms = packageManagerHelper.getPermissionsForApp(pkg)
+                    val sensitivePerms = manifestPerms.filter { it.name in sensitivePermissions }.map { perm ->
+                        PermissionEvidence(
+                            name = perm.name,
+                            riskTier = RiskTier.SENSITIVE,
+                            lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
+                                formatLastAccess(it.accessTimestamp)
+                            } ?: ""
+                        )
+                    }
 
-                val sensitivePerms = manifestPerms.filter { it.name in sensitivePermissions }.map { perm ->
-                    PermissionEvidence(
-                        name = perm.name,
-                        riskTier = RiskTier.SENSITIVE,
-                        lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
-                            formatLastAccess(it.accessTimestamp)
-                        } ?: ""
+                    val normalPerms = manifestPerms.filter { it.name !in sensitivePermissions }.map { perm ->
+                        PermissionEvidence(
+                            name = perm.name,
+                            riskTier = RiskTier.STANDARD,
+                            lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
+                                formatLastAccess(it.accessTimestamp)
+                            } ?: ""
+                        )
+                    }
+
+                    val specialPerms = packageManagerHelper.getSpecialPermissions(pkg).map { specName ->
+                        PermissionEvidence(
+                            name = specName,
+                            riskTier = RiskTier.HIGH,
+                            lastAccess = ""
+                        )
+                    }
+
+                    val allPermissions = (normalPerms + sensitivePerms + specialPerms)
+
+                    AppDetailUiState(
+                        isLoading = false,
+                        appInfo = appInfo,
+                        usageToday = usageStatsHelper.formatDuration(usageTodayMs),
+                        usageWeek = usageStatsHelper.formatDuration(weekTotalMs),
+                        weeklyAverage = usageStatsHelper.formatDuration(weeklyAvgMs),
+                        monthlyTotal = usageStatsHelper.formatDuration(monthTotalMs),
+                        launchesToday = launchesToday,
+                        lastUsed = lastUsed,
+                        permissions = allPermissions
+                    )
+                } catch (e: Exception) {
+                    AppDetailUiState(
+                        isLoading = false,
+                        appInfo = null,
+                        lastUsed = "App details not available or uninstalled."
                     )
                 }
-
-                val normalPerms = manifestPerms.filter { it.name !in sensitivePermissions }.map { perm ->
-                    PermissionEvidence(
-                        name = perm.name,
-                        riskTier = RiskTier.STANDARD,
-                        lastAccess = permEvents.find { it.permissionName == perm.name }?.let {
-                            formatLastAccess(it.accessTimestamp)
-                        } ?: ""
-                    )
+            }
+                .catch { e ->
+                    emit(AppDetailUiState(isLoading = false, lastUsed = "Database Error"))
                 }
-
-                // 2. Get Special Settings Permissions (Direct Names)
-                val specialPerms = packageManagerHelper.getSpecialPermissions(pkg).map { specName ->
-                    PermissionEvidence(
-                        name = specName,
-                        riskTier = RiskTier.HIGH,
-                        lastAccess = ""
-                    )
-                }
-
-                // 3. Merge and Count
-                val allPermissions = (normalPerms + sensitivePerms + specialPerms)
-
-                AppDetailUiState(
-                    isLoading = false,
-                    appInfo = appInfo,
-                    usageToday = usageStatsHelper.formatDuration(usageTodayMs),
-                    usageWeek = usageStatsHelper.formatDuration(weekTotalMs),
-                    weeklyAverage = usageStatsHelper.formatDuration(weeklyAvgMs),
-                    monthlyTotal = usageStatsHelper.formatDuration(monthTotalMs),
-                    launchesToday = launchesToday,
-                    lastUsed = lastUsed,
-                    permissions = allPermissions
-                )
-            }.flowOn(Dispatchers.IO)
+                .flowOn(Dispatchers.IO)
         }
         .stateIn(
             scope = viewModelScope,

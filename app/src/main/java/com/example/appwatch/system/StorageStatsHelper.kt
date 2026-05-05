@@ -132,53 +132,7 @@ class StorageStatsHelper @Inject constructor(
             null
         }
     }
-
-    fun getSystemAppsStorageTotal(): Long {
-        return try {
-            val userHandle = android.os.Process.myUserHandle()
-            val pm = context.packageManager
-
-            val totalStats = storageStatsManager.queryStatsForUser(
-                StorageManager.UUID_DEFAULT,
-                userHandle
-            )
-            val allAppsTotal = totalStats.appBytes +
-                    totalStats.dataBytes +
-                    totalStats.cacheBytes
-
-            // Fix shared UID — track counted UIDs
-            val installedApps = pm.getInstalledApplications(0)
-            var userAppsSum = 0L
-            val countedUids = mutableSetOf<Int>()
-
-            for (app in installedApps) {
-                val isSystem = (app.flags and
-                        android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
-                if (!isSystem && !countedUids.contains(app.uid)) {
-                    try {
-                        val stats = storageStatsManager.queryStatsForUid(
-                            StorageManager.UUID_DEFAULT, app.uid
-                        )
-                        userAppsSum += (stats.appBytes +
-                                stats.dataBytes +
-                                stats.cacheBytes)
-                        countedUids.add(app.uid)
-                    } catch (e: Exception) {}
-                }
-            }
-
-            allAppsTotal - userAppsSum
-        } catch (e: Exception) {
-            0L
-        }
-    }
-
     fun formatSize(bytes: Long): String {
-        return when {
-            bytes >= 1024L * 1024 * 1024 -> "%.1f GB".format(bytes / (1024.0 * 1024 * 1024))
-            bytes >= 1024L * 1024 -> "%.1f MB".format(bytes / (1024.0 * 1024))
-            bytes >= 1024L -> "%.1f KB".format(bytes / 1024.0)
-            else -> "$bytes B"
-        }
+        return android.text.format.Formatter.formatFileSize(context, bytes)
     }
 }

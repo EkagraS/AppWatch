@@ -1,5 +1,6 @@
 package com.example.appwatch.data.repository
 
+import android.util.Log
 import com.example.appwatch.data.local.dao.AppNotificationDao
 import com.example.appwatch.data.local.entity.AppNotificationEntity
 import com.example.appwatch.domain.repository.AppNotificationRepository
@@ -15,14 +16,26 @@ class AppNotificationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun incrementNotificationCount(packageName: String, date: String) {
-        notificationDao.incrementNotificationCount(packageName, date)
+        try {
+            notificationDao.incrementNotificationCount(packageName, date)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to increment notification count", e)
+        }
     }
 
     override suspend fun cleanOldNotifications(expiryDate: String) {
-        notificationDao.deleteOldNotifications(expiryDate)
+        try {
+            notificationDao.deleteOldNotifications(expiryDate)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to clean old notifications", e)
+        }
     }
 
     override suspend fun updateNotificationStats(packageName: String, date: String, type: String) {
-        notificationDao.updateNotificationStats(packageName, date, type)
+        try {
+            notificationDao.updateNotificationStats(packageName, date, type)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to update notification stats", e)
+        }
     }
 }

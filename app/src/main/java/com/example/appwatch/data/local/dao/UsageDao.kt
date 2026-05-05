@@ -87,7 +87,7 @@ interface UsageDao {
 
     // 4. Streak ke liye last event timestamp (Current active/inactive check)
     @Query("SELECT MAX(lastEventTimestamp) FROM app_usage")
-    suspend fun getLastSystemEventTime(): Long
+    suspend fun getLastSystemEventTime(): Long?
 // Separate data class for grouping
 
     @Query("SELECT * FROM app_usage WHERE usageDate >= :startDate")

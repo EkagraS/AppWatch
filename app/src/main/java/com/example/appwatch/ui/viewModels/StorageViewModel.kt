@@ -1,4 +1,4 @@
-package com.example.appwatch.presentation.viewmodel
+package com.example.appwatch.ui.viewModels
 
 import android.Manifest
 import android.content.Context
@@ -15,10 +15,13 @@ import com.example.appwatch.system.PackageManagerHelper
 import com.example.appwatch.system.StorageStatsHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 data class MediaStorageInfo(
@@ -57,7 +60,6 @@ class StorageViewModel @Inject constructor(
     }
 
     fun refreshAllData() {
-        // Pattern: Agar data pehle se hai toh loading skip (UsageStats pattern)
         if (_uiState.value.userApps.isNotEmpty()) {
             _uiState.update { it.copy(isLoadingFromRoom = false) }
             return
@@ -65,15 +67,9 @@ class StorageViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingFromRoom = true) }
-
             refreshInBackground()
-
-            // 2. Load Stats (Pattern: marathon/pace logic)
             checkMediaPermission()
-
-            // 3. Fetch from Room (Pattern: fetchAllDaysData)
             fetchRoomData()
-
             _uiState.update { it.copy(isLoadingFromRoom = false) }
         }
     }
@@ -119,39 +115,52 @@ class StorageViewModel @Inject constructor(
         }
     }
 
+    private var refreshJob: Job? = null
+
     fun refreshInBackground() {
         if (_uiState.value.isRefreshing) return
-        viewModelScope.launch(Dispatchers.IO) {
+
+        refreshJob?.cancel() // Purani job ko safe cancel karo
+        refreshJob = viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isRefreshing = true) }
 
-            val roomApps = appInfoDao.getAllAppsAlphabetical().firstOrNull() ?: emptyList()
-            val allEntities = if (roomApps.isEmpty()) {
-                val liveApps = packageManagerHelper.getInstalledAppsMetadata()
-                appInfoDao.insertAllMetadata(liveApps)
-                liveApps
-            } else {
-                roomApps
-            }
-
-            val now = System.currentTimeMillis()
-            allEntities.filter { !it.isSystemApp }.forEach { entity ->
-                val storageInfo = storageStatsHelper.getAppStorageInfo(entity.packageName)
-                if (storageInfo != null) {
-                    appInfoDao.updateAppStorage(
-                        packageName = entity.packageName,
-                        appSize = storageInfo.appSizeBytes,
-                        dataSize = storageInfo.dataSizeBytes,
-                        cacheSize = storageInfo.cacheSizeBytes,
-                        totalSize = storageInfo.totalSizeBytes,
-                        updatedAt = now
-                    )
+            try {
+                val roomApps = appInfoDao.getAllAppsAlphabetical().firstOrNull() ?: emptyList()
+                val allEntities = if (roomApps.isEmpty()) {
+                    val liveApps = packageManagerHelper.getInstalledAppsMetadata()
+                    appInfoDao.insertAllMetadata(liveApps)
+                    liveApps
+                } else {
+                    roomApps
                 }
+
+                val now = System.currentTimeMillis()
+                allEntities.filter { !it.isSystemApp }.forEach { entity ->
+                    try {
+                        val storageInfo = storageStatsHelper.getAppStorageInfo(entity.packageName)
+                        if (storageInfo != null) {
+                            appInfoDao.updateAppStorage(
+                                packageName = entity.packageName,
+                                appSize = storageInfo.appSizeBytes,
+                                dataSize = storageInfo.dataSizeBytes,
+                                cacheSize = storageInfo.cacheSizeBytes,
+                                totalSize = storageInfo.totalSizeBytes,
+                                updatedAt = now
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Ignore individual app failure, continue scanning others
+                    }
+                }
+                fetchRoomData()
+
+            } catch (e: CancellationException) {
+                throw e // Coroutine safe exit
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _uiState.update { it.copy(isRefreshing = false) }
             }
-
-            // Sync khatam hone ke baad data refresh
-            fetchRoomData()
-
-            _uiState.update { it.copy(isRefreshing = false) }
         }
     }
 
@@ -204,7 +213,7 @@ class StorageViewModel @Inject constructor(
         }
     }
 
-    private fun calculateFolderSize(folder: java.io.File): Long {
+    private fun calculateFolderSize(folder: File): Long {
         if (!folder.exists()) return 0L
         var size = 0L
         folder.walkTopDown().forEach { file ->

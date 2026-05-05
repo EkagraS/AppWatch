@@ -29,7 +29,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appwatch.R
-import com.example.appwatch.presentation.viewmodel.AppsWithPermissionViewModel
+import com.example.appwatch.ui.viewModels.AppsWithPermissionViewModel
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.SurfaceWhite
 import com.example.appwatch.ui.theme.TextPrimary

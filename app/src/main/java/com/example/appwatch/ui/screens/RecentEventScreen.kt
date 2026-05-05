@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.appwatch.R
 import com.example.appwatch.data.local.entity.RecentEventEntity
-import com.example.appwatch.presentation.viewmodel.DashboardViewModel
+import com.example.appwatch.ui.viewModels.DashboardViewModel
 import com.example.appwatch.ui.ScreenComponents.getIconForEventType
 import com.example.appwatch.ui.theme.*
 import kotlinx.coroutines.Dispatchers

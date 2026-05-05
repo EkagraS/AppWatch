@@ -1,6 +1,5 @@
 package com.example.appwatch.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +26,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.presentation.viewmodel.AppListViewModel
+import com.example.appwatch.ui.viewModels.AppListViewModel
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.ui.input.nestedscroll.nestedScroll

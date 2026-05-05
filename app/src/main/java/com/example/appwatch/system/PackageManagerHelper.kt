@@ -7,11 +7,9 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.os.Build
 import com.example.appwatch.data.local.entity.AppInfoEntity
 import com.example.appwatch.domain.model.AppInfo
-import com.example.appwatch.presentation.viewmodel.PermissionEvidence
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,7 +18,6 @@ import android.provider.Settings
 @Singleton
 class PackageManagerHelper @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val storageStatsManager: android.app.usage.StorageStatsManager
 ) {
     private val packageManager = context.packageManager
     private val userHandle = android.os.Process.myUserHandle()
@@ -127,19 +124,6 @@ class PackageManagerHelper @Inject constructor(
 //            if (packageInfo.packageName == context.packageName) return@mapNotNull null
             var totalSize = 0L
             var cacheSize = 0L
-
-            try {
-                val stats = storageStatsManager.queryStatsForPackage(
-                    appInfo.storageUuid,
-                    packageInfo.packageName,
-                    userHandle
-                )
-                // App Size + Data Size + Cache Size
-                totalSize = stats.appBytes + stats.dataBytes + stats.cacheBytes
-                cacheSize = stats.cacheBytes
-            } catch (e: Exception) {
-                // Fallback to 0 if permission is missing
-            }
 
             AppInfoEntity(
                 id=index+1,

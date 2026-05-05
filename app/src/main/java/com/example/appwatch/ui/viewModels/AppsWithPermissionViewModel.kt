@@ -1,4 +1,4 @@
-package com.example.appwatch.presentation.viewmodel
+package com.example.appwatch.ui.viewModels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,7 +8,9 @@ import com.example.appwatch.domain.model.SensitiveAccess
 import com.example.appwatch.domain.repository.PermissionRepository
 import com.example.appwatch.system.PackageManagerHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,11 +34,15 @@ class AppsWithPermissionViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    private var refreshJob: Job? = null
     init {
         // Step 1: Start observing Room (Jaise DashboardViewModel mein hai)
         viewModelScope.launch {
             repository.getAppsWithPermission(permissionType)
-                .catch { _isLoading.value = false }
+                .catch { e->
+                    _isLoading.value = false
+                    _apps.value = emptyList()
+                }
                 .collect { appsFromRoom ->
                     _apps.value = appsFromRoom.sortedWith(
                         compareBy({ it.isSystemApp }, { it.appName })
@@ -55,7 +61,9 @@ class AppsWithPermissionViewModel @Inject constructor(
     private fun refreshPermissionCache() {
         if (permissionType.isEmpty()) return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch(Dispatchers.IO) {
+            _isRefreshing.value = true
             _isRefreshing.value = true
             try {
                 val allApps = packageManagerHelper.getInstalledAppsMetadata()
@@ -73,10 +81,13 @@ class AppsWithPermissionViewModel @Inject constructor(
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
                 _isRefreshing.value = false
+                _isLoading.value = false
             }
         }
     }

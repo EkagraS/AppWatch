@@ -1,6 +1,7 @@
 package com.example.appwatch.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.appwatch.data.local.dao.PermissionAccessDao
 import com.example.appwatch.data.local.entity.PermissionAccessEntity
 import com.example.appwatch.domain.model.AppInfo
@@ -52,18 +53,27 @@ class PermissionRepositoryImpl @Inject constructor(
     override fun getAppsWithPermission(permissionName: String): Flow<List<AppInfo>> {
         return permissionAccessDao.getEventsByPermission(permissionName).map { entities ->
             entities.mapNotNull { entity ->
-                val systemAppInfo = packageManagerHelper.getAppInfo(entity.packageName, entity.id)
-                systemAppInfo?.copy(id = entity.id)
-//                packageManagerHelper.getAppInfo(entity.packageName)
+                try {
+                    val systemAppInfo = packageManagerHelper.getAppInfo(entity.packageName, entity.id)
+                    systemAppInfo?.copy(id = entity.id)
+                } catch (e: Exception) {
+                    Log.e("REPO_ERROR", "PackageManager failed for ${entity.packageName}", e)
+                    null
+                }
             }
         }
     }
+
     override suspend fun logAccessEvent(access: SensitiveAccess) {
-        val entity = PermissionAccessEntity(
-            packageName = access.packageName,
-            permissionName = access.accessType,
-            accessTimestamp = System.currentTimeMillis(),
-        )
-        permissionAccessDao.insertAccessEvent(entity)
+        try {
+            val entity = PermissionAccessEntity(
+                packageName = access.packageName,
+                permissionName = access.accessType,
+                accessTimestamp = System.currentTimeMillis(),
+            )
+            permissionAccessDao.insertAccessEvent(entity)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to log access event", e)
+        }
     }
 }

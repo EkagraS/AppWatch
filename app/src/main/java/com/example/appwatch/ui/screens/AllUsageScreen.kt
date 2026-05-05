@@ -17,12 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.appwatch.R
 import com.example.appwatch.domain.model.AppUsage
-import com.example.appwatch.presentation.viewmodel.UsageStatsViewModel
+import com.example.appwatch.ui.viewModels.UsageStatsViewModel
 import com.example.appwatch.ui.theme.BackgroundLight
 import com.example.appwatch.ui.theme.Teal50
 import com.example.appwatch.ui.theme.TextPrimary

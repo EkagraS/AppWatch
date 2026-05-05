@@ -8,8 +8,13 @@ import android.net.NetworkCapabilities
 import com.example.appwatch.data.local.entity.AppDataUsageEntity
 import com.example.appwatch.domain.repository.AppDataUsageRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 
 class DataUsageManager @Inject constructor(
@@ -20,41 +25,50 @@ class DataUsageManager @Inject constructor(
     private val packageManager = context.packageManager
 
     suspend fun trackTodayUsage() {
-        val today = LocalDate.now().toString()
-        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val currentTime = System.currentTimeMillis()
+        // Reason: Heavy operations (OS IPC aur DB writes) ko IO thread par bheja taaki UI freeze na ho.
+        withContext(Dispatchers.IO) {
+            try {
+                val calendar = Calendar.getInstance()
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
 
-        // 1. Sabse pehle Mobile aur WiFi ka saara data ek baar mein fetch kar lo (Optimized)
-        val mobileStatsMap = getNetworkUsageMap(NetworkCapabilities.TRANSPORT_CELLULAR, startOfDay, currentTime)
-        val wifiStatsMap = getNetworkUsageMap(NetworkCapabilities.TRANSPORT_WIFI, startOfDay, currentTime)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                val startOfDay = calendar.timeInMillis
+                val currentTime = System.currentTimeMillis()
 
-        // 2. Installed apps ki list nikaalo
-        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+                val mobileStatsMap = getNetworkUsageMap(NetworkCapabilities.TRANSPORT_CELLULAR, startOfDay, currentTime)
+                val wifiStatsMap = getNetworkUsageMap(NetworkCapabilities.TRANSPORT_WIFI, startOfDay, currentTime)
 
-        for (app in installedApps) {
-            val uid = app.uid
-            val mobileBytes = mobileStatsMap[uid] ?: 0L
-            val wifiBytes = wifiStatsMap[uid] ?: 0L
+                val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
 
-            // 3. Wahi variables use kar raha hoon jo Entity mein hain
-            if (mobileBytes > 0 || wifiBytes > 0) {
-                repository.updateUsageData(
-                    AppDataUsageEntity(
-                        packageName = app.packageName,
-                        date = today,
-                        mobileUsageBytes = mobileBytes,
-                        wifiUsageBytes = wifiBytes
-                    )
-                )
+                for (app in installedApps) {
+                    val uid = app.uid
+                    val mobileBytes = mobileStatsMap[uid] ?: 0L
+                    val wifiBytes = wifiStatsMap[uid] ?: 0L
+
+                    if (mobileBytes > 0 || wifiBytes > 0) {
+                        repository.updateUsageData(
+                            AppDataUsageEntity(
+                                packageName = app.packageName,
+                                date = today,
+                                mobileUsageBytes = mobileBytes,
+                                wifiUsageBytes = wifiBytes
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
-
     private fun getNetworkUsageMap(networkType: Int, startTime: Long, endTime: Long): Map<Int, Long> {
         val usageMap = mutableMapOf<Int, Long>()
+        var networkStats: NetworkStats? = null
         try {
-            // 🔴 Yahan 'querySummary' use hoga, jo 'NetworkStats' (Iterator) return karta hai
-            val networkStats = networkStatsManager.querySummary(networkType, null, startTime, endTime)
+            networkStats = networkStatsManager.querySummary(networkType, null, startTime, endTime)
             val bucket = NetworkStats.Bucket()
 
             while (networkStats.hasNextBucket()) {
@@ -63,9 +77,13 @@ class DataUsageManager @Inject constructor(
                 val bytes = bucket.rxBytes + bucket.txBytes
                 usageMap[uid] = (usageMap[uid] ?: 0L) + bytes
             }
-            networkStats.close() // 🔴 Ab 'close' chalega
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            try {
+                networkStats?.close()
+            } catch (e: Exception) {
+            }
         }
         return usageMap
     }

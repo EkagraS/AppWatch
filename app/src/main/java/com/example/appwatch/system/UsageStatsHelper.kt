@@ -15,21 +15,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import android.os.Process
 
-/**
- * The "Statistician" of the app.
- * Interacts with Android's UsageStatsManager to calculate screen time,
- * track app launches, and generate weekly activity charts.
- */
 @Singleton
 class UsageStatsHelper @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-
-    /**
-     * Fetches usage data for all apps used today.
-     * Maps raw system data into our UsageEntity for the database.
-     */
 
     val blockedPackages = setOf(
         "com.miui.home",                // MIUI launcher
@@ -440,12 +430,10 @@ class UsageStatsHelper @Inject constructor(
 
         var totalBytes = 0L
         try {
-            // Mobile Data
             val mobileBucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, calendar.timeInMillis, System.currentTimeMillis())
             totalBytes += mobileBucket.rxBytes + mobileBucket.txBytes
 
-            // WiFi
-            val wifiBucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_WIFI, "", calendar.timeInMillis, System.currentTimeMillis())
+            val wifiBucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_WIFI, null, calendar.timeInMillis, System.currentTimeMillis())
             totalBytes += wifiBucket.rxBytes + wifiBucket.txBytes
         } catch (e: Exception) { e.printStackTrace() }
 

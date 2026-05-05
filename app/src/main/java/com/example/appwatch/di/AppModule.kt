@@ -56,33 +56,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNotificationRepository(
-        dao: AppNotificationDao
-    ): AppNotificationRepository {
-        return AppNotificationRepositoryImpl(dao)
-    }
-
-    @Provides
-    @Singleton
     fun provideDataUsageDao(db: AppWatchDatabase): AppDataUsageDao {
         return db.appDataUsageDao()
     }
 
     @Provides
     @Singleton
-    fun provideDataUsageRepository(dao: AppDataUsageDao): AppDataUsageRepository {
-        return AppDataUsageRepositoryImpl(dao)
-    }
-
-    @Provides
-    @Singleton
     fun provideVitalsDao(db: AppWatchDatabase): VitalsDao {
         return db.vitalsDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideVitalsRepository(dao: VitalsDao): VitalsRepository {
-        return VitalsRepositoryImpl(dao)
     }
 }

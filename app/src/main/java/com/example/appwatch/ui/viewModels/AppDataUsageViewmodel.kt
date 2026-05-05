@@ -1,4 +1,4 @@
-package com.example.appwatch.ui.viewmodels
+package com.example.appwatch.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,8 +8,11 @@ import com.example.appwatch.data.manager.DataUsageManager
 import com.example.appwatch.domain.repository.AppDataUsageRepository
 import com.example.appwatch.domain.repository.AppNotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,17 +38,21 @@ class AppDataUsageViewmodel @Inject constructor(
 
     private val todayDate = LocalDate.now().toString()
 
+    private var collectionJob: Job? = null
     init {
         refreshStats()
     }
 
     fun refreshStats() {
-        viewModelScope.launch {
+        collectionJob?.cancel()
+        collectionJob =viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
             // 1. System se fresh data fetch karo (On-demand)
             try {
                 dataUsageManager.trackTodayUsage()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Data fetch failed: ${e.message}") }
             }
@@ -55,14 +62,24 @@ class AppDataUsageViewmodel @Inject constructor(
                 notificationRepo.getNotificationsByDate(todayDate),
                 dataUsageRepo.getUsageByDate(todayDate)
             ) { notifications, usage ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        notifications = notifications,
-                        dataUsage = usage
-                    )
+                // Naya state return karo
+                _uiState.value.copy(
+                    isLoading = false,
+                    notifications = notifications,
+                    dataUsage = usage
+                )
+            }
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Database error: ${e.localizedMessage}"
+                        )
+                    }
                 }
-            }.collect { }
+                .collect { newState ->
+                    _uiState.value = newState
+                }
         }
     }
 }

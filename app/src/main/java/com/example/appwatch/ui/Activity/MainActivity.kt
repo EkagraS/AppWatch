@@ -1,16 +1,15 @@
-package com.example.appwatch
+package com.example.appwatch.ui.Activity
 
-import android.R.attr.type
-import android.content.Intent
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.core.app.NotificationManagerCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -32,12 +31,19 @@ import com.example.appwatch.ui.screens.today.AppDataUsageScreen
 import com.example.appwatch.ui.screens.today.AppNotificationScreen
 import com.example.appwatch.ui.theme.AppWatch2Theme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lifecycleScope.launch {
+            delay(15000L) // 15 sec stability check
+            val sharedPrefs = getSharedPreferences("app_watch_prefs", Context.MODE_PRIVATE)
+            sharedPrefs.edit().putInt("continuous_crash_count", 0).apply()
+        }
         setContent {
             AppWatch2Theme {
                 val navController = rememberNavController()

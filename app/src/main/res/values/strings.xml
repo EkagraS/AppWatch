@@ -1,10 +1,9 @@
 <resources>
 
-<!--     Splash Screen      -->
+    <!--     Splash Screen      -->
     <string name="app_name">AppWatch</string>
     <string name="app_punch_line">Know what your apps\nare doing to you.</string>
     <string name="app_version">v1.0.0</string>
-
 
 
     <!--     Onboarding Screen          -->
@@ -58,8 +57,7 @@
     <string name="onboarding_media_downloads">Downloads Folder</string>
 
 
-
-<!--    Settings Screen     -->
+    <!--    Settings Screen     -->
 
     <string name="settings_title">Settings</string>
     <string name="settings_about_desc">AppWatch helps you understand what\'s happening on your phone. See which apps use your camera, drain your storage, or sit unused with sensitive permissions. Everything runs on your device and nothing is ever shared.</string>
@@ -205,8 +203,7 @@
     <string name="legal_licenses">Open Source Licenses</string>
 
 
-
-<!--    Dashboard Screen        -->
+    <!--    Dashboard Screen        -->
     <string name="dash_syncing">Syncing system data…</string>
     <string name="dash_header_overview">Overview</string>
     <string name="dash_header_today">Today\'s Activity</string>
@@ -234,8 +231,7 @@
     <string name="dash_insight_sms">SMS</string>
 
 
-
-<!--    Recent Activity Section     -->
+    <!--    Recent Activity Section     -->
     <string name="recent_header">Recent Activity</string>
     <string name="recent_empty_title">All Caught Up</string>
     <string name="recent_empty_desc">No recent events to show</string>
@@ -249,14 +245,12 @@
     <string name="desc_sideloaded_warning">These apps were not installed from an official store.</string>
 
 
-
-<!--    Needs Attention Section     -->
+    <!--    Needs Attention Section     -->
     <string name="attention_header">Needs Attention</string>
     <string name="attention_empty_state">All systems look secure. No immediate action required.</string>
 
 
-
-<!--    App List Screen     -->
+    <!--    App List Screen     -->
     <string name="app_list_title">Installed Apps</string>
     <string name="search_hint">Search apps…</string>
     <string name="loading_apps">Loading apps…</string>
@@ -273,8 +267,7 @@
     <string name="cd_clear_search">Clear search</string>
 
 
-
-<!--    App detail Screen   -->
+    <!--    App detail Screen   -->
     <string name="detail_title_analysis">App Analysis</string>
     <string name="detail_header_usage">Usage Statistics</string>
     <string name="detail_header_perms">Permissions</string>
@@ -301,8 +294,7 @@
     <string name="cd_system_settings">System Settings</string>
 
 
-
-<!--    All Apps Storage Screen     -->
+    <!--    All Apps Storage Screen     -->
     <string name="storage_all_apps_title">All Apps</string>
     <string name="storage_analyzing">Analyzing app storage…</string>
     <string name="storage_total_header">Total App Storage</string>
@@ -315,8 +307,7 @@
     <string name="storage_apps_count_template">%1$d downloaded apps</string>
 
 
-
-<!--    Storage Details Screen  -->
+    <!--    Storage Details Screen  -->
     <string name="storage_analysis_title">Storage Analysis</string>
     <string name="storage_updating_msg">Updating storage data…</string>
     <string name="storage_device_header">Device Storage</string>
@@ -342,13 +333,11 @@
     <string name="storage_status_free">Free: %1$s</string>
 
 
-
     <!--    All Usage Screen  -->
     <string name="usage_all_apps_title">All Apps</string>
     <string name="usage_today">Today</string>
     <string name="usage_empty_state">No usage data for %1$s</string>
     <string name="usage_apps_count">%1$d apps used</string>
-
 
 
     <!--    Usage Stats Screen  -->
@@ -376,7 +365,6 @@
     <string name="btn_view_more_apps">View all %1$d more apps</string>
 
 
-
     <!--    Know Your Usage Section  -->
     <string name="usage_insights_header">Usage Insights</string>
     <string name="usage_summary_today">Today\'s Summary</string>
@@ -390,7 +378,6 @@
     <string name="usage_no_data">No data available yet</string>
 
     <string name="cd_expand">Expand</string>
-
 
 
     <!--    Apps With Permission Screen  -->
@@ -446,13 +433,11 @@
     <string name="tier_sensitive_short">Sensitive</string>
 
 
-
     <!--    App Data Usage Screen  -->
     <string name="data_usage_title">Today\'s Data Usage</string>
     <string name="data_usage_empty_state">No apps used more than 1MB today.</string>
     <string name="label_mobile">Mobile: %1$s</string>
     <string name="label_wifi">WiFi: %1$s</string>
-
 
 
     <!--    App Notification Screen  -->
@@ -461,7 +446,6 @@
     <string name="notif_label_total">Total Notifications</string>
     <string name="notif_status_loading">Loading…</string>
     <string name="notif_empty_state">No notifications tracked yet</string>
-
 
 
     <!--    Needs Attention Screen  -->
@@ -496,7 +480,6 @@
     <string name="perm_desc_vpn_body">Acts as an \'Internet Guard\'. Secures your connection on public Wi-Fi, but it means the app can see and route all your internet traffic.</string>
 
 
-
     <!--    Recent Event Screen  -->
     <string name="title_recent_install">Newly Installed Apps</string>
     <string name="title_recent_update">Recently Updated Apps</string>
@@ -505,7 +488,6 @@
     <string name="title_recent_data_hog">High Data Consumption</string>
     <string name="title_recent_default">Recent App Activity</string>
     <string name="recent_no_activity">No activity recorded yet</string>
-
 
 
     <!--    Notification Loader  -->
@@ -521,15 +503,12 @@
     <string name="btn_open_settings">Open Settings</string>
 
 
-
     <!--    Shimmer Components  -->
     <string name="initial_loader_scanning_cd">Scanning</string>
     <string name="initial_loader_title">Setting up AppWatch</string>
     <string name="initial_loader_subtitle">Scanning your apps.</string>
     <string name="initial_loader_hint">It only takes minutes to set up.</string>
     <string name="initial_loader_privacy_badge">PRIVATE &amp; OFFLINE ANALYSIS</string>
-
-
 
 
     <!--    Usage Stats Loader  -->
@@ -552,7 +531,48 @@
     <string name="dialog_privacy_timer_msg">Important: You might see a 10-second safety timer on your device settings. This is for security purposes and you can safely grant them. We never read your private content.\n You can always remove this from the settings.</string>
     <string name="btn_proceed">Proceed</string>
     <string name="btn_later">Later</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
 
+    <string name="lorem_ipsum">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
+        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
+        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
+        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
+        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
+        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
+        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
+        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
+        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
+        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
+        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
+        bibendum, vel congue leo egestas.\n\n
+        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
+        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
+        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
+        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
+        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
+        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
+        est.\n\n
+        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
+        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
+        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
+        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
+        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
+        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
+        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
+        convallis.\n\n
+        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
+        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
+        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
+        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
+        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
+        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
+        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    </string>
 
 
 </resources>

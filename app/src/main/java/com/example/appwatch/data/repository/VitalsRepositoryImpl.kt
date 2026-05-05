@@ -1,5 +1,6 @@
 package com.example.appwatch.data.repository
 
+import android.util.Log
 import com.example.appwatch.data.local.dao.VitalsDao
 import com.example.appwatch.data.local.entity.VitalsEntity
 import com.example.appwatch.domain.repository.VitalsRepository
@@ -16,10 +17,18 @@ class VitalsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveDailyVitals(vitals: VitalsEntity) {
-        vitalsDao.insertVitals(vitals)
+        try {
+            vitalsDao.insertVitals(vitals)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to save daily vitals", e)
+        }
     }
 
     override suspend fun cleanup(threshold: Long) {
-        vitalsDao.deleteOldVitals(threshold)
+        try {
+            vitalsDao.deleteOldVitals(threshold)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to cleanup vitals", e)
+        }
     }
 }

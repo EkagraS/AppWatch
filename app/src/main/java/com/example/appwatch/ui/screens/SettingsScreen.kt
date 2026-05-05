@@ -59,7 +59,8 @@ enum class SheetType {
     PRIVACY,
     TERMS,
     LICENSES,
-    CONTACT
+    CONTACT,
+    ABOUT
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -462,7 +463,7 @@ fun SettingsScreen(navController: NavController) {
                                     try {
                                         val intent = Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("https://github.com/ekagra-shandilya")
+                                            Uri.parse("https://github.com/EkagraS/AppWatch/")
                                         )
                                         context.startActivity(intent)
                                     } catch (e: Exception) {
@@ -480,7 +481,7 @@ fun SettingsScreen(navController: NavController) {
                                     try {
                                         val intent = Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("https://github.com/ekagra-shandilya") // Apna actual GitHub link daal dena
+                                            Uri.parse("https://www.linkedin.com/in/ekagra-shandilya-3944a0256") // Apna actual GitHub link daal dena
                                         )
                                         context.startActivity(intent)
                                     } catch (e: Exception) {
@@ -502,6 +503,14 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 ContactLinkRow(
+                    icon = Icons.Default.Info,
+                    label = "About AppWatch",
+                    value = "Version v1",
+                    color = Color(0xFF6366F1),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                    onClick = { activeSheet = SheetType.ABOUT }
+                )
+                ContactLinkRow(
                     icon = Icons.Default.Code,
                     label = stringResource(R.string.settings_dev_github_label),
                     value = stringResource(R.string.settings_dev_github_value),
@@ -511,7 +520,7 @@ fun SettingsScreen(navController: NavController) {
                         try {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://github.com/ekagra-shandilya") // Apna actual GitHub link daal dena
+                                Uri.parse("https://github.com/EkagraS/") // Apna actual GitHub link daal dena
                             )
                             context.startActivity(intent)
                         } catch (e: Exception) {
@@ -612,6 +621,7 @@ fun SettingsScreen(navController: NavController) {
                 SheetType.TERMS -> TermsSheet()
                 SheetType.LICENSES -> LicensesSheet()
                 SheetType.CONTACT -> {}
+                SheetType.ABOUT -> AboutDetailSheet()
                 else -> {}
             }
         }
@@ -1079,6 +1089,29 @@ fun LicensesSheet() {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 18.sp
+        )
+    }
+}
+
+@Composable
+fun AboutDetailSheet() {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 40.dp)
+            .verticalScroll(scrollState)
+    ) {
+        Text("About", fontSize = 22.sp, fontWeight = FontWeight.Black)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Thanks for trying out AppWatch! This is a solo developed app currently in its v1 (Beta) stage.\n\n" +
+                    "Since Android handles usage data differently across various manufacturers and devices, you might encounter some unexpected behavior or minor bugs. I’m constantly refining the app to ensure it works smoothly for everyone.\n\n" +
+                    "If you hit a snag, notice something 'rough around the edges,' or have an idea to make the app better, please share your thoughts through our Feedback Form. Your insights are exactly what I need to make AppWatch better for everyone!",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            lineHeight = 22.sp
         )
     }
 }

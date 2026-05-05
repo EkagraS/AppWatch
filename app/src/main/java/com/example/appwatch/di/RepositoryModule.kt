@@ -2,12 +2,16 @@ package com.example.appwatch.di
 
 import com.example.appwatch.data.local.AppWatchDatabase
 import com.example.appwatch.data.local.dao.RecentEventDao
+import com.example.appwatch.data.repository.AppDataUsageRepositoryImpl
 import com.example.appwatch.data.repository.AppInfoRepositoryImpl
+import com.example.appwatch.data.repository.AppNotificationRepositoryImpl
 import com.example.appwatch.data.repository.DashboardRepositoryImpl
 import com.example.appwatch.data.repository.PermissionRepositoryImpl
 import com.example.appwatch.data.repository.UsageRepositoryImpl
 import com.example.appwatch.data.repository.VitalsRepositoryImpl
+import com.example.appwatch.domain.repository.AppDataUsageRepository
 import com.example.appwatch.domain.repository.AppInfoRepository
+import com.example.appwatch.domain.repository.AppNotificationRepository
 import com.example.appwatch.domain.repository.DashboardRepository
 import com.example.appwatch.domain.repository.PermissionRepository
 import com.example.appwatch.domain.repository.UsageRepository
@@ -52,4 +56,16 @@ abstract class RepositoryModule {
     abstract fun bindVitalsRepository(
         vitalsRepositoryImpl: VitalsRepositoryImpl
     ): VitalsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppNotificationRepository(
+        impl: AppNotificationRepositoryImpl
+    ): AppNotificationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppDataUsageRepository(
+        impl: AppDataUsageRepositoryImpl
+    ): AppDataUsageRepository
 }

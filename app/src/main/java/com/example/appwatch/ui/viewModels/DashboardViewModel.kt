@@ -1,4 +1,4 @@
-package com.example.appwatch.presentation.viewmodel
+package com.example.appwatch.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +7,8 @@ import com.example.appwatch.data.local.entity.RecentEventEntity
 import com.example.appwatch.domain.model.DashboardSummary
 import com.example.appwatch.domain.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -58,6 +60,7 @@ class DashboardViewModel @Inject constructor(
         _auditFilter.value = days
     }
 
+    private var refreshJob: Job? = null
 
     fun formatDataUsage(bytes: Long): String {
         if (bytes == 0L) return "0 MB"
@@ -69,29 +72,33 @@ class DashboardViewModel @Inject constructor(
         }
     }
     init {
-        // Step 1: Start observing Room
         viewModelScope.launch {
             dashboardRepository.getDashboardSummaryFlow()
-                .catch { e -> _uiState.update { it.copy(error = e.message, isLoadingFromRoom = false) } }
+                .catch { e ->
+                    _uiState.update { it.copy(error = "Database Error: ${e.localizedMessage}", isLoadingFromRoom = false) }
+                }
                 .collect { summary ->
-                    _uiState.update {
-                        it.copy(summary = summary, isLoadingFromRoom = false)
-                    }
+                    _uiState.update { it.copy(summary = summary, isLoadingFromRoom = false) }
                 }
         }
-        // Step 2: Refresh system data & cache
         refreshInBackground()
     }
 
     fun refreshInBackground() {
         if (_uiState.value.isRefreshing) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true) }
-            dashboardRepository.refreshAllData()
-            _uiState.update { it.copy(
-                isRefreshing = false,
-                isFirstSync = false
-            )}
+
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isRefreshing = true, error = null) }
+                dashboardRepository.refreshAllData()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Sync Failed: ${e.localizedMessage}") }
+            } finally {
+                _uiState.update { it.copy(isRefreshing = false, isFirstSync = false) }
+            }
         }
     }
 

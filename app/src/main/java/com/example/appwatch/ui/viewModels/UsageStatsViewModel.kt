@@ -1,4 +1,4 @@
-package com.example.appwatch.presentation.viewmodel
+package com.example.appwatch.ui.viewModels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,11 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appwatch.data.local.dao.UsageDao
-import com.example.appwatch.data.local.entity.UsageEntity
 import com.example.appwatch.domain.model.AppUsage
 import com.example.appwatch.domain.repository.UsageRepository
-import com.example.appwatch.domain.usecase.GetAppUsageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UsageStatsViewModel @Inject constructor(
-    private val getAppUsageUseCase: GetAppUsageUseCase,
     private val usageRepository: UsageRepository,
     private val usageDao: UsageDao
 ) : ViewModel() {
@@ -38,10 +37,10 @@ class UsageStatsViewModel @Inject constructor(
     val allDaysUsage: StateFlow<Map<Int, List<AppUsage>>> = _allDaysUsage.asStateFlow()
 
     // 3. Existing Flows (Kept as is for your components)
-    val dailyUsageList = getAppUsageUseCase()
+    val dailyUsageList = usageRepository.getDailyUsage()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val weeklyChartData = getAppUsageUseCase.getWeeklyStats()
+    val weeklyChartData = usageRepository.getWeeklyActivity()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val todayActiveStreak = usageRepository.getActiveStreak()
@@ -68,24 +67,34 @@ class UsageStatsViewModel @Inject constructor(
         refreshAllData()
     }
 
+    private var refreshJob: Job? = null
+
     fun refreshAllData() {
         if (allDaysUsage.value.isNotEmpty()) {
             isLoading = false
             return
         }
-        viewModelScope.launch {
+
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             isLoading = true
-            usageRepository.syncDailyUsage()
-            val pace = usageRepository.getUnlockPace()
-            val marathon = usageRepository.getMarathonSession()
+            try {
+                usageRepository.syncDailyUsage()
+                val pace = usageRepository.getUnlockPace()
+                val marathon = usageRepository.getMarathonSession()
 
-            unlockPace = pace
-            marathonAppName = marathon?.first ?: "None"
-            marathonTime = formatDuration(marathon?.second ?: 0L)
+                unlockPace = pace
+                marathonAppName = marathon?.first ?: "None"
+                marathonTime = formatDuration(marathon?.second ?: 0L)
 
-            fetchAllDaysData()
-
-            isLoading = false
+                fetchAllDaysData()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isLoading = false
+            }
         }
     }
 
@@ -132,6 +141,7 @@ class UsageStatsViewModel @Inject constructor(
     suspend fun getUsageForDay(dateTimestamp: Long): List<AppUsage> {
         val entities = usageDao.getUsageByDate(dateTimestamp).firstOrNull() ?: emptyList()
         val total = entities.sumOf { it.totalTimeInForeground }.toFloat().coerceAtLeast(1f)
+
         return entities
             .filter { it.totalTimeInForeground >= 60000 }
             .sortedByDescending { it.totalTimeInForeground }
@@ -145,7 +155,6 @@ class UsageStatsViewModel @Inject constructor(
                     lastUsedString = "Active"
                 )
             }
-        getTodayUsage()
     }
 
     // Today also comes from Room after sync
