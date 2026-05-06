@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.appwatch"
+    namespace = "com.ekagra.privascope"
     compileSdk =35
 
     lint {
@@ -16,7 +16,7 @@ android {
         abortOnError = false  // add this too so lint errors don't block release build
     }
     defaultConfig {
-        applicationId = "com.example.appwatch"
+        applicationId = "com.ekagra.privascope"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.material)

@@ -27,7 +27,7 @@
     </queries>
 
     <application
-        android:name=".AppWatchApplication"
+        android:name=".PrivaScopeApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -35,11 +35,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppWatch2">
+        android:theme="@style/Theme.PrivaScope">
         <service
             android:name=".services.NotificationKeeperService"
             android:exported="true"
-            android:label="AppWatch Notification Listener"
+            android:label="PrivaScope Notification Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -63,7 +63,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppWatch2">
+            android:theme="@style/Theme.PrivaScope">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -74,7 +74,7 @@
             android:name=".ui.activities.CrashRecoveryActivity"
             android:process=":recovery"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppWatch2" />
+            android:theme="@style/Theme.PrivaScope" />
     </application>
 
 </manifest>

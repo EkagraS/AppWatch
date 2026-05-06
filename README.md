@@ -1,7 +1,7 @@
-# AppWatch 🛡️
+# PrivaScope 🛡️
 ### Android App Intelligence & Privacy Monitor
 
-AppWatch is a system-level Android app that gives you complete visibility into how apps on your device truly behave behind the scenes. Most users grant permissions without ever knowing which apps actually use them, when they were last accessed, or how much time they consume daily. AppWatch surfaces all of this by tracking real-time usage patterns, monitoring sensitive data access via system-level APIs, and exposing apps that silently read your clipboard or access your camera and microphone without your awareness. Everything runs completely offline with no internet permission required and your data never leaves your device.
+PrivaScope is a system-level Android app that gives you complete visibility into how apps on your device truly behave behind the scenes. Most users grant permissions without ever knowing which apps actually use them, when they were last accessed, or how much time they consume daily. PrivaScope surfaces all of this by tracking real-time usage patterns, monitoring sensitive data access via system-level APIs, and exposing apps that silently read your clipboard or access your camera and microphone without your awareness. Everything runs completely offline with no internet permission required and your data never leaves your device.
 
 ---
 
@@ -66,7 +66,7 @@ A deep-dive view showing exactly how many times an app was launched today, along
 
 ## 🏗️ Architecture
 
-AppWatch is built on **Clean Architecture** with **MVVM** at the presentation layer. The codebase is divided into three strict layers data, domain, and presentation and with dependencies only pointing inward. The domain layer has zero dependencies on Android framework classes, making business logic independently testable.
+PrivaScope is built on **Clean Architecture** with **MVVM** at the presentation layer. The codebase is divided into three strict layers data, domain, and presentation and with dependencies only pointing inward. The domain layer has zero dependencies on Android framework classes, making business logic independently testable.
 
 The data layer interacts with Android system APIs and the local Room database. Use cases in the domain layer encapsulate all business logic and are the only bridge between data and presentation. ViewModels expose state via `StateFlow` and the Compose UI observes and reacts to state changes. Hilt manages dependency injection across all layers.
 
@@ -74,13 +74,13 @@ The data layer interacts with Android system APIs and the local Room database. U
 
 ## 🔐 Permissions Required
 
-AppWatch requires the following special permission to function:
+PrivaScope requires the following special permission to function:
 
-| Permission | Purpose | How to Grant |
-|------------|---------|--------------|
-| `PACKAGE_USAGE_STATS` | Access per-app usage and sensitive access data | Settings → Apps → Special App Access → Usage Access → AppWatch → Allow |
+| Permission | Purpose | How to Grant                                                             |
+|------------|---------|--------------------------------------------------------------------------|
+| `PACKAGE_USAGE_STATS` | Access per-app usage and sensitive access data | Settings → Apps → Special App Access → Usage Access → PrivaScope → Allow |
 
-> ⚠️ **Important:** `PACKAGE_USAGE_STATS` is a special permission that Android does not grant via a runtime dialog. On first launch, AppWatch detects if the permission is missing and redirects you directly to the correct system settings screen where you can enable it manually with one tap.
+> ⚠️ **Important:** `PACKAGE_USAGE_STATS` is a special permission that Android does not grant via a runtime dialog. On first launch, PrivaScope detects if the permission is missing and redirects you directly to the correct system settings screen where you can enable it manually with one tap.
 
 ---
 
@@ -94,7 +94,7 @@ AppWatch requires the following special permission to function:
 
 1. Clone the repository
 ```bash
-git clone https://github.com/EkagraS/AppWatch.git
+git clone https://github.com/EkagraS/PrivaScope.git
 ```
 
 2. Open the project in Android Studio
@@ -104,7 +104,7 @@ git clone https://github.com/EkagraS/AppWatch.git
 ./gradlew assembleDebug
 ```
 
-4. On first launch, grant the **Usage Access** permission when prompted — AppWatch will guide you directly to the right settings screen
+4. On first launch, grant the **Usage Access** permission when prompted — PrivaScope will guide you directly to the right settings screen
 
 ---
 

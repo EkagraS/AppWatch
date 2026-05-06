@@ -1,0 +1,79 @@
+package com.ekagra.privascope.data.repository
+
+import android.content.Context
+import android.util.Log
+import com.ekagra.privascope.data.local.dao.PermissionAccessDao
+import com.ekagra.privascope.data.local.entity.PermissionAccessEntity
+import com.ekagra.privascope.domain.model.AppInfo
+import com.ekagra.privascope.domain.model.PermissionInfo
+import com.ekagra.privascope.domain.model.SensitiveAccess
+import com.ekagra.privascope.domain.repository.PermissionRepository
+import com.ekagra.privascope.system.PackageManagerHelper
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
+import java.util.*
+import javax.inject.Inject
+
+class PermissionRepositoryImpl @Inject constructor(
+    private val permissionAccessDao: PermissionAccessDao,
+    private val packageManagerHelper: PackageManagerHelper,
+    @ApplicationContext private val context: Context
+) : PermissionRepository {
+
+    override fun getPermissionsForApp(packageName: String): Flow<List<PermissionInfo>> {
+        return permissionAccessDao.getEventsForApp(packageName).map { entities ->
+            entities.map { entity ->
+                PermissionInfo(
+                    permissionName = entity.permissionName,
+                    isSensitive = true,
+                    description = "System se logged access",
+                    granted = true
+                )
+            }
+        }
+    }
+
+    override fun getSensitiveAccessHistory(): Flow<List<SensitiveAccess>> {
+        val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+        return permissionAccessDao.getEventsForApp("").map { entities ->
+            entities.map { entity ->
+                SensitiveAccess(
+                    packageName = entity.packageName,
+                    appName = "App Name",
+                    accessType = entity.permissionName,
+                    timestampString = sdf.format(Date(entity.accessTimestamp)),
+                    isRealTime = false
+                )
+            }
+        }
+    }
+
+    override fun getAppsWithPermission(permissionName: String): Flow<List<AppInfo>> {
+        return permissionAccessDao.getEventsByPermission(permissionName).map { entities ->
+            entities.mapNotNull { entity ->
+                try {
+                    val systemAppInfo = packageManagerHelper.getAppInfo(entity.packageName, entity.id)
+                    systemAppInfo?.copy(id = entity.id)
+                } catch (e: Exception) {
+                    Log.e("REPO_ERROR", "PackageManager failed for ${entity.packageName}", e)
+                    null
+                }
+            }
+        }
+    }
+
+    override suspend fun logAccessEvent(access: SensitiveAccess) {
+        try {
+            val entity = PermissionAccessEntity(
+                packageName = access.packageName,
+                permissionName = access.accessType,
+                accessTimestamp = System.currentTimeMillis(),
+            )
+            permissionAccessDao.insertAccessEvent(entity)
+        } catch (e: Exception) {
+            Log.e("DB_ERROR", "Failed to log access event", e)
+        }
+    }
+}

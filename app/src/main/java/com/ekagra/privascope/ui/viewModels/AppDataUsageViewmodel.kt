@@ -1,0 +1,85 @@
+package com.ekagra.privascope.ui.viewModels
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ekagra.privascope.data.local.entity.AppDataUsageEntity
+import com.ekagra.privascope.data.local.entity.AppNotificationEntity
+import com.ekagra.privascope.data.manager.DataUsageManager
+import com.ekagra.privascope.domain.repository.AppDataUsageRepository
+import com.ekagra.privascope.domain.repository.AppNotificationRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+
+data class TodayUIState(
+    val isLoading: Boolean = false,
+    val notifications: List<AppNotificationEntity> = emptyList(),
+    val dataUsage: List<AppDataUsageEntity> = emptyList(),
+    val errorMessage: String? = null
+)
+
+@HiltViewModel
+class AppDataUsageViewmodel @Inject constructor(
+    private val notificationRepo: AppNotificationRepository,
+    private val dataUsageRepo: AppDataUsageRepository,
+    private val dataUsageManager: DataUsageManager
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(TodayUIState())
+    val uiState = _uiState.asStateFlow()
+
+    private val todayDate = LocalDate.now().toString()
+
+    private var collectionJob: Job? = null
+    init {
+        refreshStats()
+    }
+
+    fun refreshStats() {
+        collectionJob?.cancel()
+        collectionJob =viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            // 1. System se fresh data fetch karo (On-demand)
+            try {
+                dataUsageManager.trackTodayUsage()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Data fetch failed: ${e.message}") }
+            }
+
+            // 2. Room se dono flows ko combine karke UI ko update karo
+            combine(
+                notificationRepo.getNotificationsByDate(todayDate),
+                dataUsageRepo.getUsageByDate(todayDate)
+            ) { notifications, usage ->
+                // Naya state return karo
+                _uiState.value.copy(
+                    isLoading = false,
+                    notifications = notifications,
+                    dataUsage = usage
+                )
+            }
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Database error: ${e.localizedMessage}"
+                        )
+                    }
+                }
+                .collect { newState ->
+                    _uiState.value = newState
+                }
+        }
+    }
+}

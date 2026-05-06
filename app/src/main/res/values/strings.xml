@@ -1,15 +1,15 @@
 <resources>
 
     <!--     Splash Screen      -->
-    <string name="app_name">AppWatch</string>
-    <string name="app_punch_line">Know what your apps\nare doing to you.</string>
+    <string name="app_name">PrivaScope</string>
+    <string name="app_punch_line">See exactly\nwhat your apps see</string>
     <string name="app_version">v1.0.0</string>
 
 
     <!--     Onboarding Screen          -->
     <string name="onboarding_error">On some devices while granting this permission android might show you a 10-second security countdown, this is for security purposes and you can safely grant them.</string>
 
-    <string name="onboarding_page1">AppWatch shows you what your apps are doing that includes screen time, storage, permissions and more. It is 100% private, local, and your data never leaves this phone.</string>
+    <string name="onboarding_page1">PrivaScope shows you what your apps are doing that includes screen time, storage, permissions and more. It is 100% private, local, and your data never leaves this phone.</string>
 
     <string name="onboarding2_title">Screen Time and App Activity</string>
     <string name="onboarding2_description">We need the "Screen time" permission to show these to you.</string>
@@ -31,9 +31,9 @@
     <string name="btn_skip_storage">Skip — I\'ll enable this later</string>
 
     <string name="dialog_timer_title">One thing before you go</string>
-    <string name="dialog_timer_desc">Android will show a security screen with a 10-second countdown. This is completely normal — Android does this for all privacy apps.\n\nJust wait 10 seconds, find AppWatch in the list and toggle it ON.</string>
+    <string name="dialog_timer_desc">Android will show a security screen with a 10-second countdown. This is completely normal — Android does this for all privacy apps.\n\nJust wait 10 seconds, find PrivaScope in the list and toggle it ON.</string>
     <string name="dialog_skip_title">No problem!</string>
-    <string name="dialog_skip_desc">You can grant %1$s later from the Settings page inside AppWatch.</string>
+    <string name="dialog_skip_desc">You can grant %1$s later from the Settings page inside PrivaScope.</string>
 
     <string name="perm_usage_access">Usage Access</string>
     <string name="perm_notification_access">Notification Access</string>
@@ -60,26 +60,26 @@
     <!--    Settings Screen     -->
 
     <string name="settings_title">Settings</string>
-    <string name="settings_about_desc">AppWatch helps you understand what\'s happening on your phone. See which apps use your camera, drain your storage, or sit unused with sensitive permissions. Everything runs on your device and nothing is ever shared.</string>
-    <string name="settings_data_info_desc">AppWatch builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. Live usage stats may reset after a restart due to Android system limits, but your historical reports remain safe.</string>
+    <string name="settings_about_desc">PrivaScope helps you understand what\'s happening on your phone. See which apps use your camera, drain your storage, or sit unused with sensitive permissions. Everything runs on your device and nothing is ever shared.</string>
+    <string name="settings_data_info_desc">PrivaScope builds your privacy report over time. The app cannot access many of the previous data and it starts collecting them the day you install it. Live usage stats may reset after a restart due to Android system limits, but your historical reports remain safe.</string>
 
     <string name="settings_header_permissions">Permissions</string>
-    <string name="settings_header_how_it_works">How AppWatch Works</string>
+    <string name="settings_header_how_it_works">How PrivaScope Works</string>
     <string name="settings_header_legal">Legal</string>
     <string name="settings_header_developer">Developer</string>
 
     <string name="settings_perm_usage_title">App Usage Access</string>
     <string name="settings_perm_usage_desc">Needed to show screen time, app launches and weekly activity.</string>
     <string name="settings_perm_storage_title">Media Storage Access</string>
-    <string name="settings_perm_storage_desc">Allows AppWatch to show how much space on your device is being used.</string>
+    <string name="settings_perm_storage_desc">Allows PrivaScope to show how much space on your device is being used.</string>
     <string name="settings_perm_notif_title">Notification Count</string>
     <string name="settings_perm_notif_desc">We use it to count notification sent by each app along with notification swiped/opened. No notification content is ever read.</string>
     <string name="settings_perm_apps_title">Installed Apps Visibility</string>
-    <string name="settings_perm_apps_desc">It allows AppWatch to see all apps on your device and is granted after the install.</string>
+    <string name="settings_perm_apps_desc">It allows PrivaScope to see all apps on your device and is granted after the install.</string>
     <string name="settings_perm_reading_title">App Permission</string>
     <string name="settings_perm_reading_desc">Used to check what permissions each app has and is granted after the install.</string>
     <string name="settings_perm_data_title">Data Usage</string>
-    <string name="settings_perm_data_desc">Allows AppWatch to read mobile and Wi-Fi data consumption by each app.</string>
+    <string name="settings_perm_data_desc">Allows PrivaScope to read mobile and Wi-Fi data consumption by each app.</string>
 
     <string name="settings_how_usage_title">App Usage Tracking</string>
     <string name="settings_how_usage_subtitle">How we measure your screen time and app activity</string>
@@ -92,13 +92,13 @@
     <string name="settings_how_privacy_title">Privacy Insights</string>
     <string name="settings_how_privacy_subtitle">How we identify apps that may be a risk to your privacy</string>
     <string name="settings_how_background_title">Background Updates</string>
-    <string name="settings_how_background_subtitle">How AppWatch keeps your data fresh without draining battery</string>
+    <string name="settings_how_background_subtitle">How PrivaScope keeps your data fresh without draining battery</string>
 
     <string name="settings_dev_role">Android Developer</string>
-    <string name="settings_dev_github_label">GitHub — AppWatch</string>
+    <string name="settings_dev_github_label">GitHub — PrivaScope</string>
     <string name="settings_dev_github_value">View source code</string>
     <string name="settings_toast_unavailable">Feature currently unavailable</string>
-    <string name="settings_version_text">AppWatch %1$s</string>
+    <string name="settings_version_text">PrivaScope %1$s</string>
 
     <string name="dialog_revoke_title">Turn Off Permission?</string>
     <string name="btn_revoke">Revoke</string>
@@ -118,9 +118,9 @@
     <string name="sheet_usage_point4_title">Active and Inactive Sessions</string>
     <string name="sheet_usage_point4_desc">We find your longest continuous screen-on and screen-off periods to show your phone usage patterns throughout the day.</string>
     <string name="sheet_policy_point5_title">Encrypted Database</string>
-    <string name="sheet_policy_point5_desc">All your local data is encrypted using SQLCipher. This means even if someone gets access to your phone\'s internal files, they can\'t read your AppWatch history.</string>
+    <string name="sheet_policy_point5_desc">All your local data is encrypted using SQLCipher. This means even if someone gets access to your phone\'s internal files, they can\'t read your PrivaScope history.</string>
     <string name="sheet_policy_point6_title">Identity Protection</string>
-    <string name="sheet_policy_point6_desc">We don\'t collect names, emails, or device IDs. To AppWatch, you are completely anonymous and we have no way to link data to you.</string>
+    <string name="sheet_policy_point6_desc">We don\'t collect names, emails, or device IDs. To PrivaScope, you are completely anonymous and we have no way to link data to you.</string>
 
     <string name="sheet_perm_subtitle">How we find which apps have sensitive access</string>
     <string name="sheet_perm_point1_title">What Each App Can Access</string>
@@ -166,35 +166,35 @@
     <string name="sheet_privacy_point4_title">Recent Activity</string>
     <string name="sheet_privacy_point4_desc">We track which apps were installed, updated or removed this week so you always know what changed on your phone recently.</string>
 
-    <string name="sheet_bg_subtitle">How AppWatch keeps your data fresh</string>
+    <string name="sheet_bg_subtitle">How PrivaScope keeps your data fresh</string>
     <string name="sheet_bg_point1_title">Daily Refresh</string>
-    <string name="sheet_bg_point1_desc">Once a day, AppWatch quietly updates your app list, storage data and usage history in the background. You don\'t need to do anything.</string>
+    <string name="sheet_bg_point1_desc">Once a day, PrivaScope quietly updates your app list, storage data and usage history in the background. You don\'t need to do anything.</string>
     <string name="sheet_bg_point2_title">Battery Friendly</string>
     <string name="sheet_bg_point2_desc">We use Android\'s WorkManager which is designed to run tasks efficiently without draining your battery or slowing your phone.</string>
     <string name="sheet_bg_point3_title">Instant Loading</string>
-    <string name="sheet_bg_point3_desc">When you open AppWatch, it shows your last saved data immediately while quietly fetching any updates in the background.</string>
+    <string name="sheet_bg_point3_desc">When you open PrivaScope, it shows your last saved data immediately while quietly fetching any updates in the background.</string>
     <string name="sheet_bg_point4_title">Works Offline</string>
-    <string name="sheet_bg_point4_desc">AppWatch does not need internet to work. All data is read directly from your device and stored locally.</string>
+    <string name="sheet_bg_point4_desc">PrivaScope does not need internet to work. All data is read directly from your device and stored locally.</string>
 
     <string name="sheet_policy_point1_title">Everything Stays on Your Phone</string>
     <string name="sheet_policy_point1_desc">All analysis including screen time, permissions, storage happens entirely on your device. Nothing is ever sent anywhere.</string>
     <string name="sheet_policy_point2_title">No Tracking at All</string>
-    <string name="sheet_policy_point2_desc">AppWatch has no third-party SDKs. We have no way to track or store any data.</string>
+    <string name="sheet_policy_point2_desc">PrivaScope has no third-party SDKs. We have no way to track or store any data.</string>
     <string name="sheet_policy_point3_title">No Internet Permission</string>
-    <string name="sheet_policy_point3_desc">AppWatch does not have internet permission. It is technically impossible for it to send any data anywhere.</string>
+    <string name="sheet_policy_point3_desc">PrivaScope does not have internet permission. It is technically impossible for it to send any data anywhere.</string>
     <string name="sheet_policy_point4_title">Delete Anytime</string>
-    <string name="sheet_policy_point4_desc">Uninstalling AppWatch removes everything. No data remains on your phone or anywhere else after uninstall.</string>
+    <string name="sheet_policy_point4_desc">Uninstalling PrivaScope removes everything. No data remains on your phone or anywhere else after uninstall.</string>
 
     <string name="sheet_terms_point1_title">Free to Use</string>
-    <string name="sheet_terms_point1_desc">AppWatch is completely free. There are no subscriptions, no in-app purchases and no hidden charges.</string>
+    <string name="sheet_terms_point1_desc">PrivaScope is completely free. There are no subscriptions, no in-app purchases and no hidden charges.</string>
     <string name="sheet_terms_point2_title">For Information Only</string>
-    <string name="sheet_terms_point2_desc">AppWatch shows you information about your device. It does not make any changes to your apps, settings or data on your behalf.</string>
+    <string name="sheet_terms_point2_desc">PrivaScope shows you information about your device. It does not make any changes to your apps, settings or data on your behalf.</string>
     <string name="sheet_terms_point3_title">No Guarantee</string>
     <string name="sheet_terms_point3_desc">We do our best to keep data accurate but some readings may vary depending on your device model or Android version.</string>
     <string name="sheet_terms_point4_title">Your Responsibility</string>
-    <string name="sheet_terms_point4_desc">Any action you take based on AppWatch\'s information like revoking a permission is your own decision. We are not responsible for any outcome.</string>
+    <string name="sheet_terms_point4_desc">Any action you take based on PrivaScope\'s information like revoking a permission is your own decision. We are not responsible for any outcome.</string>
 
-    <string name="sheet_licenses_desc">AppWatch is built using the following open source libraries. We are grateful to their developers.</string>
+    <string name="sheet_licenses_desc">PrivaScope is built using the following open source libraries. We are grateful to their developers.</string>
     <string name="sheet_licenses_footer">All libraries above are licensed under Apache License 2.0, to view full license %1$s</string>
     <string name="click_here">click here</string>
 
@@ -462,7 +462,7 @@
     <string name="audit_detail_unused">Unused from %1$d days</string>
 
     <string name="special_perms_title">Highly Sensitive Permissions</string>
-    <string name="special_perms_intro">At AppWatch, we categorize these as \'Highly Sensitive\' because they allow apps to go beyond normal permissions. While trusted tools use these for advanced features, they require extra caution because they have a \'bird’s-eye view\' of your phone\'s activity.</string>
+    <string name="special_perms_intro">At PrivaScope, we categorize these as \'Highly Sensitive\' because they allow apps to go beyond normal permissions. While trusted tools use these for advanced features, they require extra caution because they have a \'bird’s-eye view\' of your phone\'s activity.</string>
 
     <string name="perm_desc_accessibility_title">ACCESSIBILITY</string>
     <string name="perm_desc_accessibility_body">Acts as a \'Screen Helper\'. Essential for password managers to auto-fill or screen readers for assistance, but it can see everything you type.</string>
@@ -498,14 +498,14 @@
     <string name="notif_loader_card_title">Audit Notifications</string>
     <string name="notif_loader_card_desc">See which apps send the most alerts and audit sensitive message access. We never read, store or use any of your private data. You can always change from settings.</string>
 
-    <string name="dialog_notif_privacy_msg">To audit which apps are reading your notifications (like potential spyware), AppWatch needs Notification Access.</string>
+    <string name="dialog_notif_privacy_msg">To audit which apps are reading your notifications (like potential spyware), PrivaScope needs Notification Access.</string>
     <string name="dialog_notif_timer_msg">Important: You might see a 10-second safety timer on your device settings. This is standard for security focused tools. We never read your private content and we only use it to count alerts.\n You can always remove this from the settings.</string>
     <string name="btn_open_settings">Open Settings</string>
 
 
     <!--    Shimmer Components  -->
     <string name="initial_loader_scanning_cd">Scanning</string>
-    <string name="initial_loader_title">Setting up AppWatch</string>
+    <string name="initial_loader_title">Setting up PrivaScope</string>
     <string name="initial_loader_subtitle">Scanning your apps.</string>
     <string name="initial_loader_hint">It only takes minutes to set up.</string>
     <string name="initial_loader_privacy_badge">PRIVATE &amp; OFFLINE ANALYSIS</string>
@@ -527,7 +527,7 @@
     <string name="btn_enable_permission">Enable Permission</string>
 
     <string name="dialog_privacy_title">Privacy Disclosure</string>
-    <string name="dialog_privacy_usage_access_msg">To show your usage habits, AppWatch needs \'Usage Access\'.</string>
+    <string name="dialog_privacy_usage_access_msg">To show your usage habits, PrivaScope needs \'Usage Access\'.</string>
     <string name="dialog_privacy_timer_msg">Important: You might see a 10-second safety timer on your device settings. This is for security purposes and you can safely grant them. We never read your private content.\n You can always remove this from the settings.</string>
     <string name="btn_proceed">Proceed</string>
     <string name="btn_later">Later</string>

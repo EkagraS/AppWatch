@@ -1,0 +1,212 @@
+package com.ekagra.privascope.ui.screens
+
+import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.ekagra.privascope.data.local.entity.RecentEventEntity
+import com.ekagra.privascope.ui.viewModels.DashboardViewModel
+import com.ekagra.privascope.ui.ScreenComponents.getIconForEventType
+import com.ekagra.privascope.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.ekagra.privascope.R
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecentEventScreen(
+    navController: NavController,
+    eventType: String,
+    viewModel: DashboardViewModel = hiltViewModel()
+) {
+    val eventList by viewModel.getEventsByType(eventType).collectAsStateWithLifecycle(initialValue = emptyList())
+
+    val screenTitleRes = when (eventType) {
+        "INSTALL" -> R.string.title_recent_install
+        "UPDATE" -> R.string.title_recent_update
+        "SIDELOADED_APK" -> R.string.title_recent_sideloaded
+        "UNINSTALL" -> R.string.title_recent_uninstall
+        "DATA_HOG" -> R.string.title_recent_data_hog
+        else -> R.string.title_recent_default
+    }
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = BackgroundLight,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(screenTitleRes),
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back),
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = BackgroundLight,
+                    scrolledContainerColor = Teal50,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = TextPrimary,
+                    actionIconContentColor = TextPrimary
+                )
+            )
+        }
+    ) { paddingValues ->
+
+        if (eventList.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.recent_no_activity),
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+            ) {
+                items(eventList) { event ->
+                    EventListItemCard(event = event, onAppClick = { navController.navigate("app_detail/${event.packageName}") })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EventListItemCard(event: RecentEventEntity, onAppClick: () -> Unit) {
+    val context = LocalContext.current
+    val packageManager = context.packageManager
+
+    var appName by remember(event.packageName) { mutableStateOf(event.packageName) }
+    var appIconBitmap by remember(event.packageName) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+
+    LaunchedEffect(event.packageName) {
+        withContext(Dispatchers.IO) {
+            try {
+                val appInfo = packageManager.getApplicationInfo(event.packageName, PackageManager.GET_META_DATA)
+                appName = packageManager.getApplicationLabel(appInfo).toString()
+                val drawable: Drawable = packageManager.getApplicationIcon(event.packageName)
+                appIconBitmap = drawable.toBitmap().asImageBitmap()
+            } catch (e: PackageManager.NameNotFoundException) {
+                // Keep fallback
+            }
+        }
+    }
+
+    Card(
+        onClick = onAppClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceWhite
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, DividerColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (appIconBitmap != null) {
+                Image(
+                    bitmap = appIconBitmap!!,
+                    contentDescription = appName,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Android,
+                    contentDescription = null,
+                    tint = Indigo500,
+                    modifier = Modifier.size(44.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = appName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = if (!event.extraInfo.isNullOrEmpty()) event.extraInfo else event.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip // Package name aur metadata cut jaye par dots na dikhe (Clip)
+                )
+            }
+
+            val iconTint = when(event.eventType) {
+                "INSTALL" -> ActivityInstall
+                "UNINSTALL" -> ActivityUninstall
+                "UPDATE" -> ActivityUpdate
+                else -> TextSecondary.copy(alpha = 0.6f)
+            }
+
+            Icon(
+                imageVector = getIconForEventType(event.eventType),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
